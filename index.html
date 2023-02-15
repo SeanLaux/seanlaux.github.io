@@ -1,10 +1,182 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-<head>
-<meta charset="utf-8">
-<title>我的主页</title>
-</head>
-<body>
-<p>乘风破浪，未来可期！</p>
-</body>
+	<head>
+		<meta charset="utf-8">
+		<title>My Love</title>
+		<style type="text/css" >
+			/* 最外层样式 */
+			.wrap {
+				width: 200px;
+				height: 200px;
+				margin: 200px auto;
+				position: relative;
+			}
+			
+			/* 包裹所有容器的样式 */
+			.cube {
+				width: 200px;
+				height: 200px;
+				/* perspective: 500px; */
+				/* 保持3D效果 */
+				margin: 0 auto;
+				transform-style: preserve-3d;
+				transform: rotateX(-30deg) rotateY(-80deg);
+				animation: rotate linear 10s infinite;
+			}
+			
+			@-webkit-keyframes rotate {
+				from{
+					transform: rotateX(0deg) rotateY(0deg);
+				}
+				to{
+					transform: rotateX(360deg) rotateY(360deg);
+				}
+			}
+			
+			.cube div {
+				position: absolute;
+				width: 200px;
+				height: 200px;
+				/* opacity: 0.8; */
+				transition: all .4;
+			}
+			/* 定义所有图片的样式 */
+			.pic {
+				width: 200px;
+				height: 200px;
+			}
+			
+			.cube .Out_Left {
+				transform: rotateY(-90deg) translateZ(100px);
+			}
+			
+			.cube .Out_Right {
+				transform: rotateY(90deg) translateZ(100px);
+			}
+			
+			.cube .Out_Top {
+				transform: rotateX(90deg) translateZ(100px);
+			}
+			
+			.cube .Out_Bottom {
+				transform: rotateX(-90deg) translateZ(100px);
+			}
+			
+			.cube .Out_Front {
+				transform: rotateY(0deg) translateZ(100px);
+			}
+			
+			.cube .Out_Back {
+				transform: rotateY(180deg) translateZ(-100px);
+			}
+			
+			/* 定义小正方体的样式 */
+			.cube span {
+				display: block;
+				width: 100px;
+				height: 100px;
+				position: absolute;
+				top: 50px;
+				left: 50px;
+			}
+			
+			.cube .in_pic {
+				width: 100px;
+				height: 100px;
+			}
+			
+			.cube .In_Left {
+				transform: rotateY(-90deg) translateZ(50px);
+			}
+			
+			.cube .In_Right {
+				transform: rotateY(90deg) translateZ(50px);
+			}
+			
+			.cube .In_Top {
+				transform: rotateX(90deg) translateZ(50px);
+			}
+			
+			.cube .In_Bottom {
+				transform: rotateX(-90deg) translateZ(50px);
+			}
+			
+			.cube .In_Front {
+				transform: rotateY(0deg) translateZ(50px);
+			}
+			
+			.cube .In_Back {
+				transform: rotateY(180deg) translateZ(-50px);
+			}
+			
+			/* 鼠标移入后的样式 */
+			.cube:hover .Out_Left {
+				transform: rotateY(90deg) translateZ(-200px);
+			}
+			
+			.cube:hover .Out_Right {
+				transform: rotateY(-90deg) translateZ(-200px);
+			}
+			
+			.cube:hover .Out_Top {
+				transform: rotateX(-90deg) translateZ(-200px);
+			}
+			
+			.cube:hover .Out_Bottom {
+				transform: rotateX(90deg) translateZ(-200px);
+			}
+			
+			.cube:hover .Out_Front {
+				transform: translateZ(200px);
+			}
+			
+			.cube:hover .Out_Back {
+				transform: translateZ(-200px);
+			}
+		</style>
+	</head>
+	<body onclick="location.href='congratulations.html';">
+		<div class="wrap">
+			<div class="cube">
+				<!-- 外面前面的照片 -->
+				<div class="Out_Front">
+					<img src="img/photomagic/1.jpg" class="pic" />
+				</div>
+				<div class="Out_Back">
+					<img src="img/photomagic/2.jpg" class="pic" />
+				</div>
+				<div class="Out_Top">
+					<img src="img/photomagic/3.jpg" class="pic" />
+				</div>
+				<div class="Out_Bottom">
+					<img src="img/photomagic/4.jpg" class="pic" />
+				</div>
+				<div class="Out_Left">
+					<img src="img/photomagic/5.jpg" class="pic" />
+				</div>
+				<div class="Out_Right">
+					<img src="img/photomagic/7.jpg" class="pic" />
+				</div>
+				
+				<div class="In_Front">
+					<img src="img/photomagic/6.jpg" class="pic" />
+				</div>
+				<div class="In_Back">
+					<img src="img/photomagic/6.jpg" class="pic" />
+				</div>
+				<div class="In_Top">
+					<img src="img/photomagic/6.jpg" class="pic" />
+				</div>
+				<div class="In_Bottom">
+					<img src="img/photomagic/6.jpg" class="pic" />
+				</div>
+				<div class="In_Left">
+					<img src="img/photomagic/6.jpg" class="pic" />
+				</div>
+				<div class="In_Right">
+					<img src="img/photomagic/6.jpg" class="pic" />
+				</div>
+			</div>
+		</div>
+	</body>
 </html>
