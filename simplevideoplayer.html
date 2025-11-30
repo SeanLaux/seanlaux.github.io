@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生日快乐！</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .player-container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            display: block;
+        }
+        .controls {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        .progress-container {
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .progress {
+            height: 100%;
+            background: #007bff;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .left-controls, .right-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #495057;
+            transition: color 0.2s;
+        }
+        button:hover {
+            color: #007bff;
+        }
+        .time {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .volume-slider {
+            width: 80px;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .volume-level {
+            height: 100%;
+            background: #007bff;
+            border-radius: 3px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <video id="videoPlayer">
+            <source src="video/happybirthdaymami.mp4" type="video/mp4">
+            您的浏览器不支持HTML5视频播放
+        </video>
+        
+        <div class="controls">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress" id="progress"></div>
+                </div>
+            </div>
+            
+            <div class="buttons">
+                <div class="left-controls">
+                    <button id="playPauseBtn">▶️</button>
+                    <span class="time" id="timeDisplay">00:00 / 00:00</span>
+                </div>
+                
+                <div class="right-controls">
+                    <div class="volume-container">
+                        <button id="muteBtn">🔊</button>
+                        <div class="volume-slider" id="volumeSlider">
+                            <div class="volume-level" id="volumeLevel"></div>
+                        </div>
+                    </div>
+                    
+                    <button id="fullscreenBtn">⛶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const videoPlayer = document.getElementById('videoPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const muteBtn = document.getElementById('muteBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progress = document.getElementById('progress');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeLevel = document.getElementById('volumeLevel');
+        const timeDisplay = document.getElementById('timeDisplay');
+
+        // 播放/暂停功能
+        playPauseBtn.addEventListener('click', () => {
+            if (videoPlayer.paused) {
+                videoPlayer.play();
+                playPauseBtn.textContent = '⏸️';
+            playPauseBtn.title = '暂停';
+            playPauseBtn.setAttribute('aria-label', '暂停视频');
+            playPauseBtn.setAttribute('aria-pressed', 'true');
+            playPauseBtn.setAttribute('role', 'button');
+            playPauseBtn.setAttribute('tabindex', '0');
+            videoPlayer.setAttribute('aria-label', '正在播放的视频');
+            videoPlayer.setAttribute('aria-describedby', '正在播放的视频');
+            videoPlayer.setAttribute('aria-live', 'polite');
+        } else {
+                videoPlayer.pause();
+                playPauseBtn.textContent = '▶️';
+                playPauseBtn.title = '播放';
+                playPauseBtn.setAttribute('aria-label', '播放视频');
+                playPauseBtn.setAttribute('aria-pressed', 'false');
+            }
+        });
+
+        // 静音功能
+        muteBtn.addEventListener('click', () => {
+            videoPlayer.muted = !videoPlayer.muted;
+            muteBtn.textContent = videoPlayer.muted ? '🔇' : '🔊';
+            muteBtn.title = videoPlayer.muted ? '取消静音' : '静音';
+        });
+
+        // 全屏功能
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                videoPlayer.requestFullscreen();
+                fullscreenBtn.textContent = '⛶';
+                fullscreenBtn.title = '退出全屏';
+            } else {
+                document.exitFullscreen();
+                fullscreenBtn.textContent = '⛶';
+                fullscreenBtn.title = '全屏';
+            }
+        });
+
+        // 进度条功能
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            videoPlayer.currentTime = pos * videoPlayer.duration;
+        });
+
+        // 音量控制
+        volumeSlider.addEventListener('click', (e) => {
+            const rect = volumeSlider.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            videoPlayer.volume = pos;
+            volumeLevel.style.width = `${pos * 100}%`;
+        });
+
+        // 更新进度条和时间显示
+        videoPlayer.addEventListener('timeupdate', () => {
+            const percent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+            progress.style.width = `${percent}%`;
+            
+            const currentTime = formatTime(videoPlayer.currentTime);
+            const duration = formatTime(videoPlayer.duration);
+            timeDisplay.textContent = `${currentTime} / ${duration}`;
+        });
+
+        // 格式化时间显示
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 视频加载完成后更新时长
+        videoPlayer.addEventListener('loadedmetadata', () => {
+            timeDisplay.textContent = `00:00 / ${formatTime(videoPlayer.duration)}`;
+        });
+
+        // 键盘快捷键支持
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    playPauseBtn.click();
+                    break;
+                case 'f':
+                    fullscreenBtn.click();
+                    break;
+                case 'm':
+                    muteBtn.click();
+                    break;
+                case 'ArrowLeft':
+                    videoPlayer.currentTime -= 5;
+                    break;
+                case 'ArrowRight':
+                    videoPlayer.currentTime += 5;
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
