@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>甜甜的小天地</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入可爱中文字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'ZCOOL KuaiLe', sans-serif;
+        }
+        body {
+            background: linear-gradient(180deg, #fff0f6 0%, #fde6ef 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        /* 背景装饰元素 - 神话生物作为低透明度背景 */
+        .bg-deco {
+            position: fixed;
+            z-index: 0;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+        .bg-unicorn {
+            top: 10%;
+            left: 5%;
+            font-size: 120px;
+            color: #d896ff;
+        }
+        .bg-phoenix {
+            top: 40%;
+            right: 8%;
+            font-size: 100px;
+            color: #ff7b7b;
+        }
+        .bg-dragon {
+            bottom: 5%;
+            left: 10%;
+            font-size: 110px;
+            color: #7f9dbe;
+        }
+        .bg-rose {
+            bottom: 35%;
+            right: 15%;
+            font-size: 90px;
+            color: #ff477e;
+        }
+        .bg-star {
+            top: 20%;
+            right: 30%;
+            font-size: 60px;
+            color: #ffd700;
+        }
+        .bg-moon {
+            top: 60%;
+            left: 40%;
+            font-size: 80px;
+            color: #ffdc3c;
+        }
+        /* 全直角规范 - 强制取消所有圆角 */
+        .no-radius {
+            border-radius: 0 !important;
+        }
+        /* 置顶导航栏 - 无顶部留白 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 999;
+            background: linear-gradient(90deg, #ff6b9d 0%, #ff8fab 100%);
+            box-shadow: 0 2px 10px rgba(255, 107, 157, 0.3);
+        }
+        main {
+            margin-top: 64px;
+            position: relative;
+            z-index: 1;
+        }
+        /* 移动端菜单默认隐藏 */
+        .mobile-menu {
+            display: none;
+        }
+        .mobile-menu.active {
+            display: block;
+        }
+        /* 时间轴垂直线样式 */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #ff6b9d, #ffc2d4);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -30px;
+            top: 4px;
+            width: 18px;
+            height: 18px;
+            background: #ff6b9d;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #ffc2d4;
+        }
+        .date-header {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff0f6;
+            padding: 12px 16px;
+            border-left: 4px solid #ff6b9d;
+            margin-bottom: 12px;
+            transition: background 0.3s;
+        }
+        .date-header:hover {
+            background: #ffe6f0;
+        }
+        .date-header .arrow {
+            transition: transform 0.3s;
+            color: #ff6b9d;
+        }
+        .date-header.active .arrow {
+            transform: rotate(180deg);
+        }
+        .date-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            padding-left: 8px;
+        }
+        .date-content.show {
+            max-height: 5000px;
+        }
+        /* ===== 内容卡片样式 ===== */
+        .content-card {
+            background: white;
+            box-shadow: 0 2px 8px rgba(255, 107, 157, 0.15);
+            overflow: hidden;
+        }
+        .card-img-box {
+            width: 100%;
+            aspect-ratio: 4/3; /* 固定图片容器比例 */
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff0f6;
+        }
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 图片填满容器，不变形 */
+            display: block;
+        }
+        .card-img-height {
+            width: auto;          /* 宽度自动等比 */
+            height: 100%;         /* 高度填满容器 */
+            display: block;
+            margin: 0 auto;       /* 水平居中 */
+            object-fit: contain;  /* 保持比例，完整显示 */
+        }
+        .card-desc {
+            padding: 12px;
+            text-align: center;
+            color: #ec4899;
+            font-size: 16px;
+        }
+        /* 主流电脑分辨率（1200px以上）固定3列布局 */
+        @media (min-width: 1200px) {
+            .content-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景装饰元素 -->
+    <div class="bg-deco bg-unicorn"><i class="fa-solid fa-horse-head"></i></div>
+    <div class="bg-deco bg-phoenix"><i class="fa-solid fa-fire"></i></div>
+    <div class="bg-deco bg-dragon"><i class="fa-solid fa-dragon"></i></div>
+    <div class="bg-deco bg-rose"><i class="fa-solid fa-rose"></i></div>
+    <div class="bg-deco bg-star"><i class="fa-solid fa-star"></i></div>
+    <div class="bg-deco bg-moon"><i class="fa-solid fa-moon"></i></div>
+
+    <!-- 置顶无留白导航栏 -->
+    <nav class="top-nav no-radius">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="text-white text-2xl font-bold">甜甜的小天地</div>
+            <div class="hidden md:flex space-x-8 text-white text-lg">
+                <a href="#intro" class="hover:text-yellow-100 transition">自我介绍</a>
+                <a href="#photos" class="hover:text-yellow-100 transition">我的相片</a>
+                <a href="#gallery" class="hover:text-yellow-100 transition">我的画板</a>
+                <a href="#honor" class="hover:text-yellow-100 transition">我的荣誉</a>
+            </div>
+            <button id="menuBtn" class="md:hidden text-white text-2xl">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+        <!-- 移动端下拉菜单 -->
+        <div id="mobileMenu" class="mobile-menu md:hidden bg-pink-600 px-4 py-2">
+            <a href="#intro" class="block py-3 text-white border-b border-pink-500 hover:text-yellow-100">自我介绍</a>
+            <a href="#photos" class="block py-3 text-white border-b border-pink-500 hover:text-yellow-100">我的相片</a>
+            <a href="#gallery" class="block py-3 text-white border-b border-pink-500 hover:text-yellow-100">我的画板</a>
+            <a href="#honor" class="block py-3 text-white hover:text-yellow-100">我的荣誉</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- 自我介绍版块 -->
+        <section id="intro" class="mb-16 bg-white no-radius shadow-md p-8">
+            <h2 class="text-3xl text-pink-600 mb-6 border-b-4 border-pink-200 pb-2">✨ 自我介绍</h2>
+            <p class="text-xl text-gray-700 leading-relaxed">
+                大家好呀🥰 我大名叫刘思颖，小名叫甜甜，今年6岁啦，是2611班的一年级新生～
+我超级喜欢唱歌、跳舞、画画，还有学各种各样的新知识！平时我总爱拿着彩笔涂涂画画，画里总少不了飘在棉花糖云朵上的彩虹独角兽、喷着粉橙色小火焰的软萌凤凰、圆滚滚不咬人的可爱小龙，还有开满玫瑰花的夏夜星空、眨眼睛的星星和弯弯的月亮， 我会跳好多可爱的幼儿舞蹈，我跳的舞拿了好多好多奖哦😆，也会唱《小星星》、《孤勇者》和《咏鹅》等等好多儿歌哦，下次班级活动我可以表演给大家看呀！
+我还喜欢收集亮晶晶的闪粉贴纸、玫瑰形状的小橡皮，还有各种带独角兽图案的小文具。我性格软软的，最喜欢和小朋友们一起做游戏，也特别愿意帮老师和爸爸妈妈做力所能及的小事，希望能和大家成为好朋友，一起上学、一起画画、一起开开心心长大呀✨
+            </p>
+        </section>
+
+        <!-- 我的相片版块 - 每个日期分类下2行3列共6个卡片 -->
+        <section id="photos" class="mb-16">
+            <h2 class="text-3xl text-pink-600 mb-6 border-b-4 border-pink-200 pb-2">📸 我的相片</h2>
+            <div class="timeline">
+                <!-- 2025-12-03 · 艺术照 - 2行3列共6张 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot no-radius"></div>
+                    <div class="date-header active" onclick="toggleDate(this)">
+                        <span class="font-bold text-pink-700 text-lg">2025-12-03 · 艺术照</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="date-content show">
+                        <div class="content-grid grid grid-cols-1 sm:grid-cols-2 pb-4">
+                            <!-- 第1行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-03/花朵宝宝（2）.jpg" alt="花仙子" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">花仙子</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-03/花朵宝宝.jpg" alt="阳光照进我心" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">阳光照进我心</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-03/卡通造型宝宝（2）.jpg" alt="我和库洛米" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">我和库洛米</div>
+                            </div>
+                            <!-- 第2行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-03/卡通造型宝宝.jpg" alt="库洛米造型" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">库洛米造型</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 2025-12-29 · 冬季运动会 - 3行3列共8张 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot no-radius"></div>
+                    <div class="date-header  active" onclick="toggleDate(this)">
+                        <span class="font-bold text-pink-700 text-lg">2025-12-29 · 冬季运动会</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="date-content show">
+                        <div class="content-grid grid grid-cols-1 sm:grid-cols-2 pb-4">
+                            <!-- 第1行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-29/IMG_8764.JPG" alt="双师会" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">双师会</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-29/IMG_8793.JPG" alt="雄师亮相" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">雄师亮相</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-29/IMG_8797.JPG" alt="准备出击" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">准备出击</div>
+                            </div>
+                            <!-- 第2行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-29/IMG_8857.JPG" alt="翩翩起舞" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">翩翩起舞</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-29/IMG_8904.JPG" alt="我和小伙伴" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">我和小伙伴</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-29/IMG_8905.JPG" alt="惊鸿一瞥" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">惊鸿一瞥</div>
+                            </div>
+                            <!-- 第3行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-29/IMG_8906.JPG" alt="准备起跑" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">准备起跑</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2025-12-29/IMG_8907.JPG" alt="隧道穿越" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">隧道穿越</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+		<!-- 2026-01-29 · 第3届创意戏曲节 - 3行3列共8张 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot no-radius"></div>
+                    <div class="date-header active" onclick="toggleDate(this)">
+                        <span class="font-bold text-pink-700 text-lg">2026-01-29 · 第3届创意戏曲节</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="date-content show">
+                        <div class="content-grid grid grid-cols-1 sm:grid-cols-2 pb-4">
+                            <!-- 第1行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8901.jpg" alt="第3届创意戏曲节" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8902.jpg" alt="第3届创意戏曲节" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8903.jpg" alt="第3届创意戏曲节" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                            <!-- 第2行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8904.jpg" alt="第3届创意戏曲节" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8905.jpg" alt="第3届创意戏曲节" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8906.jpg" alt="第3届创意戏曲节" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                            <!-- 第3行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8907.jpg" alt="第3届创意戏曲节" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8908.jpg" alt="第3届创意戏曲节" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myphoto/2026-01-29/IMG_8909.jpg" alt="第3届创意戏曲节" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">&nbsp;</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 我的画板版块 - 每个日期分类下2行3列共6个作品 -->
+        <section id="gallery" class="mb-16">
+            <h2 class="text-3xl text-pink-600 mb-6 border-b-4 border-pink-200 pb-2">🎨 我的画板</h2>
+            <div class="timeline">
+                <!-- 幼儿园时期绘画作品 - 2行3列共6幅 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot no-radius"></div>
+                    <div class="date-header active" onclick="toggleDate(this)">
+                        <span class="font-bold text-pink-700 text-lg">幼儿园时期绘画作品</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="date-content show">
+                        <div class="content-grid grid grid-cols-1 sm:grid-cols-2 pb-4">
+                            <!-- 第1行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./mypainting/幼儿园时期绘画作品/paint001.jpg" alt="城堡" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">城堡</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./mypainting/幼儿园时期绘画作品/paint002.jpg" alt="精灵花园" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">精灵花园</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./mypainting/幼儿园时期绘画作品/paint003.jpg" alt="数字魔" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">数字魔</div>
+                            </div>
+                            <!-- 第2行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./mypainting/幼儿园时期绘画作品/paint004.jpg" alt="彩绘手掌" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">彩绘手掌</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./mypainting/幼儿园时期绘画作品/paint005.jpg" alt="美甲手掌" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">美甲手掌</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./mypainting/幼儿园时期绘画作品/paint006.jpg" alt="彩虹城堡" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">彩虹城堡</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 小学一年级作品 - 2行3列共6幅 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot no-radius"></div>
+                    <div class="date-header" onclick="toggleDate(this)">
+                        <span class="font-bold text-pink-700 text-lg"> 小学一年级作品</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="date-content">
+                        <div class="content-grid grid grid-cols-1 sm:grid-cols-2 pb-4">
+                            <!-- 第1行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./敬请期待.jpg" alt="敬请期待" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">敬请期待</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./敬请期待.jpg" alt="敬请期待" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">敬请期待</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./敬请期待.jpg" alt="敬请期待" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">敬请期待</div>
+                            </div>
+                            <!-- 第2行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./敬请期待.jpg" alt="敬请期待" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">敬请期待</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./敬请期待.jpg" alt="敬请期待" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">敬请期待</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./敬请期待.jpg" alt="敬请期待" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">敬请期待</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 我的荣誉版块 - 每个日期分类下2行3列共6个荣誉 -->
+        <section id="honor" class="mb-16">
+            <h2 class="text-3xl text-pink-600 mb-6 border-b-4 border-pink-200 pb-2">🏆 我所获得的荣誉</h2>
+            <div class="timeline">
+                <!-- 舞蹈奖项 - 2行3列共6项 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot no-radius"></div>
+                    <div class="date-header active" onclick="toggleDate(this)">
+                        <span class="font-bold text-pink-700 text-lg">舞蹈奖项</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="date-content show">
+                        <div class="content-grid grid grid-cols-1 sm:grid-cols-2 pb-4">
+                            <!-- 第1行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/舞蹈奖项/2023.艺彩华夏.湖南第四届请少年舞蹈大赛.特金奖.jpg" alt="2023.艺彩华夏.湖南第四届请少年舞蹈大赛.特金奖" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">🌟 2023.艺彩华夏.湖南第四届请少年舞蹈大赛.特金奖</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/舞蹈奖项/2024.艺彩华夏.第六届少年舞蹈大赛.特金奖.jpg" alt="2024.艺彩华夏.第六届少年舞蹈大赛.特金奖" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">💃 2024.艺彩华夏.第六届少年舞蹈大赛.特金奖</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/舞蹈奖项/2024.筑梦青春.艺路同行.第20届青春中国校园美育选拔活动.金奖.jpg" alt="2024.筑梦青春.艺路同行.第20届青春中国校园美育选拔活动.金奖" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">🎖️ 2024.筑梦青春.艺路同行.第20届青春中国校园美育选拔活动.金奖</div>
+                            </div>
+                            <!-- 第2行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/舞蹈奖项/2025.筑梦青春艺路同行.青春中国青少年美育展演活动湖南展区.金奖.jpg" alt="2025.筑梦青春艺路同行.青春中国青少年美育展演活动湖南展区.金奖" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">🧮 2025.筑梦青春艺路同行.青春中国青少年美育展演活动湖南展区.金奖</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/舞蹈奖项/2026.百花舞界.第八届青少年舞蹈大赛.金奖.jpg" alt="2026.百花舞界.第八届青少年舞蹈大赛.金奖" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">📖 2026.百花舞界.第八届青少年舞蹈大赛.金奖</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 部分证书 - 4行3列共11项 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot no-radius"></div>
+                    <div class="date-header active" onclick="toggleDate(this)">
+                        <span class="font-bold text-pink-700 text-lg">部分证书</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="date-content show">
+                        <div class="content-grid grid grid-cols-1 sm:grid-cols-2 pb-4">
+                            <!-- 第1行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/2023年“艺彩华夏”湖南第四届青少年舞蹈大赛特金奖荣誉证书.jpg" alt="2023年“艺彩华夏”湖南第四届青少年舞蹈大赛特金奖荣誉证书" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">📚 2023年“艺彩华夏”湖南第四届青少年舞蹈大赛特金奖荣誉证书</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/2024年“艺彩华夏”湖南第六届青少年舞蹈大赛特金奖荣誉证书.jpg" alt="2024年“艺彩华夏”湖南第六届青少年舞蹈大赛特金奖荣誉证书" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">🎤 2024年“艺彩华夏”湖南第六届青少年舞蹈大赛特金奖荣誉证书</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/2024年“筑梦青春·艺路同行”第 20 届金奖荣誉证书.jpg" alt="2024年“筑梦青春·艺路同行”第 20 届金奖荣誉证书" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">🏃 2024年“筑梦青春·艺路同行”第 20 届金奖荣誉证书</div>
+                            </div>
+                            <!-- 第2行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/2025年“筑梦青春·艺路同行”第21届青少年美育展演金奖证书.jpg" alt="2025年“筑梦青春·艺路同行”第21届青少年美育展演金奖证书" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">🪀 2025年“筑梦青春·艺路同行”第21届青少年美育展演金奖证书</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/2025年第21届青少年美育展演活动湖南展区社会实践证书.jpg" alt="2025年第21届青少年美育展演活动湖南展区社会实践证书" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">📚 2025年第21届青少年美育展演活动湖南展区社会实践证书</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/2026年“百花舞界”湖南第八届青少年舞蹈大赛金奖证书.jpg" alt="2026年“百花舞界”湖南第八届青少年舞蹈大赛金奖证书" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">🧹 2026年“百花舞界”湖南第八届青少年舞蹈大赛金奖证书</div>
+                            </div>
+                            <!-- 第3行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/跆拳道八级证书.jpg" alt="跆拳道八级证书" class="card-img no-radius">
+                                </div>
+                                <div class="card-desc">📚 跆拳道八级证书</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/中国舞1级证书.jpg" alt="中国舞1级证书" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">🎤 中国舞1级证书</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/中国舞2级证书.jpg" alt="中国舞2级证书" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">🏃 中国舞2级证书</div>
+                            </div>
+                            <!-- 第4行 -->
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/中国舞4级证书.jpg" alt="中国舞4级证书" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">🪀 中国舞4级证书</div>
+                            </div>
+                            <div class="content-card no-radius">
+                                <div class="card-img-box">
+                                    <img src="./myprizesandhonours/证书/中国舞5级证书.jpg" alt="中国舞5级证书" class="card-img-height no-radius">
+                                </div>
+                                <div class="card-desc">📚 中国舞5级证书</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="no-radius bg-pink-700 text-white text-center py-6">
+        <p>© 2026 甜甜的个人小天地 用爱制作</p>
+    </footer>
+
+    <script>
+        // 移动端菜单功能
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+        });
+
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+            });
+        });
+
+        // 日期分类折叠展开功能
+        function toggleDate(header) {
+            header.classList.toggle('active');
+            const content = header.nextElementSibling;
+            content.classList.toggle('show');
+        }
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop - 64,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
