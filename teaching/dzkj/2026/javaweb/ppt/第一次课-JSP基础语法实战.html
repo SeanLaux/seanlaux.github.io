@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第一次课 · JSP基础语法实战 · 班级考勤展示页</title>
+<style>
+:root{
+  --bg:#eef1f6;--panel:#fff;--line:#e1e7ef;--line2:#eef2f7;
+  --text:#1f2328;--muted:#6b7480;--brand:#e8632a;--brand2:#cf5320;
+  --data:#0b6b53;--data2:#8a5a00;
+  --codebg:#ffffff;--gut:#f7f9fc;--gut2:#fbfcfe;
+  --basic:#0969da;--object:#8250df;--flow:#1a7f37;--request:#bc4c00;--tag:#bf3989;
+  --std:#4a5563;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.75;}
+button{font-family:inherit;cursor:pointer;}
+code,pre,.mono{font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New","Microsoft YaHei",monospace;}
+body.student-mode,body.student-mode *{-webkit-user-select:none!important;user-select:none!important;}
+body.student-mode .kp-body,body.student-mode .kp-body *{-webkit-user-select:text!important;user-select:text!important;}
+
+.topbar{position:sticky;top:0;z-index:80;background:#1b2430;color:#fff;
+  display:flex;align-items:center;gap:22px;padding:10px 22px;flex-wrap:wrap;
+  box-shadow:0 2px 14px rgba(15,25,40,.22);}
+.brand{display:flex;align-items:center;gap:12px;min-width:270px;}
+.logo{width:42px;height:42px;flex:0 0 42px;border-radius:10px;background:linear-gradient(135deg,#ff8a4c,#e8632a);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:.5px;}
+.b1{font-size:15.5px;font-weight:700;letter-spacing:.3px;}
+.b2{font-size:12px;color:#9fb0c4;margin-top:1px;letter-spacing:.4px;}
+.tmode{margin-left:auto;font-size:12.5px;padding:5px 12px;border-radius:999px;
+  background:#2d3a49;color:#c3cfdd;border:1px solid #3a495b;}
+.tmode.on{background:#e8f7ee;color:#12693a;border-color:#6ebf8a;}
+
+.rail{position:sticky;top:62px;z-index:70;background:#fff;border-bottom:1px solid var(--line);
+  padding:9px 22px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(20,35,60,.05);}
+.rail::-webkit-scrollbar{height:5px;}
+.rail::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+.stepchip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:6px 14px;font-size:13px;color:#48525f;transition:.16s;flex:0 0 auto;}
+.stepchip .n{width:19px;height:19px;border-radius:50%;background:#eef2f7;color:#5b6673;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;}
+.stepchip:hover{border-color:#b9c6d6;background:#f7fafd;}
+.stepchip.active{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.stepchip.active .n{background:var(--brand);color:#fff;}
+.stepchip.done .n{background:#d8f0e2;color:#1a7f37;}
+
+.wrap{max-width:1600px;margin:0 auto;padding:22px 22px 80px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 3px 16px rgba(23,40,70,.06);padding:26px 30px;}
+.step-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+.step-kind{font-size:12px;font-weight:700;letter-spacing:.6px;padding:4px 11px;border-radius:6px;
+  background:#eef4ff;color:#0969da;flex:0 0 auto;margin-top:3px;}
+.step-kind.code{background:#fff1e8;color:#c9541c;}
+.step-kind.env{background:#e8f7ee;color:#12693a;}
+.step-kind.std{background:#f4edff;color:#8250df;}
+.step-title{font-size:20px;font-weight:800;letter-spacing:.2px;margin:0;}
+.step-sub{color:var(--muted);font-size:13px;margin-top:2px;}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;margin-top:4px;}
+.pill{font-size:12px;padding:4px 11px;border-radius:999px;background:#f2f5f9;color:#55606d;border:1px solid #e6ecf4;}
+.pill.time{background:#fff8ec;color:#9a6400;border-color:#f6e3c4;}
+.pill.file{background:#eef7f1;color:#12693a;border-color:#d5ebdd;}
+
+.workbench{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(360px,1fr);
+  gap:18px;align-items:start;margin-top:18px;}
+@media (max-width:1180px){.workbench{grid-template-columns:1fr;}}
+
+.left-col{min-width:0;display:flex;flex-direction:column;gap:16px;}
+.guide-box{background:#f8fafd;border:1px solid var(--line);border-left:4px solid var(--brand);
+  border-radius:10px;padding:14px 18px;}
+.guide-box h4{margin:0 0 8px;font-size:14px;color:#243040;letter-spacing:.3px;}
+.guide-box ol{margin:0;padding-left:20px;}
+.guide-box li{margin:5px 0;font-size:13.5px;color:#3c4757;}
+.guide-box li b{color:#16202c;}
+
+.code-panel{background:var(--codebg);border:1px solid #dde4ee;border-radius:12px;
+  overflow:hidden;box-shadow:0 4px 18px rgba(22,40,70,.07);}
+.code-head{display:flex;align-items:center;gap:12px;padding:9px 14px;background:#f8fafc;
+  border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.filedot{display:flex;gap:5px;}
+.filedot i{width:10px;height:10px;border-radius:50%;display:block;}
+.code-file{font-size:13px;font-weight:700;color:#33404f;letter-spacing:.3px;}
+.code-file small{font-weight:400;color:var(--muted);margin-left:6px;}
+.codeacts{margin-left:auto;display:flex;gap:8px;}
+.mini-btn{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:7px;
+  padding:5px 12px;font-size:12.5px;transition:.15s;}
+.mini-btn:hover{background:#eef4fb;border-color:#b7c9dd;color:#12212f;}
+.mini-btn.ok{background:#e8f7ee;border-color:#bfe3cd;color:#12693a;}
+.mini-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.legend{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;background:#fcfdff;
+  border-bottom:1px solid #eef2f8;}
+.lg{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#5d6875;
+  background:#fff;border:1px solid #e6ecf4;border-radius:999px;padding:3px 10px;}
+.lg b{font-size:12.5px;}
+
+.code-body{max-height:640px;overflow:auto;padding:8px 0;background:var(--codebg);}
+.code-body::-webkit-scrollbar{width:10px;height:10px;}
+.code-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px;}
+.code-body::-webkit-scrollbar-track{background:#f4f7fb;}
+.cl{display:flex;align-items:flex-start;min-height:22px;border-left:3px solid transparent;}
+.cl:hover{background:#f4f8ff;}
+.cl.clickable{cursor:pointer;}
+.cl.clickable:hover{background:#eaf3ff;}
+.cl.active{background:#e4f0ff!important;border-left-color:#0969da!important;}
+.cl .ic{flex:0 0 30px;text-align:center;font-size:13px;line-height:22px;user-select:none;padding-top:1px;}
+.cl .ln{flex:0 0 40px;text-align:right;padding-right:12px;font-size:12px;color:#a6b3c2;
+  line-height:22px;user-select:none;font-family:Consolas,monospace;}
+.cl.active .ln{color:#0969da;font-weight:700;}
+.cl .src{flex:1 1 auto;white-space:pre;padding-right:20px;font-size:13px;line-height:22px;
+  color:#1f2328;font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;}
+.cl.marked{border-left-width:3px;border-left-style:solid;}
+.cl.marked.k-basic{border-left-color:var(--basic);background:rgba(9,105,218,.035);}
+.cl.marked.k-object{border-left-color:var(--object);background:rgba(130,80,223,.035);}
+.cl.marked.k-flow{border-left-color:var(--flow);background:rgba(26,127,55,.035);}
+.cl.marked.k-request{border-left-color:var(--request);background:rgba(188,76,0,.035);}
+.cl.marked.k-tag{border-left-color:var(--tag);background:rgba(191,57,137,.035);}
+.cl.marked:hover{filter:saturate(1.15);}
+.code-body .cl.marked:hover{background:#eff5ff;}
+.code-body .cl.active .ic{transform:scale(1.25);}
+
+.tok-cmt{color:#6e7781;font-style:italic;}
+.tok-kw{color:#cf222e;font-weight:700;}
+.tok-str{color:#0a3069;}
+.tok-num{color:#0550ae;}
+.tok-tag{color:#116329;font-weight:700;}
+.tok-attr{color:#0550ae;}
+.tok-punc{color:#57606a;}
+.tok-jsp{color:#8250df;font-weight:700;}
+.tok-jspcode{color:#953800;}
+.tok-el{color:#8250df;font-weight:700;background:#faf5ff;border-radius:3px;padding:0 2px;}
+.tok-dir{color:#bf3989;font-weight:700;}
+
+.kp-panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  box-shadow:0 4px 18px rgba(22,40,70,.07);position:sticky;top:118px;max-height:calc(100vh - 140px);
+  display:flex;flex-direction:column;}
+@media (max-width:1180px){.kp-panel{position:static;max-height:none;}}
+.kp-head{display:flex;align-items:center;gap:10px;padding:11px 16px;
+  background:linear-gradient(135deg,#f7f9fc,#eef3fa);border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.kp-head .t{font-size:14px;font-weight:800;color:#1b2430;letter-spacing:.3px;}
+.kp-head .hint{font-size:11.5px;color:var(--muted);}
+.kp-nav{margin-left:auto;display:flex;gap:6px;}
+.kp-nav button{background:#fff;border:1px solid #d6dfea;border-radius:7px;padding:4px 10px;
+  font-size:12px;color:#41505f;}
+.kp-nav button:hover{background:#eef4fb;border-color:#b7c9dd;}
+.kp-nav button:disabled{opacity:.4;cursor:not-allowed;}
+.kp-chips{display:flex;gap:6px;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid #eef2f8;background:#fcfdff;}
+.kchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:999px;
+  background:#f3f6fa;border:1px solid #e3eaf3;color:#4c5765;transition:.15s;}
+.kchip:hover{background:#e9f1fb;border-color:#c3d5e9;}
+.kchip.on{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.kp-body{padding:16px 18px 24px;overflow:auto;flex:1 1 auto;}
+.kp-body::-webkit-scrollbar{width:9px;}
+.kp-body::-webkit-scrollbar-thumb{background:#cfd8e3;border-radius:5px;}
+.kp-empty{text-align:center;color:#8b96a5;padding:50px 20px;font-size:14px;line-height:2;}
+.kp-empty .big{font-size:40px;display:block;margin-bottom:12px;}
+.kp-empty b{color:#2d3a49;}
+.kpcard{border:1px solid #e6ecf4;border-radius:11px;overflow:hidden;margin-bottom:16px;background:#fff;}
+.kpcard-head{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid #eef2f8;}
+.kpcard-head .ic{font-size:16px;}
+.kpcard-head .tt{font-size:15px;font-weight:800;color:#141b23;}
+.kpcard-head .cat{margin-left:auto;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;}
+.kpcard-body{padding:14px 16px 18px;font-size:13.5px;color:#2c3540;}
+.kp-def{background:#f7fafd;border:1px solid #e6eef7;border-left:4px solid #4a90d9;
+  border-radius:8px;padding:11px 14px;margin-bottom:14px;color:#26313d;}
+.kpcard h5{margin:16px 0 8px;font-size:13.5px;color:#16202c;display:flex;align-items:center;gap:7px;
+  padding-bottom:5px;border-bottom:1px dashed #e3eaf3;}
+.kpcard h5:first-of-type{margin-top:6px;}
+.kpcard ul,.kpcard ol{margin:6px 0;padding-left:20px;}
+.kpcard li{margin:4px 0;}
+.kpcard b{color:#101820;}
+table.kpt{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:12.8px;}
+table.kpt th{background:#f4f7fb;color:#2b3542;text-align:left;padding:7px 10px;
+  border:1px solid #e3eaf3;font-weight:700;}
+table.kpt td{padding:7px 10px;border:1px solid #e8eef6;vertical-align:top;}
+table.kpt tr:nth-child(even) td{background:#fbfcfe;}
+table.kpt code{background:#eef4fb;padding:1px 5px;border-radius:4px;font-size:12px;color:#0a3d78;}
+pre.kpcode{background:#f8fafc;border:1px solid #e5ebf3;border-radius:8px;padding:11px 13px;
+  overflow-x:auto;font-size:12.6px;line-height:1.7;color:#1f2937;margin:8px 0 12px;white-space:pre;}
+pre.kpcode .c-str{color:#0a3069;}
+pre.kpcode .c-kw{color:#cf222e;font-weight:700;}
+pre.kpcode .c-cmt{color:#6e7781;font-style:italic;}
+pre.kpcode .c-jsp{color:#8250df;font-weight:700;}
+pre.kpcode .c-el{color:#8250df;font-weight:700;}
+pre.kpcode .c-tag{color:#116329;font-weight:700;}
+.tip{background:#e8f7ee;border:1px solid #bfe3cd;border-left:4px solid #1a7f37;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#124225;}
+.warn{background:#fff8ec;border:1px solid #f6e3c4;border-left:4px solid #bc4c00;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#6b3f00;}
+.std{background:#f4edff;border:1px solid #e0d1ff;border-left:4px solid #8250df;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#4a2e87;}
+.kplink{display:inline-block;margin:3px 4px 3px 0;padding:4px 10px;border-radius:6px;
+  background:#eef4fb;border:1px solid #cfe0f2;color:#0a3d78;font-size:12px;cursor:pointer;}
+.kplink:hover{background:#ddeaf8;}
+
+.info-section{margin-top:18px;}
+.info-section h3{font-size:17px;margin:20px 0 10px;color:#1b2430;padding-left:10px;border-left:4px solid var(--brand);}
+.info-section h4{font-size:14.5px;margin:16px 0 8px;color:#2d3a49;}
+.info-section p{font-size:13.5px;color:#3c4757;margin:8px 0;}
+.info-section ul,.info-section ol{padding-left:22px;}
+.info-section li{margin:4px 0;font-size:13.5px;color:#3c4757;}
+.info-section table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
+.info-section table th,.info-section table td{border:1px solid #e3eaf3;padding:8px 12px;text-align:left;}
+.info-section table th{background:#f4f7fb;color:#2b3542;}
+.pom-box{background:#1b2430;color:#eef1f6;border-radius:10px;padding:16px 18px;font-family:"JetBrains Mono",Consolas,monospace;
+  font-size:12.5px;line-height:1.75;overflow-x:auto;margin:10px 0;}
+.pom-box .p-kw{color:#ff7b72;}.pom-box .p-str{color:#a5d6ff;}.pom-box .p-tag{color:#7ee787;}
+.pom-box .p-cmt{color:#8b949e;font-style:italic;}.pom-box .p-num{color:#79c0ff;}
+.tree{background:#f8fafc;border:1px solid #e5ebf3;border-radius:10px;padding:16px 20px;font-family:"JetBrains Mono",Consolas,monospace;
+  font-size:13px;line-height:1.9;white-space:pre;margin:10px 0;color:#3c4757;}
+.tree .dir{color:#0969da;font-weight:700;}.tree .file{color:#1f2328;}.tree .note{color:#8b96a5;font-style:italic;}
+.browser-mock{background:#fff;border:1px solid #dde4ee;border-radius:10px;overflow:hidden;margin:14px 0;max-width:680px;}
+.browser-bar{background:#f4f7fb;padding:8px 12px;display:flex;gap:6px;align-items:center;border-bottom:1px solid #e5ebf3;}
+.browser-bar i{width:10px;height:10px;border-radius:50%;}
+.browser-url{flex:1;background:#fff;border:1px solid #d6dfea;border-radius:6px;padding:4px 10px;font-size:12px;color:#5b6673;font-family:Consolas,monospace;}
+.browser-body{padding:24px;background:#fff;min-height:160px;}
+.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0;}
+.kpi{flex:1 1 180px;background:linear-gradient(135deg,#fff8ec,#fef3e2);border:1px solid #f6e3c4;border-radius:10px;padding:14px 16px;}
+.kpi .v{font-size:22px;font-weight:800;color:#cf5320;}
+.kpi .l{font-size:12px;color:#8a5a00;margin-top:4px;}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px;}
+.kitem{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:.18s;}
+.kitem:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(23,40,70,.1);border-color:#b7c9dd;}
+.kitem .ic{font-size:22px;flex:0 0 30px;}
+.kitem .kt{font-size:13.5px;font-weight:700;color:#1b2430;}
+.kitem .kc{font-size:11.5px;color:#7b8795;margin-top:3px;}
+
+.navrow{display:flex;justify-content:space-between;margin-top:22px;gap:10px;flex-wrap:wrap;}
+.navrow button{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:8px;padding:8px 18px;font-size:13.5px;}
+.navrow button.primary{background:linear-gradient(135deg,#ff8a4c,#e8632a);color:#fff;border-color:transparent;font-weight:700;}
+.navrow button:hover{filter:brightness(1.05);}
+.navrow button:disabled{opacity:.4;cursor:not-allowed;}
+
+.toast{position:fixed;right:20px;bottom:24px;z-index:999;padding:12px 20px;border-radius:10px;
+  font-size:13.5px;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.2);opacity:0;transform:translateY(20px);
+  transition:.25s;pointer-events:none;max-width:360px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#1a7f37;}
+.toast.err{background:#cf222e;}
+.toast.warn{background:#bc4c00;}
+</style>
+</head>
+<body class="student-mode">
+
+<!-- ============ 顶栏 ============ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">JSP</div>
+    <div>
+      <div class="b1">JSP 项目式教学交互课件</div>
+      <div class="b2">第一次课 · JSP基础语法 · 班级考勤展示页</div>
+    </div>
+  </div>
+  <div class="tmode" id="tmode">🛡️ 教师模式：关闭</div>
+</div>
+
+<!-- ============ 步骤轨道 ============ -->
+<div class="rail" id="rail"></div>
+
+<!-- ============ 主舞台 ============ -->
+<div class="wrap" id="stage"></div>
+
+<!-- ============ Toast ============ -->
+<div class="toast" id="toast"></div>
+
+<!-- ============ 源码容器（script text/plain 避免嵌套解析问题） ============ -->
+<script type="text/plain" id="src-c1-header">
+<%--
+  对应知识点模块：JSP注释、page指令全属性、静态包含基础
+  教师备注：这是第一个敲的文件，先给学生演示公共组件复用的意义，不用每个页面重复写导航
+--%>
+<%--
+  知识点：JSP原生注释，格式<%-- 注释内容 --%>
+  仅在JSP源码中可见，翻译Servlet时会被直接丢弃，不会发送到浏览器
+--%>
+<%@ page 
+    contentType="text/html;charset=UTF-8" 
+    language="java" 
+    pageEncoding="UTF-8"
+    session="true"
+    isELIgnored="false"
+%>
+<%--
+  知识点：page指令，定义当前JSP页面的全局配置
+  常用属性：language/contentType/pageEncoding/import/session/errorPage/isErrorPage/isELIgnored
+--%>
+
+<div style="background: #2c3e50; color: white; padding: 15px; text-align: center;">
+    <h2 style="margin:0;">2024级软件技术1班 JSP课程考勤系统</h2>
+    <p style="margin:5px 0 0 0;font-size:14px;">JSP基础语法实战项目（Jakarta EE环境）</p>
+</div>
+</script>
+
+<script type="text/plain" id="src-c1-footer">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<div style="background: #ecf0f1; padding: 10px; text-align: center; margin-top: 30px;">
+    <p style="margin:0;">Java Web课程教学演示 © 2025 | 运行环境：Tomcat 10.1.59 + Jakarta EE 10</p>
+</div>
+</script>
+
+<script type="text/plain" id="src-c1-index">
+<%@ page import="java.util.Date,java.text.SimpleDateFormat" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%-- page指令import属性：导入Java类，多个类用逗号分隔，是唯一可以重复出现的page属性 --%>
+
+
+    课程考勤首页</title>
+    
+        .container { width: 800px; margin: 20px auto; }
+        .stat-card { border: 1px solid #eee; padding: 20px; margin: 10px 0; border-radius: 8px; }
+    </style>
+</head>
+
+<%-- jsp:include动态包含：运行时合并执行结果，页面变量互不影响 --%>
+<jsp:include page="header.jsp"/>
+
+<div class="container">
+    <%-- 三种JSP脚本元素：声明脚本(成员)、表达式脚本(输出)、代码脚本片段(局部逻辑) --%>
+    <%!
+        // 声明脚本：定义Servlet类的成员变量/方法，所有用户共享，有线程安全问题
+        int totalStudent = 45;
+        int attendCount = 42;
+        int lateCount = 2;
+        int absentCount = 1;
+
+        public String getAttendRate(){
+            double rate = attendCount * 100.0 / totalStudent;
+            return String.format("%.1f", rate) + "%";
+        }
+    %>
+
+    <div class="stat-card">
+        今日课程：JSP基础语法</h3>
+        
+            当前页面生成时间：
+            <%-- 表达式脚本：输出数据到页面，结尾绝对不能加分号！ --%>
+            <%= new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss").format(new Date()) %>
+        </p>
+    </div>
+
+    <div class="stat-card">
+        今日考勤统计</h3>
+        <%-- 代码脚本片段：写在_jspService方法内，局部变量，线程安全 --%>
+        <%
+            String teacherName = "张老师";
+            String courseWeek = "第6教学周";
+        %>
+        授课教师：<%= teacherName %>  |  教学周：<%= courseWeek %></p>
+        
+            班级总人数：<%= totalStudent %>人</li>
+            出勤人数：<span style="color: green"><%= attendCount %>人</span></li>
+            迟到人数：<span style="color: orange"><%= lateCount %>人</span></li>
+            缺勤人数：<span style="color: red"><%= absentCount %>人</span></li>
+            今日出勤率：<%= getAttendRate() %></b></li>
+        </ul>
+
+        <button onclick="location.href='detail.jsp?courseId=jsp001'">查看详细考勤名单</button>
+    </div>
+
+    <%@ include file="footer.jsp" %>
+</div>
+</body>
+</html>
+</script>
+
+<script type="text/plain" id="src-c1-detail">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
+
+    考勤详情</title>
+    .container{width:800px;margin:20px auto;} table{border-collapse: collapse;}</style>
+</head>
+
+<jsp:include page="header.jsp"/>
+<div class="container">
+    今日考勤详细名单</h3>
+    <table border="1" cellpadding="8" cellspacing="0" width="100%">
+        <tr style="background:#f5f5f5;">学号</th>姓名</th>考勤状态</th>备注</th></tr>
+        <%-- 代码脚本片段与HTML穿插：Java循环控制HTML结构生成，实现动态表格 --%>
+        <%
+            String[] stuList = {"张三","李四","王五","赵六","孙七"};
+            String[] status = {"出勤","迟到","缺勤","出勤","出勤"};
+            String[] remark = {"-","迟到10分钟","未请假","-","-"};
+            for(int i=0;i<stuList.length;i++){
+        %>
+            
+                202400<%= i+1 %></td>
+                <%= stuList[i] %></td>
+                <%= status[i] %></td>
+                <%= remark[i] %></td>
+            </tr>
+        <% } %>
+    </table>
+    
+    <button onclick="location.href='index.jsp'">返回首页</button>
+
+    <%-- JSP动作标签：jsp:forward服务器内部转发，配合jsp:param传参，地址栏不变 --%>
+    <%--
+    <jsp:forward page="index.jsp">
+        <jsp:param name="fromPage" value="detail"/>
+        <jsp:param name="courseId" value="jsp001"/>
+    </jsp:forward>
+    --%>
+</div>
+<%@ include file="footer.jsp" %>
+</body>
+</html>
+</script>
+
+<!-- ============ 知识点模板 ============ -->
+<script type="text/html" id="kp-jsp-comment">
+<div class="kp-def">JSP 提供<b>两类注释</b>：JSP 原生注释只在源码中可见、不发送到浏览器；HTML 注释会作为响应内容发送给客户端。</div>
+
+<h5>📌 两类注释语法与差异</h5>
+<table class="kpt">
+<tr><th>类型</th><th>语法</th><th>客户端是否可见</th><th>翻译阶段</th><th>典型用途</th></tr>
+<tr><td><b>JSP 原生注释</b></td><td><code>&lt;%-- 注释 --%&gt;</code></td><td>❌ 不可见</td><td>编译期直接丢弃</td><td>开发者备注、逻辑说明、临时屏蔽代码</td></tr>
+<tr><td><b>HTML 注释</b></td><td><code>&lt;!-- 注释 --&gt;</code></td><td>✅ 右键查看源码可见</td><td>原样作为响应输出</td><td>给前端/设计师的页面说明</td></tr>
+<tr><td><b>Java 单行注释</b></td><td><code>// 注释</code></td><td>❌ 在脚本内可见于 Java 源文件，不发送到浏览器</td><td>Java 编译器忽略</td><td>脚本片段内的代码注释</td></tr>
+<tr><td><b>Java 多行注释</b></td><td><code>/* 注释 */</code></td><td>❌ 同上</td><td>Java 编译器忽略</td><td>大段说明</td></tr>
+</table>
+
+<h5>💻 代码示例</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 这条注释学生看不到 --%&gt;</span>
+<span class="c-tag">&lt;!--</span> 这条注释会出现在浏览器源码里 <span class="c-tag">--&gt;</span>
+<span class="c-jsp">&lt;%</span>
+  <span class="c-cmt">// 这是脚本内的单行注释</span>
+  <span class="c-cmt">/* 多行注释
+     也不发给浏览器 */</span>
+<span class="c-jsp">%&gt;</span></pre>
+
+<div class="tip"><b>💡 教师演示建议：</b>启动 Tomcat 访问页面后，让学生右键"查看网页源代码"对比两种注释——JSP 原生注释会完全消失，HTML 注释还在。这是最直观的证明。</div>
+
+<div class="warn"><b>⚠️ 易错点：</b>新手常见错误是在 JSP 里用 <code>//</code> 注释掉 <code>%&gt;</code> 结尾符——<code>// %&gt;</code> 中 <code>%&gt;</code> 仍会被 JSP 解析器识别为脚本结束符，导致后续代码被当作 HTML 输出。要屏蔽 JSP 标记，必须用 <code>&lt;%-- ... --%&gt;</code>。</div>
+
+<div class="std"><b>🏭 行业标准：</b>企业开发规范要求：<b>后端逻辑说明、SQL 注释、敏感信息一律使用 JSP 原生注释</b>，绝不能用 HTML 注释暴露实现细节；面向前端布局的注释可使用 HTML 注释，但上线前建议通过构建工具清理。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="page-directive">page 指令</span>
+<span class="kplink" data-jump="three-scripts">三种脚本元素</span>
+</script>
+
+<script type="text/html" id="kp-page-directive">
+<div class="kp-def"><b>page 指令</b>用于定义当前 JSP 页面的<b>全局配置属性</b>，一个页面可以写多个 page 指令，但除 <code>import</code> 外其他属性只能出现一次。它会被翻译到 Servlet 类的头部。</div>
+
+<h5>📌 语法格式</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;%@</span> <span class="c-kw">page</span> 属性1=<span class="c-str">"值1"</span> 属性2=<span class="c-str">"值2"</span> ... <span class="c-jsp">%&gt;</span></pre>
+
+<h5>📋 8 个常用属性完整清单</h5>
+<table class="kpt">
+<tr><th>属性</th><th>作用</th><th>默认值</th><th>注意事项</th></tr>
+<tr><td><code>language</code></td><td>指定脚本语言</td><td>java</td><td>目前 JSP 仅支持 Java，固定写 java</td></tr>
+<tr><td><code>contentType</code></td><td>设置响应 MIME 类型和字符编码</td><td>text/html;charset=ISO-8859-1</td><td><b>必须设置 UTF-8</b>，否则中文乱码</td></tr>
+<tr><td><code>pageEncoding</code></td><td>JSP 源文件的编码</td><td>ISO-8859-1</td><td>与 contentType 的 charset 一致时可省略，必须放文件最开头</td></tr>
+<tr><td><code>import</code></td><td>导入 Java 类</td><td>无</td><td><b>唯一可以重复出现的属性</b>，多类用逗号分隔</td></tr>
+<tr><td><code>session</code></td><td>是否自动创建 session 对象</td><td>true</td><td>设为 false 则页面不能直接用 session 内置对象</td></tr>
+<tr><td><code>errorPage</code></td><td>发生异常时自动跳转的页面</td><td>无</td><td>路径以 / 开头代表应用根</td></tr>
+<tr><td><code>isErrorPage</code></td><td>当前页是否为错误处理页</td><td>false</td><td>设为 true 才能使用 exception 内置对象</td></tr>
+<tr><td><code>isELIgnored</code></td><td>是否忽略 EL 表达式</td><td>false（Servlet 2.4+）</td><td>设为 true 则 ${} 被当普通字符串输出</td></tr>
+</table>
+
+<h5>💻 完整写法示例</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;%@</span> <span class="c-kw">page</span> <span class="c-attr">contentType</span>=<span class="c-str">"text/html;charset=UTF-8"</span>
+         <span class="c-attr">language</span>=<span class="c-str">"java"</span>
+         <span class="c-attr">pageEncoding</span>=<span class="c-str">"UTF-8"</span>
+         <span class="c-attr">session</span>=<span class="c-str">"true"</span>
+         <span class="c-attr">isELIgnored</span>=<span class="c-str">"false"</span>
+         <span class="c-attr">errorPage</span>=<span class="c-str">"error.jsp"</span> <span class="c-jsp">%&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 高频错误：</b><ol><li><b>中文乱码</b>：忘记设置 contentType 或 pageEncoding，默认 ISO-8859-1 不支持中文——必须放在<b>文件最开头第一行</b>，不能有任何输出（包括空行）在前面；</li><li><b>属性重复</b>：contentType 写两次会编译报错；</li><li><b>errorPage 没生效</b>：若页面已经通过 response.getWriter() 输出内容再抛异常，无法转发。</li></ol></div>
+
+<div class="std"><b>🏭 企业实践：</b>企业项目中<b>不会在每个 JSP 页面单独写 contentType 和编码</b>，而是通过一个 <b>CharacterEncodingFilter</b> 统一拦截所有请求与响应设置 UTF-8；errorPage 也通过 web.xml 的 <code>&lt;error-page&gt;</code> 统一配置 404/500 页面，避免每页重复配置。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="page-import">page 指令 import 属性</span>
+<span class="kplink" data-jump="jsp-comment">JSP 注释</span>
+</script>
+
+<script type="text/html" id="kp-page-import">
+<div class="kp-def"><code>import</code> 是 page 指令中<b>唯一可以重复出现</b>的属性，用来在 JSP 脚本中导入 Java 类，作用与 Java 源文件顶部的 <code>import</code> 语句完全一致。</div>
+
+<h5>📌 三种写法</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 方式1：多个类写在同一个 import 里，逗号分隔 --%&gt;</span>
+<span class="c-jsp">&lt;%@</span> <span class="c-kw">page</span> <span class="c-attr">import</span>=<span class="c-str">"java.util.Date,java.text.SimpleDateFormat"</span> <span class="c-jsp">%&gt;</span>
+
+<span class="c-cmt">&lt;%-- 方式2：分开写多个 page 指令 --%&gt;</span>
+<span class="c-jsp">&lt;%@</span> <span class="c-kw">page</span> <span class="c-attr">import</span>=<span class="c-str">"java.util.List"</span> <span class="c-jsp">%&gt;</span>
+<span class="c-jsp">&lt;%@</span> <span class="c-kw">page</span> <span class="c-attr">import</span>=<span class="c-str">"java.util.ArrayList"</span> <span class="c-jsp">%&gt;</span>
+
+<span class="c-cmt">&lt;%-- 方式3：import 通配符（不推荐） --%&gt;</span>
+<span class="c-jsp">&lt;%@</span> <span class="c-kw">page</span> <span class="c-attr">import</span>=<span class="c-str">"java.util.*"</span> <span class="c-jsp">%&gt;</span></pre>
+
+<h5>📋 默认自动导入的包（无需写 import）</h5>
+<table class="kpt">
+<tr><th>包</th><th>说明</th></tr>
+<tr><td><code>java.lang.*</code></td><td>String、Integer、Object 等基础类</td></tr>
+<tr><td><code>jakarta.servlet.*</code></td><td>Servlet、ServletConfig 等（Jakarta EE）</td></tr>
+<tr><td><code>jakarta.servlet.jsp.*</code></td><td>JspWriter、PageContext 等</td></tr>
+<tr><td><code>jakarta.servlet.http.*</code></td><td>HttpServletRequest、HttpSession 等</td></tr>
+</table>
+
+<div class="tip"><b>💡 提示：</b>Tomcat 10+ 使用 <b>jakarta.servlet.*</b>（不再是 javax.servlet.*），所以如果你的项目是 Tomcat 10 + Jakarta EE 10，导入 Servlet 相关类时包名必须用 jakarta 开头，否则会报 ClassNotFoundException。</div>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li>导入未使用的类不会报错，但会让页面变得臃肿；</li><li>通配符 <code>java.util.*</code> 不会导入子包 <code>java.util.jar.*</code>，Java 没有"递归导入"；</li><li>导入了不存在的类会报编译错误 500。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b>MVC 架构下 JSP 页面<b>不应该写复杂的 Java 代码</b>，也就几乎不需要 import 业务类；数据通过 EL 表达式 + JSTL 直接渲染，页面只需要导入 java.util 这类工具类即可，甚至完全不需要 import。这是区分"老旧JSP"和"现代JSP用法"的标志。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="page-directive">page 指令全属性</span>
+<span class="kplink" data-jump="three-scripts">三种脚本元素</span>
+</script>
+
+<script type="text/html" id="kp-three-scripts">
+<div class="kp-def">JSP 提供<b>三种脚本元素</b>用来在页面中嵌入 Java 代码，它们被翻译到 Servlet 类的<b>不同位置</b>，作用与生命周期完全不同——这是 JSP 基础语法的核心必考点。</div>
+
+<h5>📋 三种脚本元素完整对比</h5>
+<table class="kpt">
+<tr><th>类型</th><th>语法</th><th>翻译位置</th><th>作用</th><th>线程安全</th></tr>
+<tr><td><b>声明脚本</b></td><td><code>&lt;%! 代码 %&gt;</code></td><td>Servlet 类体中（成员位置）</td><td>定义成员变量、成员方法、静态代码块</td><td>❌ 所有用户共享，存在线程安全问题</td></tr>
+<tr><td><b>表达式脚本</b></td><td><code>&lt;%= 表达式 %&gt;</code></td><td>_jspService() 方法的 out.print() 参数里</td><td>把变量/表达式结果输出到页面</td><td>—</td></tr>
+<tr><td><b>代码脚本片段</b></td><td><code>&lt;% 代码 %&gt;</code></td><td>_jspService() 方法体内部</td><td>写任意 Java 逻辑（if/for/局部变量）</td><td>✅ 局部变量，每次请求独立</td></tr>
+</table>
+
+<h5>💻 典型用法示例</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 1. 声明脚本：定义成员方法（只能写在成员位置） --%&gt;</span>
+<span class="c-jsp">&lt;%!</span>
+  <span class="c-kw">int</span> totalStudent = <span class="c-num">45</span>;   <span class="c-cmt">// 成员变量，多用户共享！</span>
+  <span class="c-kw">public</span> String <span class="c-tag">getRate</span>(){
+    <span class="c-kw">return</span> String.format(<span class="c-str">"%.1f%%"</span>, attendCount*<span class="c-num">100.0</span>/totalStudent);
+  }
+<span class="c-jsp">%&gt;</span>
+
+<span class="c-cmt">&lt;%-- 2. 代码脚本片段：写局部逻辑 --%&gt;</span>
+<span class="c-jsp">&lt;%</span>
+  String teacher = <span class="c-str">"张老师"</span>;   <span class="c-cmt">// 局部变量，线程安全</span>
+  <span class="c-kw">for</span>(<span class="c-kw">int</span> i=<span class="c-num">0</span>;i&lt;<span class="c-num">3</span>;i++){
+<span class="c-jsp">%&gt;</span>
+  &lt;li&gt;第&lt;%= i+1 %&gt;条记录&lt;/li&gt;   <span class="c-cmt">&lt;%-- 3. 表达式脚本：输出值，结尾不能有分号！ --%&gt;</span>
+<span class="c-jsp">&lt;%</span> } <span class="c-jsp">%&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 三个高频错误必须强调：</b><ol>
+<li><b>表达式脚本结尾绝对不能加分号</b>——因为它被翻译成 <code>out.print(xxx)</code> 的参数部分，写成 <code>&lt;%= name; %&gt;</code> 会变成 <code>out.print(name;);</code> 直接编译报错，这是新手最常犯的错误；</li>
+<li><b>声明脚本里定义的变量是成员变量</b>——多个并发用户访问会共享同一个值，会产生"串号"问题，<b>永远不要用声明脚本存用户私有数据</b>；</li>
+<li><b>声明脚本里不能使用内置对象</b>——因为内置对象是 _jspService 方法的局部变量，成员位置无法访问。</li>
+</ol></div>
+
+<div class="tip"><b>💡 记忆口诀：</b>
+<ul>
+<li>感叹号<mark>！</mark> = 成员位置，"大吃一惊，所有人都看到了"（共享）；</li>
+<li>等号<mark>=</mark> = 输出，"等于号打印出来"；</li>
+<li>只有 <%%> = 普通代码，和你在 main 方法里写一样。</li>
+</ul>
+</div>
+
+<div class="std"><b>🏭 行业标准：</b>现代企业开发中<b>禁止在 JSP 页面中使用声明脚本和代码脚本片段</b>，页面中只允许 EL 表达式 + JSTL 标签。原因是脚本片段让页面充斥 Java 代码，难以维护，也不利于前后端分离。本次课之所以学三种脚本，是为了理解 JSP 的底层原理，后续第二次课会用 EL+JSTL 重构。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="page-directive">page 指令</span>
+<span class="kplink" data-jump="html-loop">脚本与 HTML 穿插</span>
+</script>
+
+<script type="text/html" id="kp-dynamic-include">
+<div class="kp-def"><b>&lt;jsp:include&gt;</b> 是 JSP 的<b>动态包含动作标签</b>，在<b>运行期</b>调用被包含页面的 _jspService 方法，将执行结果合并到当前页面输出，实现组件复用。</div>
+
+<h5>📌 语法</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;jsp:include</span> <span class="c-attr">page</span>=<span class="c-str">"header.jsp"</span> <span class="c-attr">flush</span>=<span class="c-str">"true"</span><span class="c-jsp">/&gt;</span></pre>
+
+<h5>📋 动态包含 vs 静态包含 6 维度对比（必考点）</h5>
+<table class="kpt">
+<tr><th>对比维度</th><th>静态包含 &lt;%@ include %&gt;</th><th>动态包含 &lt;jsp:include&gt;</th></tr>
+<tr><td>语法类型</td><td>JSP 指令</td><td>JSP 动作标签</td></tr>
+<tr><td>合并时机</td><td><b>编译期</b>合并源码</td><td><b>运行期</b>合并执行结果</td></tr>
+<tr><td>最终 Servlet 数</td><td>合并成 1 个 Servlet</td><td>各自独立的 Servlet（2个）</td></tr>
+<tr><td>变量冲突</td><td>❌ 两个页面不能有同名变量（会报重复定义）</td><td>✅ 两个页面变量完全隔离，互不影响</td></tr>
+<tr><td>传递参数</td><td>不能传参</td><td>可用 &lt;jsp:param&gt; 传参</td></tr>
+<tr><td>适用场景</td><td>页头、页脚等静态内容，效率高</td><td>经常变化的动态内容（如推荐列表、广告位）</td></tr>
+</table>
+
+<h5>💻 对比示例</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 静态包含：编译时把 header.jsp 的源码直接复制进来 --%&gt;</span>
+<span class="c-jsp">&lt;%@</span> <span class="c-kw">include</span> <span class="c-attr">file</span>=<span class="c-str">"footer.jsp"</span> <span class="c-jsp">%&gt;</span>
+
+<span class="c-cmt">&lt;%-- 动态包含：运行时调用 header.jsp，把结果插入此处 --%&gt;</span>
+<span class="c-jsp">&lt;jsp:include</span> <span class="c-attr">page</span>=<span class="c-str">"header.jsp"</span><span class="c-jsp">/&gt;</span></pre>
+
+<div class="tip"><b>💡 教师演示建议：</b>在 header.jsp 里定义一个 <code>&lt;%! int x = 1; %&gt;</code>，然后在 index.jsp 里也定义一个 <code>&lt;%! int x = 2; %&gt;</code>，用静态包含会报重复定义错误，换成动态包含就能正常运行——这是最直观的证明。</div>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li>静态包含用 <code>file</code> 属性，动态包含用 <code>page</code> 属性，不要搞混；</li><li>动态包含的路径如果以 / 开头代表应用根，不写 / 代表当前页面同级目录；</li><li><code>flush="true"</code> 表示在包含前先把当前已有输出刷新到浏览器。</li></ol></div>
+
+<div class="std"><b>🏭 行业实践：</b>现代企业项目更常用 <b>SiteMesh、Tiles、Thymeleaf 模板</b> 等布局框架实现页头页脚复用，原生 JSP include 只在简单项目中使用。Spring Boot 项目中通常使用 Thymeleaf 的 <code>th:replace</code> 代替 JSP include。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="action-tags">JSP 动作标签</span>
+<span class="kplink" data-jump="three-scripts">三种脚本元素</span>
+</script>
+
+<script type="text/html" id="kp-html-loop">
+<div class="kp-def">JSP 代码脚本片段可以与 HTML 代码<b>任意穿插</b>——在 <code>&lt;% %&gt;</code> 之外写 HTML，里面写 Java 控制逻辑（for/if），就能实现"Java 逻辑控制 HTML 结构生成"，这是 JSP 实现动态页面的核心手法。</div>
+
+<h5>📌 原理解释</h5>
+<p>Tomcat 翻译 JSP 时，会把脚本片段外的 HTML 翻译成 <code>out.write("HTML代码")</code>，脚本片段内的 Java 代码原样放到 _jspService 方法中。所以穿插写法本质是在一个方法里交替调用 out.write 输出 HTML 与执行 Java 逻辑。</p>
+
+<h5>💻 三种常用穿插模式</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 模式1：for 循环生成列表 --%&gt;</span>
+<span class="c-jsp">&lt;%</span>
+  String[] names = {<span class="c-str">"张三"</span>,<span class="c-str">"李四"</span>,<span class="c-str">"王五"</span>};
+  <span class="c-kw">for</span>(<span class="c-kw">int</span> i=<span class="c-num">0</span>;i&lt;names.length;i++){
+<span class="c-jsp">%&gt;</span>
+  &lt;tr&gt;&lt;td&gt;&lt;%= i+1 %&gt;&lt;/td&gt;&lt;td&gt;&lt;%= names[i] %&gt;&lt;/td&gt;&lt;/tr&gt;
+<span class="c-jsp">&lt;%</span> } <span class="c-jsp">%&gt;</span>
+
+<span class="c-cmt">&lt;%-- 模式2：if 判断选择性输出 --%&gt;</span>
+<span class="c-jsp">&lt;%</span> <span class="c-kw">if</span>(score &gt;= <span class="c-num">60</span>){ <span class="c-jsp">%&gt;</span>
+  &lt;span style="color:green"&gt;及格&lt;/span&gt;
+<span class="c-jsp">&lt;%</span> } <span class="c-kw">else</span>{ <span class="c-jsp">%&gt;</span>
+  &lt;span style="color:red"&gt;不及格&lt;/span&gt;
+<span class="c-jsp">&lt;%</span> } <span class="c-jsp">%&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><b>大括号必须配对</b>——很多新手会忘记 for/if 的结束大括号 <code>}</code>，因为大括号"散落"在多个脚本片段里，建议在结束 <code>}</code> 后面加 HTML 注释 <code>&lt;!-- end for --&gt;</code> 方便排查；</li><li>不要在脚本片段里用 out.println 输出大段 HTML——可读性差、容易出错，直接在 <code>%&gt;</code> 后写 HTML 即可；</li><li>脚本内声明的变量在后续脚本片段里仍然可用（因为它们都在同一个方法里）。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b>企业开发中<b>不允许用脚本片段拼接 HTML</b>，这种写法可读性差、难以维护、容易产生 XSS 漏洞。标准做法是用 <b>JSTL 的 &lt;c:forEach&gt; 和 &lt;c:if&gt;</b> 标签替代（第二次课会讲），完全在标签层面实现循环与判断，不出现 Java 代码。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="three-scripts">三种脚本元素</span>
+<span class="kplink" data-jump="jstl-foreach">（第二次课）c:forEach 标签</span>
+</script>
+
+<script type="text/html" id="kp-action-tags">
+<div class="kp-def">JSP <b>动作标签</b>（Action Tags）是 JSP 内置的一组以 <code>jsp:</code> 为前缀的 XML 风格标签，用于在<b>运行期</b>执行某些动作：包含页面、跳转页面、传递参数、操作 JavaBean 等。它们在请求处理阶段执行，不同于指令（编译期执行）。</div>
+
+<h5>📋 常用 3 个动作标签</h5>
+<table class="kpt">
+<tr><th>标签</th><th>作用</th><th>关键属性</th><th>典型用法</th></tr>
+<tr><td><code>&lt;jsp:include&gt;</code></td><td>动态包含其他页面</td><td>page（必选）、flush</td><td>嵌入页头、推荐组件</td></tr>
+<tr><td><code>&lt;jsp:forward&gt;</code></td><td>服务器内部转发</td><td>page（必选）</td><td>登录校验失败跳转到登录页</td></tr>
+<tr><td><code>&lt;jsp:param&gt;</code></td><td>传递参数（配合前两个使用）</td><td>name、value</td><td>向被包含/转发页传值</td></tr>
+</table>
+
+<p>还有 <code>&lt;jsp:useBean&gt;</code> / <code>&lt;jsp:setProperty&gt;</code> / <code>&lt;jsp:getProperty&gt;</code> 用于操作 JavaBean，实际开发中已被 MVC 框架替代，了解即可。</p>
+
+<h5>💻 jsp:forward + jsp:param 传参示例</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;jsp:forward</span> <span class="c-attr">page</span>=<span class="c-str">"index.jsp"</span><span class="c-jsp">&gt;</span>
+  <span class="c-jsp">&lt;jsp:param</span> <span class="c-attr">name</span>=<span class="c-str">"fromPage"</span> <span class="c-attr">value</span>=<span class="c-str">"detail"</span><span class="c-jsp">/&gt;</span>
+  <span class="c-jsp">&lt;jsp:param</span> <span class="c-attr">name</span>=<span class="c-str">"courseId"</span> <span class="c-attr">value</span>=<span class="c-str">"jsp001"</span><span class="c-jsp">/&gt;</span>
+<span class="c-jsp">&lt;/jsp:forward&gt;</span></pre>
+<p>目标页面通过 <code>request.getParameter("courseId")</code> 即可获取到 "jsp001"。</p>
+
+<div class="tip"><b>💡 jsp:forward 特点：</b>
+<ul>
+<li>是<b>服务器内部跳转</b>，浏览器地址栏<b>不会变化</b>；</li>
+<li><b>转发前后共享同一个 request 对象</b>，request 域中数据不丢失；</li>
+<li>只能跳转到<b>当前服务器内部资源</b>，不能跳到外部网站；</li>
+<li>forward 之后的代码<b>不再执行</b>（所以 forward 后应该加 return）。</li>
+</ul>
+</div>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><code>&lt;jsp:forward&gt;</code> 之前如果已经向 out 写入了内容且没有 flush，会抛出 IllegalStateException；</li><li><code>&lt;jsp:param&gt;</code> 的 value 若含中文，需要 request.setCharacterEncoding 处理；</li><li>注意区分：include/forward 是动作标签，<code>&lt;%@ include %&gt;</code> 是指令。</li></ol></div>
+
+<div class="std"><b>🏭 企业实践：</b>实际项目中页面跳转<b>通常在 Servlet 控制器里用 request.getRequestDispatcher().forward() 完成</b>，不会在 JSP 页面里写 jsp:forward——因为 JSP 作为视图层不应该承担页面跳转逻辑。参数传递也是在 Controller 里 setAttribute，不通过 jsp:param。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="dynamic-include">jsp:include 动态包含</span>
+<span class="kplink" data-jump="forward-vs-redirect">（第二次课）转发 vs 重定向</span>
+</script>
+
+<script>
+/* ============================================================
+   配置：教师模式开关（源码级设置，无 UI 开关）
+   教师使用时改为 true 即可复制代码，默认 false 为学生模式
+   ============================================================ */
+const TEACHER_MODE = false;
+
+/* ============================================================
+   课程配置（第一次课）
+   ============================================================ */
+const COURSE = {
+  title: '第一次课 · JSP基础语法实战',
+  project: '班级课程考勤展示页',
+  dur: '4课时（前2课时教师带敲，后2课时学生实操）',
+  categories: {
+    basic:   { icon:'📘', name:'基础语法', color:'#0969da', bg:'#eef4ff' },
+    object:  { icon:'📦', name:'内置对象', color:'#8250df', bg:'#f4edff' },
+    flow:    { icon:'🔄', name:'流程跳转', color:'#1a7f37', bg:'#e8f7ee' },
+    request: { icon:'📡', name:'请求响应', color:'#bc4c00', bg:'#fff3e8' },
+    tag:     { icon:'🏷️', name:'标签表达式', color:'#bf3989', bg:'#fcecf6' }
+  },
+  KPMETA: {
+    'jsp-comment':       { title:'JSP两类注释完整区别', cat:'basic' },
+    'page-directive':    { title:'page指令全属性详解', cat:'basic' },
+    'page-import':       { title:'page指令import属性', cat:'basic' },
+    'three-scripts':     { title:'JSP三种脚本元素完整对比', cat:'basic' },
+    'dynamic-include':   { title:'jsp:include 动态包含', cat:'basic' },
+    'html-loop':         { title:'脚本与HTML穿插实现动态表格', cat:'basic' },
+    'action-tags':       { title:'JSP常用动作标签清单', cat:'basic' }
+  },
+  steps: [
+    { type:'info', tpl:'tpl-goal', kind:'任务目标', title:'任务目标与最终效果',
+      sub:'第一次课完成「班级课程考勤展示页」，掌握 JSP 基础语法' },
+    { type:'info', tpl:'tpl-env', kind:'环境准备', title:'环境与依赖准备',
+      sub:'IDEA 2024.1 + Tomcat 10.1.59 + Maven + Jakarta EE 10' },
+    { type:'info', tpl:'tpl-struct', kind:'项目结构', title:'项目结构',
+      sub:'Maven 标准 Web 目录结构与文件规划' },
+    { type:'code', src:'src-c1-header', file:'header.jsp', fileNote:'公共页头组件',
+      kind:'组件编写', title:'编写 header.jsp 公共页头',
+      sub:'学习 page 指令与 JSP 注释，创建可复用的公共页头组件',
+      dur:'约15分钟',
+      kps:['jsp-comment','page-directive'],
+      marks:[
+        { from:'知识点：JSP原生注释', to:'不会发送到浏览器', k:'jsp-comment' },
+        { from:'知识点：page指令', to:'常用属性：language', k:'page-directive' }
+      ],
+      guide:[
+        '在 webapp 目录下<b>新建 header.jsp</b>文件（注意大小写）',
+        '先写 JSP 原生注释说明本文件的作用，理解它与 HTML 注释的区别',
+        '编写 page 指令，设置 contentType、language、pageEncoding、session、isELIgnored 五个属性',
+        '编写一个带样式的公共页头 div，显示班级名称和项目名称'
+      ]},
+    { type:'code', src:'src-c1-footer', file:'footer.jsp', fileNote:'公共页脚组件',
+      kind:'组件编写', title:'编写 footer.jsp 公共页脚',
+      sub:'快速复用 page 指令知识，编写简洁的公共页脚',
+      dur:'约5分钟',
+      kps:[],  // 去重：page指令已在header讲过，此处不再讲
+      marks:[],
+      guide:[
+        '<b>新建 footer.jsp</b>，只写最简的 page 指令（知识点已在上一个文件讲过，不再重复讲解）',
+        '编写一个灰色背景的页脚 div，显示版权信息和运行环境（Tomcat 10.1.59 + Jakarta EE 10）',
+        '对比 header 和 footer，体会<b>公共组件复用</b>的好处'
+      ]},
+    { type:'code', src:'src-c1-index', file:'index.jsp', fileNote:'考勤首页 · 核心页面',
+      kind:'核心页面', title:'编写 index.jsp 考勤首页',
+      sub:'掌握三种 JSP 脚本元素与动态包含，实现考勤数据动态展示',
+      dur:'约30分钟',
+      kps:['page-import','three-scripts','dynamic-include'],
+      marks:[
+        { from:'<%@ page import=', k:'page-import' },
+        { from:'三种JSP脚本元素', to:'// 代码脚本片段', plus:12, k:'three-scripts' },
+        { from:'jsp:include动态包含', k:'dynamic-include' }
+      ],
+      guide:[
+        '<b>新建 index.jsp</b>，写 import 导入 java.util.Date 和 SimpleDateFormat',
+        '用 <b>&lt;jsp:include&gt;</b> 动态引入 header.jsp 作为页头',
+        '使用<b>声明脚本 &lt;%! %&gt;</b>定义考勤数据（总人数、出勤、迟到、缺勤）以及计算出勤率的方法',
+        '使用<b>表达式脚本 &lt;%= %&gt;</b>输出时间和各项统计数据（提醒：结尾不能加分号！）',
+        '使用<b>静态 &lt;%@ include %&gt;</b>引入 footer.jsp 作为页脚'
+      ]},
+    { type:'code', src:'src-c1-detail', file:'detail.jsp', fileNote:'考勤详情跳转页',
+      kind:'组件编写', title:'编写 detail.jsp 考勤详情页',
+      sub:'学习 JSP 动作标签与动态表格，实现详情页跳转',
+      dur:'约20分钟',
+      kps:['html-loop','action-tags'],
+      marks:[
+        { from:'代码脚本片段与HTML穿插', to:'<% } %>', plus:1, k:'html-loop' },
+        { from:'JSP动作标签：jsp:forward', to:'</jsp:forward>', k:'action-tags' }
+      ],
+      guide:[
+        '新建 detail.jsp，用 jsp:include 引入 header.jsp',
+        '写出静态表格表头（学号、姓名、考勤状态、备注）',
+        '<b>用代码脚本片段和 HTML 穿插</b>的方式，通过 for 循环生成学生数据行',
+        '添加"返回首页"按钮；在代码中注释演示 jsp:forward + jsp:param 的传参用法（默认不执行）',
+        '静态 include footer.jsp 作为页脚'
+      ]},
+    { type:'info', tpl:'tpl-verify', kind:'验证运行', title:'项目运行验证',
+      sub:'启动 Tomcat 10.1.59，走通完整流程' },
+    { type:'info', tpl:'tpl-std', kind:'行业标准', title:'JSP基础·行业编码规范',
+      sub:'从课堂代码到企业实践，理解规范背后的工程考量' },
+    { type:'info', tpl:'tpl-summary', kind:'知识总结', title:'知识点全景总结',
+      sub:'第一次课 7 个核心知识点总览', sumGrid:'sumGrid1' }
+  ]
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const state = { step:0, selKp:null };
+const srcCache = {};
+
+function $(id){return document.getElementById(id);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg, type){
+  const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (type||'ok');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>{t.className='toast';},2000);
+}
+
+function getSource(id){
+  if(srcCache[id]) return srcCache[id];
+  const el = document.getElementById(id);
+  let raw = el ? el.textContent : '';
+  // 去除首尾空行
+  raw = raw.replace(/\r/g,'').replace(/^\n+/,'').replace(/\n+$/,'');
+  const lines = raw.split('\n');
+  srcCache[id] = lines;
+  return lines;
+}
+
+function copyText(text, btn){
+  if(!TEACHER_MODE){ toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err'); return; }
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('✅ 代码已复制到剪贴板','ok');
+    if(btn){ const o=btn.textContent; btn.textContent='✅ 已复制'; setTimeout(()=>btn.textContent=o,1200);}
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('✅ 代码已复制','ok');
+  });
+}
+
+/* ============================================================
+   语法高亮（自研，白底GitHub Light风格）
+   ============================================================ */
+function hlJava(s, isDir){
+  const KW = ['abstract','assert','boolean','break','byte','case','catch','char','class','const','continue','default','do','double','else','enum','extends','final','finally','float','for','goto','if','implements','import','instanceof','int','interface','long','native','new','package','private','protected','public','return','short','static','strictfp','super','switch','synchronized','this','throw','throws','transient','try','void','volatile','while',
+             'true','false','null',
+             'String','Integer','Boolean','Double','Float','Long','Object','System','out','println','print','request','response','session','application','pageContext','config','out','page','exception'];
+  let out='',buf='',i=0,inStr=null;
+  const flush=()=>{if(buf){out+='<span class="tok-jspcode">'+esc(buf)+'</span>';buf='';}};
+  const flushKw=()=>{
+    if(!buf){return;}
+    if(/^\d/.test(buf)||/^0x[\da-f]+$/i.test(buf)){out+='<span class="tok-num">'+esc(buf)+'</span>';}
+    else if(KW.indexOf(buf)>=0){out+='<span class="tok-kw">'+esc(buf)+'</span>';}
+    else out+='<span class="tok-jspcode">'+esc(buf)+'</span>';
+    buf='';
+  };
+  while(i<s.length){
+    const c=s[i];
+    if(inStr){
+      buf+=c;
+      if(c===inStr&&s[i-1]!=='\\'){flush();inStr=null;}
+      i++;continue;
+    }
+    if(c==='"'||c==="'"){flushKw();buf+=c;inStr=c;i++;continue;}
+    if(c==='/'&&s[i+1]==='/'){flushKw();const e=s.indexOf('\n',i);out+='<span class="tok-cmt">'+esc(e<0?s.slice(i):s.slice(i,e))+'</span>';if(e<0)return out;i=e;continue;}
+    if(c==='/'&&s[i+1]==='*'){flushKw();const e=s.indexOf('*/',i+2);const end=e<0?s.length:e+2;out+='<span class="tok-cmt">'+esc(s.slice(i,end))+'</span>';i=end;continue;}
+    if(/[A-Za-z_$]/.test(c)){buf+=c;i++;continue;}
+    if(/\d/.test(c)&&(!buf||/[\d.]$/.test(buf))){buf+=c;i++;continue;}
+    if(/[\w.]/.test(c)){buf+=c;i++;continue;}
+    flushKw();
+    if(/\s/.test(c)){buf+=c;flush();i++;continue;}
+    out+='<span class="tok-punc">'+esc(c)+'</span>';i++;
+  }
+  if(inStr){out+='<span class="tok-str">'+esc(buf)+'</span>';}else{flushKw();}
+  return out;
+}
+function renderJsp(m){
+  const open=m.slice(0,3); let rest=m.slice(3,-2); if('@!='.indexOf(m[2])>=0){return '<span class="tok-dir">'+esc(open)+'</span>'+hlJava(rest,open==='<%@')+'<span class="tok-dir">%&gt;</span>';}
+  return '<span class="tok-jsp">'+esc(open)+'</span>'+hlJava(rest,false)+'<span class="tok-jsp">%&gt;</span>';
+}
+function renderTag(t){
+  const m=t.match(/^<\/?([a-zA-Z][\w:-]*)/);if(!m)return esc(t);
+  const rest=t.slice(m[0].length);
+  const re2=/("[^"]*"|'[^']*')|([a-zA-Z_:][\w:.-]*)(\s*=\s*)|(\/?>)|(\s+)|([^\s"'>=/]+)/g;
+  let out2='',last=0,mm;
+  while((mm=re2.exec(rest))){
+    out2+=esc(rest.slice(last,mm.index));
+    if(mm[1])out2+='<span class="tok-str">'+esc(mm[1])+'</span>';
+    else if(mm[2])out2+='<span class="tok-attr">'+esc(mm[2])+'</span><span class="tok-punc">'+esc(mm[3])+'</span>';
+    else if(mm[4])out2+='<span class="tok-punc">'+esc(mm[4])+'</span>';
+    else if(mm[5])out2+=mm[5];
+    else out2+=esc(mm[6]);
+    last=re2.lastIndex;
+  }
+  out2+=esc(rest.slice(last));
+  return '<span class="tok-tag">'+esc(m[0])+'</span>'+out2;
+}
+function tokenizeText(text){
+  let html='',buf='',i=0,pending=null;
+  const flush=()=>{if(buf){html+=esc(buf);buf='';}};
+  while(i<text.length){
+    const c=text[i];
+    if(c==='<'&&text.startsWith('<!--',i)){const e=text.indexOf('-->',i+4);const end=e>=0?e+3:text.length;flush();html+='<span class="tok-cmt">'+esc(text.slice(i,end))+'</span>';i=end;continue;}
+    if(c==='<'&&text.startsWith('<%',i)){
+      const e=text.indexOf('%>',i+2);
+      if(e<0){let open='<%',body=text.slice(i+2);if('@!='.indexOf(body[0])>=0){open='<%'+body[0];body=body.slice(1);}flush();const cls=(open==='<%@')?'tok-dir':'tok-jsp';html+='<span class="'+cls+'">'+esc(open)+'</span>'+hlJava(body,open==='<%@');pending={cls,dir:open==='<%@'};i=text.length;continue;}
+      flush();html+=renderJsp(text.slice(i,e+2));i=e+2;continue;
+    }
+    if(c==='$'&&text[i+1]==='{'){const e=text.indexOf('}',i+2);if(e>=0){flush();html+='<span class="tok-el">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    if(c==='<'&&(text[i+1]==='/'||/[A-Za-z]/.test(text[i+1]||''))){
+      let j=i+1,q=null;while(j<text.length){const ch=text[j];if(q){if(ch===q)q=null;}else if(ch==='"'||ch==="'"){q=ch;}else if(ch==='>'){break;}j++;}
+      if(j<text.length){flush();html+=renderTag(text.slice(i,j+1));i=j+1;continue;}
+    }
+    if(c==='"'||c==="'"){const e=text.indexOf(c,i+1);if(e>=0){flush();html+='<span class="tok-str">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    buf+=c;i++;
+  }
+  flush();return{html,pending};
+}
+function commentMask(lines){
+  const mask=new Array(lines.length).fill(false);let inC=false;
+  for(let i=0;i<lines.length;i++){const t=lines[i].trim();if(!inC){if(t.indexOf('<%--')===0){inC=true;mask[i]=true;if(t.indexOf('--%>',4)>=0)inC=false;}}else{mask[i]=true;if(t.slice(-4)==='--%>')inC=false;}}
+  return mask;
+}
+function highlightCode(lines){
+  const mask=commentMask(lines);const res=[];const st={open:false,cls:'tok-jsp',dir:false};
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(mask[i]){res.push('<span class="tok-cmt">'+esc(line)+'</span>');continue;}
+    let seg=line,html='';
+    if(st.open){
+      const e=seg.indexOf('%>');
+      if(e>=0){html+='<span class="'+st.cls+'">'+hlJava(seg.slice(0,e),st.dir)+'</span><span class="'+st.cls+'">%&gt;</span>';seg=seg.slice(e+2);st.open=false;}
+      else{html+='<span class="'+st.cls+'">'+hlJava(seg,st.dir)+'</span>';res.push(html||'&nbsp;');continue;}
+    }
+    const r=tokenizeText(seg);html+=r.html;if(r.pending){st.open=true;st.cls=r.pending.cls;st.dir=r.pending.dir;}
+    res.push(html||'&nbsp;');
+  }
+  return res;
+}
+
+/* ============================================================
+   标记解析
+   ============================================================ */
+function resolveMarks(lines, marks){
+  const out=[];
+  (marks||[]).forEach(m=>{
+    let s=-1;for(let i=0;i<lines.length;i++){if(lines[i].indexOf(m.from)>=0){s=i;break;}}
+    if(s<0)return;let e=s;
+    if(m.to){for(let i=s;i<lines.length;i++){if(lines[i].indexOf(m.to)>=0){e=i;break;}}}
+    e+=(m.plus||0);if(e>lines.length-1)e=lines.length-1;
+    out.push({s,e,k:m.k});
+  });
+  return out;
+}
+
+/* ============================================================
+   步骤索引查找
+   ============================================================ */
+function kpStepIndex(kp){
+  const steps=COURSE.steps;
+  for(let i=0;i<steps.length;i++){if(steps[i].type==='code'&&(steps[i].kps||[]).indexOf(kp)>=0)return i;}
+  return -1;
+}
+function kpList(){
+  const seen=[],out=[];
+  COURSE.steps.forEach(s=>{(s.kps||[]).forEach(k=>{if(seen.indexOf(k)<0){seen.push(k);out.push(k);}});});
+  return out;
+}
+
+/* ============================================================
+   渲染步骤轨道
+   ============================================================ */
+function renderRail(){
+  const rail=$('rail');rail.innerHTML='';
+  COURSE.steps.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='stepchip'+(i===state.step?' active':'')+(i<state.step?' done':'');
+    const isCode=s.type==='code';
+    b.innerHTML='<span class="n">'+(i+1)+'</span>'+(isCode?s.file:s.title);
+    b.onclick=()=>{state.step=i;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});};
+    rail.appendChild(b);
+  });
+  const act=rail.querySelector('.active');if(act&&act.scrollIntoView)act.scrollIntoView({block:'nearest',inline:'center'});
+}
+
+/* ============================================================
+   知识点卡片
+   ============================================================ */
+function kpCard(kp){
+  const meta=COURSE.KPMETA[kp];if(!meta)return '';
+  const cat=COURSE.categories[meta.cat];
+  const tpl=$('kp-'+kp);const inner=tpl?tpl.innerHTML:'<p>（未找到该知识点内容）</p>';
+  // 处理相关知识点跳转
+  const wrap=document.createElement('div');wrap.innerHTML=inner;
+  wrap.querySelectorAll('.kplink').forEach(el=>{
+    el.onclick=()=>{const target=el.dataset.jump;const si=kpStepIndex(target);
+      if(si>=0){state.step=si;state.selKp=target;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);}};
+  });
+  return '<div class="kpcard"><div class="kpcard-head" style="background:'+cat.bg+'"><span class="ic">'+cat.icon+'</span><span class="tt">'+meta.title+'</span><span class="cat" style="color:'+cat.color+';background:#fff;border:1px solid '+cat.color+'33">'+cat.name+'</span></div><div class="kpcard-body">'+wrap.innerHTML+'</div></div>';
+}
+
+function renderKpPanel(){
+  const body=$('kpBody');const chips=$('kpChips');
+  const st=COURSE.steps[state.step];
+  const kps=st.kps||[];
+  chips.innerHTML=kps.map(k=>{
+    const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+    return '<button class="kchip'+(state.selKp===k?' on':'')+'" data-kp="'+k+'">'+cat.icon+' '+meta.title+'</button>';
+  }).join('');
+  chips.querySelectorAll('.kchip').forEach(b=>{b.onclick=()=>{state.selKp=b.dataset.kp;renderKpPanel();};});
+  const sel=state.selKp;
+  if(sel&&kps.indexOf(sel)>=0){
+    const idx=kps.indexOf(sel);
+    body.innerHTML=kpCard(sel);body.scrollTop=0;
+    $('kpPrev').disabled=false;$('kpNext').disabled=false;
+    $('kpPrev').dataset.idx=idx;$('kpNext').dataset.idx=idx;
+    document.querySelectorAll('.cl.clickable').forEach(el=>{el.classList.toggle('active',(el.dataset.k||'').split(' ').indexOf(sel)>=0);});
+  }else{
+    body.innerHTML='<div class="kp-empty"><span class="big">👈</span>点击左侧<b>带图标的代码行</b><br>这里就会显示对应的完整知识点<br><br><span style="color:#b8c2cf;font-size:12.5px;">也可以点上方标签直接查看</span></div>';
+    $('kpPrev').disabled=true;$('kpNext').disabled=true;
+    document.querySelectorAll('.cl.clickable').forEach(el=>el.classList.remove('active'));
+  }
+}
+
+/* ============================================================
+   渲染代码步骤
+   ============================================================ */
+function renderCodeStep(s,host){
+  const lines=getSource(s.src);const marks=resolveMarks(lines,s.marks);
+  const lineK=lines.map((_,i)=>marks.filter(m=>i>=m.s&&i<=m.e).map(m=>m.k));
+  const htmls=highlightCode(lines);
+  const catsInStep=[];(s.kps||[]).forEach(k=>{const c=COURSE.KPMETA[k].cat;if(catsInStep.indexOf(c)<0)catsInStep.push(c);});
+  const legend=catsInStep.map(c=>{const cat=COURSE.categories[c];return '<span class="lg" style="border-color:'+cat.color+'33"><b>'+cat.icon+'</b>'+cat.name+'</span>';}).join('')+'<span class="lg" style="border-color:#d9e0ea"><b>▎</b>左侧色条 = 该行含知识点</span>';
+
+  let codeHtml='';
+  htmls.forEach((h,i)=>{
+    const ks=lineK[i];const hasK=ks.length>0;
+    const mainCat=hasK?COURSE.KPMETA[ks[0]].cat:'';
+    const icon=hasK?COURSE.categories[mainCat].icon:'';
+    codeHtml+='<div class="cl'+(hasK?' clickable marked k-'+mainCat:'')+'"'+(hasK?' data-k="'+ks.join(' ')+'" data-line="'+(i+1)+'"':'')+'><span class="ic">'+icon+'</span><span class="ln">'+(i+1)+'</span><code class="src">'+h+'</code></div>';
+  });
+
+  const guideHtml=s.guide?('<div class="guide-box"><h4>🧭 本步操作指引</h4><ol>'+s.guide.map(g=>'<li>'+g+'</li>').join('')+'</ol></div>'):'';
+
+  host.innerHTML=
+    '<div class="card"><div class="step-head"><span class="step-kind code">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+s.sub+'</div></div><div class="meta"><span class="pill file">📄 '+s.file+'</span><span class="pill time">⏱ '+s.dur+'</span><span class="pill">🧩 '+(s.kps||[]).length+' 个知识点</span></div></div></div>'+
+    '<div class="workbench"><div class="left-col">'+guideHtml+
+      '<div class="code-panel"><div class="code-head"><div class="filedot"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><div class="code-file">'+s.file+'<small>'+s.fileNote+'</small></div><div class="codeacts"><button class="mini-btn" id="btnCopy"'+(TEACHER_MODE?'':' disabled')+'>📋 复制代码</button><button class="mini-btn" id="btnClear">✖ 取消选中</button></div></div>'+
+      '<div class="legend">'+legend+'</div><div class="code-body" id="codeBody">'+codeHtml+'</div></div></div>'+
+      '<aside class="kp-panel"><div class="kp-head"><span class="t">📖 知识点解析</span><span class="hint">点左侧代码行 → 看完整讲解</span><div class="kp-nav"><button id="kpPrev" disabled>◀ 上一个</button><button id="kpNext" disabled>下一个 ▶</button></div></div><div class="kp-chips" id="kpChips"></div><div class="kp-body" id="kpBody"></div></aside></div>'+
+      navRow();
+
+  host.querySelectorAll('.cl.clickable').forEach(el=>{
+    el.onclick=()=>{const ks=(el.dataset.k||'').split(' ');state.selKp=ks[0];renderKpPanel();if(el.scrollIntoView)el.scrollIntoView({block:'nearest'});};
+  });
+  $('btnClear').onclick=()=>{state.selKp=null;renderKpPanel();};
+  $('btnCopy').onclick=(e)=>{copyText(lines.join('\n'),e.currentTarget);};
+  $('kpPrev').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=0;state.selKp=kps[(i-1+kps.length)%kps.length];renderKpPanel();};
+  $('kpNext').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=-1;state.selKp=kps[(i+1)%kps.length];renderKpPanel();};
+  bindNav();
+  renderKpPanel();
+}
+
+function navRow(){
+  const i=state.step,total=COURSE.steps.length;
+  return '<div class="navrow"><button id="navPrev"'+(i<=0?' disabled':'')+'>◀ 上一步</button><button id="navNext" class="primary"'+(i>=total-1?' disabled':'')+'>下一步 ▶</button></div>';
+}
+function bindNav(){
+  const pv=$('navPrev'),nx=$('navNext');
+  if(pv)pv.onclick=()=>{if(state.step>0){state.step--;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+  if(nx)nx.onclick=()=>{if(state.step<COURSE.steps.length-1){state.step++;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+}
+
+/* ============================================================
+   渲染信息步骤
+   ============================================================ */
+function renderInfoStep(s,host){
+  const tpl=$(s.tpl);const inner=tpl?tpl.innerHTML:'<p>内容缺失</p>';
+  host.innerHTML='<div class="card"><div class="step-head"><span class="step-kind '+(s.kind==='环境准备'?'env':s.kind==='行业标准'?'std':'')+'">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+s.sub+'</div></div></div><div class="info-section">'+inner+'</div></div>'+navRow();
+  bindNav();
+  if(s.sumGrid){
+    const grid=document.getElementById(s.sumGrid);
+    if(grid){
+      const wrap=grid.previousElementSibling;
+      if(wrap){const h=wrap.querySelector('h4');if(h)h.textContent='📚 第一次课 · 知识点全景（共 '+kpList().length+' 个，点击卡片可跳回对应代码位置）';}
+      grid.innerHTML=kpList().map(k=>{
+        const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+        return '<div class="kitem" data-kp="'+k+'"><span class="ic">'+cat.icon+'</span><div><div class="kt">'+meta.title+'</div><div class="kc">'+cat.name+' ｜ 位于步骤 '+(kpStepIndex(k)+1)+'</div></div></div>';
+      }).join('');
+      grid.querySelectorAll('.kitem').forEach(el=>{el.onclick=()=>{const kp=el.dataset.kp;const si=kpStepIndex(kp);if(si<0)return;state.step=si;state.selKp=kp;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);};});
+    }
+  }
+}
+
+/* ============================================================
+   主渲染
+   ============================================================ */
+function render(){
+  renderRail();
+  const stage=$('stage');
+  const s=COURSE.steps[state.step];
+  if(s.type==='code')renderCodeStep(s,stage);else renderInfoStep(s,stage);
+  // 更新教师模式显示
+  $('tmode').textContent=TEACHER_MODE?'✅ 教师模式：开启':'🛡️ 教师模式：关闭';
+  $('tmode').className='tmode'+(TEACHER_MODE?' on':'');
+  document.body.classList.toggle('student-mode',!TEACHER_MODE);
+}
+
+/* ============================================================
+   学生模式复制拦截
+   ============================================================ */
+document.addEventListener('contextmenu',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止右键菜单','warn');}});
+document.addEventListener('dragstart',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('copy',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err');}});
+document.addEventListener('cut',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('keydown',e=>{
+  if(TEACHER_MODE)return;
+  const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&(k==='c'||k==='a'||k==='s'||k==='p'||k==='u')){e.preventDefault();toast('🔒 学生模式下该快捷键已禁用','warn');}
+  if(k==='f12'||(e.ctrlKey&&e.shiftKey&&(k==='i'||k==='j'||k==='c'))){e.preventDefault();toast('🔒 学生模式下禁止打开开发者工具','warn');}
+});
+document.addEventListener('mouseup',()=>{if(!TEACHER_MODE)window.getSelection().removeAllRanges();});
+if(!TEACHER_MODE&&navigator.clipboard){
+  navigator.clipboard.writeText=()=>Promise.reject('student mode');
+}
+
+/* ============ 信息步骤模板 ============ */
+</script>
+
+<script type="text/html" id="tpl-goal">
+<h3>🎯 本次课任务目标</h3>
+<p>完成一个<b>班级课程考勤展示页</b>项目，通过"跟着敲项目"掌握 JSP 基础语法，最终实现：</p>
+<div class="kpi-row">
+  <div class="kpi"><div class="v">4 课时</div><div class="l">项目式教学</div></div>
+  <div class="kpi"><div class="v">4 个</div><div class="l">JSP 页面</div></div>
+  <div class="kpi"><div class="v">7 个</div><div class="l">核心知识点</div></div>
+  <div class="kpi"><div class="v">0 个</div><div class="l">外部依赖（基础部分）</div></div>
+</div>
+<h3>🖥️ 最终效果预览</h3>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
+  <div class="browser-url">http://localhost:8080/jsp-attendance/index.jsp</div></div>
+  <div class="browser-body" style="text-align:center;">
+    <div style="background:#2c3e50;color:#fff;padding:12px;">2024级软件技术1班 JSP课程考勤系统</div>
+    <div style="margin-top:20px;text-align:left;padding:15px;border:1px solid #eee;border-radius:8px;">
+      <b>今日课程：JSP基础语法</b><p>当前页面生成时间：（动态时间）</p>
+      <b>今日考勤统计</b><ul><li>班级总人数：45人</li><li>出勤人数：<span style="color:green">42人</span></li><li>出勤率：93.3%</li></ul>
+      <button>查看详细考勤名单</button>
+    </div>
+  </div>
+</div>
+
+<h3>✅ 验收清单</h3>
+<ul>
+<li>🔲 项目在 Tomcat 10.1.59 中能正常启动，无 404/500 错误</li>
+<li>🔲 header.jsp / footer.jsp 作为公共组件被两个页面正确包含</li>
+<li>🔲 index.jsp 显示动态时间与考勤统计，出勤率计算正确</li>
+<li>🔲 detail.jsp 动态展示学生考勤名单表格，可返回首页</li>
+<li>🔲 页面中文不乱码，编码统一使用 UTF-8</li>
+</ul>
+</script>
+
+<script type="text/html" id="tpl-env">
+<h3>🖥️ 环境清单</h3>
+<table>
+<tr><th>软件</th><th>版本</th><th>说明</th></tr>
+<tr><td>JDK</td><td>17 LTS</td><td>Tomcat 10.1 最低要求 JDK 11，推荐 17</td></tr>
+<tr><td>IDE</td><td>IntelliJ IDEA 2024.1 Ultimate</td><td>Community 版不支持 Web 项目，推荐 Ultimate</td></tr>
+<tr><td>服务器</td><td>Apache Tomcat 10.1.59</td><td>注意：Tomcat 10+ 使用 Jakarta EE 9+，包名是 jakarta.*</td></tr>
+<tr><td>构建工具</td><td>Maven 3.9+</td><td>IDEA 2024.1 已内置 Maven 3.9</td></tr>
+<tr><td>浏览器</td><td>Chrome/Edge 最新版</td><td>用于查看效果、调试</td></tr>
+</table>
+
+<h3>📦 Maven 依赖（pom.xml）</h3>
+<p>在 IDEA 中创建<b>Maven Web 项目（maven-archetype-webapp）</b>后，将 pom.xml 的 dependencies 替换为以下 Jakarta 版本依赖：</p>
+<div class="pom-box"><span class="p-cmt">&lt;!-- JSP 第一次课暂时只需要 servlet-api 和 jsp-api --&gt;</span>
+<span class="p-tag">&lt;dependencies&gt;</span>
+  <span class="p-tag">&lt;dependency&gt;</span>
+    <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet<span class="p-tag">&lt;/groupId&gt;</span>
+    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet-api<span class="p-tag">&lt;/artifactId&gt;</span>
+    <span class="p-tag">&lt;version&gt;</span><span class="p-num">6.0.0</span><span class="p-tag">&lt;/version&gt;</span>
+    <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
+  <span class="p-tag">&lt;/dependency&gt;</span>
+  <span class="p-tag">&lt;dependency&gt;</span>
+    <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet.jsp<span class="p-tag">&lt;/groupId&gt;</span>
+    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp-api<span class="p-tag">&lt;/artifactId&gt;</span>
+    <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.1.1</span><span class="p-tag">&lt;/version&gt;</span>
+    <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
+  <span class="p-tag">&lt;/dependency&gt;</span>
+<span class="p-tag">&lt;/dependencies&gt;</span></div>
+<p class="tip"><b>💡 为什么用 provided？</b>因为 Tomcat 10.1 自己的 lib 目录已经自带了 Servlet 和 JSP 的 API 包，打包时不应该再把它们带进 WEB-INF/lib，否则会产生类冲突。</p>
+
+<h3>🚀 IDEA 配置 6 步走</h3>
+<ol>
+<li>打开 IDEA 2024.1 → New Project → Maven → 勾选 <b>"Create from archetype"</b> → 选择 <code>org.apache.maven.archetypes:maven-archetype-webapp</code></li>
+<li>填写 GroupId（如 <code>com.example</code>）、ArtifactId（<code>jsp-attendance</code>），完成项目创建</li>
+<li>等待 Maven 下载依赖（右下角进度条走完）</li>
+<li>点击右上角 <b>Add Configuration</b> → <b>+</b> → <b>Tomcat Server</b> → Local → 选择 Tomcat 10.1.59 安装目录</li>
+<li>在 Deployment 选项卡 → <b>+</b> → Artifact → 选择 <code>jsp-attendance:war exploded</code>，Application context 改为 <code>/jsp-attendance</code></li>
+<li>点击绿色三角"运行"按钮，自动打开浏览器访问 http://localhost:8080/jsp-attendance/ 看到 "Hello World!" 即配置成功</li>
+</ol>
+
+<h3>⚠️ Jakarta 版本升级三大常见报错速查</h3>
+<table>
+<tr><th>报错现象</th><th>原因</th><th>解决方案</th></tr>
+<tr><td>java.lang.ClassNotFoundException: jakarta.servlet.Servlet</td><td>Tomcat 版本与包名不匹配</td><td>Tomcat 10+ 必须用 jakarta.* 依赖；Tomcat 9 及以下用 javax.*</td></tr>
+<tr><td>HTTP状态 500 - 类转换异常</td><td>项目同时存在 javax 和 jakarta 的 Servlet 包</td><td>检查 Maven 依赖树，排除所有 javax.servlet:servlet-api</td></tr>
+<tr><td>IDEA 提示无法解析 jakarta.servlet</td><td>依赖没正确导入</td><td>右键 pom.xml → Maven → Reload project；或点击右侧 Maven 面板刷新</td></tr>
+</table>
+</script>
+
+<script type="text/html" id="tpl-struct">
+<h3>📂 Maven 标准 Web 项目结构</h3>
+<p>创建项目后，<b>手动补齐缺失目录</b>（Maven archetype 默认目录不全），最终结构如下：</p>
+<div class="tree"><span class="dir">jsp-attendance/</span>                   <span class="note"># 项目根目录（Maven artifactId）</span>
+├── <span class="file">pom.xml</span>                      <span class="note"># Maven 依赖配置文件</span>
+└── <span class="dir">src/</span>
+    └── <span class="dir">main/</span>
+        ├── <span class="dir">java/</span>                <span class="note"># Java 源码目录（本次课暂不使用）</span>
+        ├── <span class="dir">resources/</span>           <span class="note"># 配置文件目录（数据库配置等）</span>
+        └── <span class="dir">webapp/</span>              <span class="note"># Web 根目录（部署到 Tomcat 的内容）</span>
+            ├── <span class="file">index.jsp</span>        <span class="note"># 考勤首页（核心代码文件）</span>
+            ├── <span class="file">header.jsp</span>       <span class="note"># 公共页头组件</span>
+            ├── <span class="file">footer.jsp</span>       <span class="note"># 公共页脚组件</span>
+            ├── <span class="file">detail.jsp</span>       <span class="note"># 考勤详情页</span>
+            └── <span class="dir">WEB-INF/</span>
+                └── <span class="file">web.xml</span>      <span class="note"># Web 部署描述符（Servlet 3.0+可省略）</span>
+</div>
+
+<h3>📌 目录作用说明</h3>
+<ul>
+<li><b>webapp/</b>：Web 应用根目录，放在这里的文件用户可以直接通过浏览器访问（如 index.jsp）</li>
+<li><b>WEB-INF/</b>：特殊目录，<b>浏览器无法直接访问</b>，里面的资源只能通过请求转发访问，适合放配置、私有页面</li>
+<li><b>java/</b>：存放 Servlet、Filter、JavaBean 等 Java 类（第一次课只写 JSP，暂不写 Java 类）</li>
+<li><b>pom.xml</b>：Maven 的核心配置文件，所有依赖都在这里声明</li>
+</ul>
+
+<div class="warn"><b>⚠️ 新手高频错误：</b>
+<ol><li><b>JSP 放在 WEB-INF 下</b>：用户无法直接访问，会报 404；能直接访问的页面必须放在 webapp 根或其子目录（非 WEB-INF）下；</li>
+<li><b>文件名大小写错误</b>：Tomcat 区分大小写，<code>Header.jsp</code> 和 <code>header.jsp</code> 是两个文件，include 路径必须严格一致；</li>
+<li><b>忘记创建 java/resources 目录</b>：IDEA 不会自动创建，需要手动在 main 目录下新建，右键标记为 Sources Root / Resources Root。</li></ol>
+</div>
+</script>
+
+<script type="text/html" id="tpl-verify">
+<h3>▶️ 启动验证步骤</h3>
+<ol>
+<li>确认 Tomcat 配置中 Application context 为 <code>/jsp-attendance</code></li>
+<li>点击 IDEA 右上角<b>绿色运行按钮</b>（或 Shift+F10）启动 Tomcat</li>
+<li>控制台看到 <code>Server startup in [xxx] milliseconds</code> 即为启动成功</li>
+<li>浏览器自动打开首页 <code>http://localhost:8080/jsp-attendance/</code>（默认访问 index.jsp）</li>
+<li>依次验证以下 4 个页面：</li>
+</ol>
+<table>
+<tr><th>访问路径</th><th>预期效果</th></tr>
+<tr><td>/index.jsp</td><td>深色页头 + 考勤统计卡片 + 灰色页脚，时间动态变化</td></tr>
+<tr><td>/header.jsp</td><td>只显示深色页头（正常，因为是组件）</td></tr>
+<tr><td>/footer.jsp</td><td>只显示灰色页脚</td></tr>
+<tr><td>/detail.jsp</td><td>5 名学生的考勤表格 + 返回按钮</td></tr>
+</table>
+
+<div class="tip"><b>💡 常见启动问题排查：</b>
+<ul><li><b>端口 8080 被占用</b>：在 Tomcat 配置 → Server → HTTP port 改为 8081 或其他端口；或关闭占用 8080 的进程；</li><li><b>页面中文乱码</b>：检查 page 指令是否写了 <code>contentType="text/html;charset=UTF-8"</code>，并确认文件本身编码为 UTF-8；</li><li><b>500 编译错误</b>：查看 IDEA 下方 Tomcat 日志的 root cause 行，通常是脚本语法错误（如表达式加了分号、大括号未配对）。</li></ul>
+</div>
+</script>
+
+<script type="text/html" id="tpl-std">
+<h3>🏭 1. MVC 分层架构规范</h3>
+<div class="std">企业中严格遵循 <b>MVC 模式</b>：<b>Model（模型）</b>是 JavaBean/Service 处理业务，<b>View（视图）</b>是 JSP 只负责渲染，<b>Controller（控制器）</b>是 Servlet 接收请求、调用 Model、转发到 View。<b>JSP 页面中严禁写业务逻辑和数据库访问代码</b>——页面只做一件事：把 Controller 准备好的数据展示出来。本次课的代码有脚本片段是为了学习语法，<b>实际项目 JSP 中不应出现 &lt;% %&gt;</b>。</div>
+
+<h3>🏭 2. 页面编码规范</h3>
+<ul>
+<li>项目全局统一使用 <b>UTF-8</b> 编码，包括文件本身、page 指令、数据库连接；</li>
+<li>JSP 页面命名使用<b>小写字母</b>，单词间不用驼峰，用短横线或直接连写（如 user-list.jsp 或 userlist.jsp）；</li>
+<li>公共组件（header/footer/nav）统一放在 <code>WEB-INF/jsp/common/</code> 下，避免被用户直接访问；</li>
+<li>页面中样式通过独立 CSS 文件引入，不大量写内联 style；</li>
+<li><b>禁用声明脚本和代码脚本片段</b>，页面只允许 EL 表达式 + JSTL 标签。</li>
+</ul>
+
+<h3>🏭 3. 安全编码规范</h3>
+<ul>
+<li><b>输出转义</b>：用户提交的数据输出到页面必须做 HTML 转义（JSTL 的 <code>&lt;c:out&gt;</code> 默认转义），防范 XSS 跨站脚本攻击；</li>
+<li><b>统一错误页面</b>：通过 web.xml 的 <code>&lt;error-page&gt;</code> 配置 404、500 友好错误页，<b>禁止把异常堆栈暴露给用户</b>；</li>
+<li><b>敏感页面放在 WEB-INF 下</b>：如后台管理页面，避免用户直接通过 URL 访问绕过权限校验。</li>
+</ul>
+
+<h3>🏭 4. 性能优化规范</h3>
+<ul>
+<li>静态页头、页脚用<b>静态包含 &lt;%@ include %&gt;</b>（编译期合并，效率更高）；动态组件用动态包含；</li>
+<li>静态资源（CSS/JS/图片）部署到 CDN 或单独的静态服务器，并开启 gzip 压缩与缓存；</li>
+<li>严禁在 JSP 中直接查询数据库——数据库查询应在 Controller/Service 中完成，JSP 只渲染已准备好的数据。</li>
+
+<h3>🏭 5. 工程化规范</h3>
+<ul>
+<li>用 <b>Filter</b> 统一处理请求编码、响应编码、登录校验，避免每个 JSP 页面重复写 <code>request.setCharacterEncoding("UTF-8")</code> 和登录判断；</li>
+<li>使用 <b>Maven</b> 管理依赖，禁止手动复制 jar 到 WEB-INF/lib；</li>
+<li>分布式部署时 session 需要存入 Redis（而非应用内存），否则多台 Tomcat 间用户登录状态不共享。</li>
+</ul>
+</script>
+
+<script type="text/html" id="tpl-summary">
+<h3>🎉 恭喜完成第一次课！</h3>
+<p>通过这节课，你已经完整掌握了 JSP 基础语法的全部核心内容：</p>
+<h4></h4>
+<div class="sumgrid" id="sumGrid1"></div>
+<h3>📝 课后作业</h3>
+<ol>
+<li>不看课件独立完成本次课的 4 个 JSP 文件（建议时间：2 课时）</li>
+<li>扩展项目：给考勤页增加一个"本周出勤率趋势"的简单模拟展示</li>
+<li>思考题：如果不使用脚本片段，只使用 EL 和 JSTL，index.jsp 的考勤数据应该从哪里来？（为第二次课和 MVC 铺垫）</li>
+<li>预习：JSP 九大内置对象、EL 表达式、JSTL 标签（第二次课内容）</li>
+</ol>
+</script>
+
+<script>render();</script>
+</body>
+</html>

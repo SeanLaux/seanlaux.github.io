@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第二次课 · JSP进阶实战 · 学生作业提交系统</title>
+<style>
+:root{
+  --bg:#eef1f6;--panel:#fff;--line:#e1e7ef;--line2:#eef2f7;
+  --text:#1f2328;--muted:#6b7480;--brand:#e8632a;--brand2:#cf5320;
+  --data:#0b6b53;--data2:#8a5a00;
+  --codebg:#ffffff;--gut:#f7f9fc;--gut2:#fbfcfe;
+  --basic:#0969da;--object:#8250df;--flow:#1a7f37;--request:#bc4c00;--tag:#bf3989;
+  --std:#4a5563;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.75;}
+button{font-family:inherit;cursor:pointer;}
+code,pre,.mono{font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New","Microsoft YaHei",monospace;}
+body.student-mode,body.student-mode *{-webkit-user-select:none!important;user-select:none!important;}
+body.student-mode .kp-body,body.student-mode .kp-body *{-webkit-user-select:text!important;user-select:text!important;}
+
+.topbar{position:sticky;top:0;z-index:80;background:#1b2430;color:#fff;
+  display:flex;align-items:center;gap:22px;padding:10px 22px;flex-wrap:wrap;
+  box-shadow:0 2px 14px rgba(15,25,40,.22);}
+.brand{display:flex;align-items:center;gap:12px;min-width:270px;}
+.logo{width:42px;height:42px;flex:0 0 42px;border-radius:10px;background:linear-gradient(135deg,#ff8a4c,#e8632a);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:.5px;}
+.b1{font-size:15.5px;font-weight:700;letter-spacing:.3px;}
+.b2{font-size:12px;color:#9fb0c4;margin-top:1px;letter-spacing:.4px;}
+.tmode{margin-left:auto;font-size:12.5px;padding:5px 12px;border-radius:999px;
+  background:#2d3a49;color:#c3cfdd;border:1px solid #3a495b;}
+.tmode.on{background:#e8f7ee;color:#12693a;border-color:#6ebf8a;}
+
+.rail{position:sticky;top:62px;z-index:70;background:#fff;border-bottom:1px solid var(--line);
+  padding:9px 22px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(20,35,60,.05);}
+.rail::-webkit-scrollbar{height:5px;}
+.rail::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+.stepchip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:6px 14px;font-size:13px;color:#48525f;transition:.16s;flex:0 0 auto;}
+.stepchip .n{width:19px;height:19px;border-radius:50%;background:#eef2f7;color:#5b6673;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;}
+.stepchip:hover{border-color:#b9c6d6;background:#f7fafd;}
+.stepchip.active{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.stepchip.active .n{background:var(--brand);color:#fff;}
+.stepchip.done .n{background:#d8f0e2;color:#1a7f37;}
+
+.wrap{max-width:1600px;margin:0 auto;padding:22px 22px 80px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 3px 16px rgba(23,40,70,.06);padding:26px 30px;}
+.step-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+.step-kind{font-size:12px;font-weight:700;letter-spacing:.6px;padding:4px 11px;border-radius:6px;
+  background:#eef4ff;color:#0969da;flex:0 0 auto;margin-top:3px;}
+.step-kind.code{background:#fff1e8;color:#c9541c;}
+.step-kind.env{background:#e8f7ee;color:#12693a;}
+.step-kind.std{background:#f4edff;color:#8250df;}
+.step-title{font-size:20px;font-weight:800;letter-spacing:.2px;margin:0;}
+.step-sub{color:var(--muted);font-size:13px;margin-top:2px;}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;margin-top:4px;}
+.pill{font-size:12px;padding:4px 11px;border-radius:999px;background:#f2f5f9;color:#55606d;border:1px solid #e6ecf4;}
+.pill.time{background:#fff8ec;color:#9a6400;border-color:#f6e3c4;}
+.pill.file{background:#eef7f1;color:#12693a;border-color:#d5ebdd;}
+
+.workbench{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(360px,1fr);
+  gap:18px;align-items:start;margin-top:18px;}
+@media (max-width:1180px){.workbench{grid-template-columns:1fr;}}
+
+.left-col{min-width:0;display:flex;flex-direction:column;gap:16px;}
+.guide-box{background:#f8fafd;border:1px solid var(--line);border-left:4px solid var(--brand);
+  border-radius:10px;padding:14px 18px;}
+.guide-box h4{margin:0 0 8px;font-size:14px;color:#243040;letter-spacing:.3px;}
+.guide-box ol{margin:0;padding-left:20px;}
+.guide-box li{margin:5px 0;font-size:13.5px;color:#3c4757;}
+.guide-box li b{color:#16202c;}
+
+.code-panel{background:var(--codebg);border:1px solid #dde4ee;border-radius:12px;
+  overflow:hidden;box-shadow:0 4px 18px rgba(22,40,70,.07);}
+.code-head{display:flex;align-items:center;gap:12px;padding:9px 14px;background:#f8fafc;
+  border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.filedot{display:flex;gap:5px;}
+.filedot i{width:10px;height:10px;border-radius:50%;display:block;}
+.code-file{font-size:13px;font-weight:700;color:#33404f;letter-spacing:.3px;}
+.code-file small{font-weight:400;color:var(--muted);margin-left:6px;}
+.codeacts{margin-left:auto;display:flex;gap:8px;}
+.mini-btn{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:7px;
+  padding:5px 12px;font-size:12.5px;transition:.15s;}
+.mini-btn:hover{background:#eef4fb;border-color:#b7c9dd;color:#12212f;}
+.mini-btn.ok{background:#e8f7ee;border-color:#bfe3cd;color:#12693a;}
+.mini-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.legend{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;background:#fcfdff;
+  border-bottom:1px solid #eef2f8;}
+.lg{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#5d6875;
+  background:#fff;border:1px solid #e6ecf4;border-radius:999px;padding:3px 10px;}
+.lg b{font-size:12.5px;}
+
+.code-body{max-height:640px;overflow:auto;padding:8px 0;background:var(--codebg);}
+.code-body::-webkit-scrollbar{width:10px;height:10px;}
+.code-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px;}
+.code-body::-webkit-scrollbar-track{background:#f4f7fb;}
+.cl{display:flex;align-items:flex-start;min-height:22px;border-left:3px solid transparent;}
+.cl:hover{background:#f4f8ff;}
+.cl.clickable{cursor:pointer;}
+.cl.clickable:hover{background:#eaf3ff;}
+.cl.active{background:#e4f0ff!important;border-left-color:#0969da!important;}
+.cl .ic{flex:0 0 30px;text-align:center;font-size:13px;line-height:22px;user-select:none;padding-top:1px;}
+.cl .ln{flex:0 0 40px;text-align:right;padding-right:12px;font-size:12px;color:#a6b3c2;
+  line-height:22px;user-select:none;font-family:Consolas,monospace;}
+.cl.active .ln{color:#0969da;font-weight:700;}
+.cl .src{flex:1 1 auto;white-space:pre;padding-right:20px;font-size:13px;line-height:22px;
+  color:#1f2328;font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;}
+.cl.marked{border-left-width:3px;border-left-style:solid;}
+.cl.marked.k-basic{border-left-color:var(--basic);background:rgba(9,105,218,.035);}
+.cl.marked.k-object{border-left-color:var(--object);background:rgba(130,80,223,.035);}
+.cl.marked.k-flow{border-left-color:var(--flow);background:rgba(26,127,55,.035);}
+.cl.marked.k-request{border-left-color:var(--request);background:rgba(188,76,0,.035);}
+.cl.marked.k-tag{border-left-color:var(--tag);background:rgba(191,57,137,.035);}
+.cl.marked:hover{filter:saturate(1.15);}
+.code-body .cl.marked:hover{background:#eff5ff;}
+.code-body .cl.active .ic{transform:scale(1.25);}
+
+.tok-cmt{color:#6e7781;font-style:italic;}
+.tok-kw{color:#cf222e;font-weight:700;}
+.tok-str{color:#0a3069;}
+.tok-num{color:#0550ae;}
+.tok-tag{color:#116329;font-weight:700;}
+.tok-attr{color:#0550ae;}
+.tok-punc{color:#57606a;}
+.tok-jsp{color:#8250df;font-weight:700;}
+.tok-jspcode{color:#953800;}
+.tok-el{color:#8250df;font-weight:700;background:#faf5ff;border-radius:3px;padding:0 2px;}
+.tok-dir{color:#bf3989;font-weight:700;}
+
+.kp-panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  box-shadow:0 4px 18px rgba(22,40,70,.07);position:sticky;top:118px;max-height:calc(100vh - 140px);
+  display:flex;flex-direction:column;}
+@media (max-width:1180px){.kp-panel{position:static;max-height:none;}}
+.kp-head{display:flex;align-items:center;gap:10px;padding:11px 16px;
+  background:linear-gradient(135deg,#f7f9fc,#eef3fa);border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.kp-head .t{font-size:14px;font-weight:800;color:#1b2430;letter-spacing:.3px;}
+.kp-head .hint{font-size:11.5px;color:var(--muted);}
+.kp-nav{margin-left:auto;display:flex;gap:6px;}
+.kp-nav button{background:#fff;border:1px solid #d6dfea;border-radius:7px;padding:4px 10px;
+  font-size:12px;color:#41505f;}
+.kp-nav button:hover{background:#eef4fb;border-color:#b7c9dd;}
+.kp-nav button:disabled{opacity:.4;cursor:not-allowed;}
+.kp-chips{display:flex;gap:6px;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid #eef2f8;background:#fcfdff;}
+.kchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:999px;
+  background:#f3f6fa;border:1px solid #e3eaf3;color:#4c5765;transition:.15s;}
+.kchip:hover{background:#e9f1fb;border-color:#c3d5e9;}
+.kchip.on{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.kp-body{padding:16px 18px 24px;overflow:auto;flex:1 1 auto;}
+.kp-body::-webkit-scrollbar{width:9px;}
+.kp-body::-webkit-scrollbar-thumb{background:#cfd8e3;border-radius:5px;}
+.kp-empty{text-align:center;color:#8b96a5;padding:50px 20px;font-size:14px;line-height:2;}
+.kp-empty .big{font-size:40px;display:block;margin-bottom:12px;}
+.kp-empty b{color:#2d3a49;}
+.kpcard{border:1px solid #e6ecf4;border-radius:11px;overflow:hidden;margin-bottom:16px;background:#fff;}
+.kpcard-head{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid #eef2f8;}
+.kpcard-head .ic{font-size:16px;}
+.kpcard-head .tt{font-size:15px;font-weight:800;color:#141b23;}
+.kpcard-head .cat{margin-left:auto;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;}
+.kpcard-body{padding:14px 16px 18px;font-size:13.5px;color:#2c3540;}
+.kp-def{background:#f7fafd;border:1px solid #e6eef7;border-left:4px solid #4a90d9;
+  border-radius:8px;padding:11px 14px;margin-bottom:14px;color:#26313d;}
+.kpcard h5{margin:16px 0 8px;font-size:13.5px;color:#16202c;display:flex;align-items:center;gap:7px;
+  padding-bottom:5px;border-bottom:1px dashed #e3eaf3;}
+.kpcard h5:first-of-type{margin-top:6px;}
+.kpcard ul,.kpcard ol{margin:6px 0;padding-left:20px;}
+.kpcard li{margin:4px 0;}
+.kpcard b{color:#101820;}
+table.kpt{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:12.8px;}
+table.kpt th{background:#f4f7fb;color:#2b3542;text-align:left;padding:7px 10px;
+  border:1px solid #e3eaf3;font-weight:700;}
+table.kpt td{padding:7px 10px;border:1px solid #e8eef6;vertical-align:top;}
+table.kpt tr:nth-child(even) td{background:#fbfcfe;}
+table.kpt code{background:#eef4fb;padding:1px 5px;border-radius:4px;font-size:12px;color:#0a3d78;}
+pre.kpcode{background:#f8fafc;border:1px solid #e5ebf3;border-radius:8px;padding:11px 13px;
+  overflow-x:auto;font-size:12.6px;line-height:1.7;color:#1f2937;margin:8px 0 12px;white-space:pre;}
+pre.kpcode .c-str{color:#0a3069;}
+pre.kpcode .c-kw{color:#cf222e;font-weight:700;}
+pre.kpcode .c-cmt{color:#6e7781;font-style:italic;}
+pre.kpcode .c-jsp{color:#8250df;font-weight:700;}
+pre.kpcode .c-el{color:#8250df;font-weight:700;}
+pre.kpcode .c-tag{color:#116329;font-weight:700;}
+.tip{background:#e8f7ee;border:1px solid #bfe3cd;border-left:4px solid #1a7f37;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#124225;}
+.warn{background:#fff8ec;border:1px solid #f6e3c4;border-left:4px solid #bc4c00;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#6b3f00;}
+.std{background:#f4edff;border:1px solid #e0d1ff;border-left:4px solid #8250df;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#4a2e87;}
+.kplink{display:inline-block;margin:3px 4px 3px 0;padding:4px 10px;border-radius:6px;
+  background:#eef4fb;border:1px solid #cfe0f2;color:#0a3d78;font-size:12px;cursor:pointer;}
+.kplink:hover{background:#ddeaf8;}
+
+.info-section{margin-top:18px;}
+.info-section h3{font-size:17px;margin:20px 0 10px;color:#1b2430;padding-left:10px;border-left:4px solid var(--brand);}
+.info-section h4{font-size:14.5px;margin:16px 0 8px;color:#2d3a49;}
+.info-section p{font-size:13.5px;color:#3c4757;margin:8px 0;}
+.info-section ul,.info-section ol{padding-left:22px;}
+.info-section li{margin:4px 0;font-size:13.5px;color:#3c4757;}
+.info-section table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
+.info-section table th,.info-section table td{border:1px solid #e3eaf3;padding:8px 12px;text-align:left;}
+.info-section table th{background:#f4f7fb;color:#2b3542;}
+.pom-box{background:#1b2430;color:#eef1f6;border-radius:10px;padding:16px 18px;font-family:"JetBrains Mono",Consolas,monospace;
+  font-size:12.5px;line-height:1.75;overflow-x:auto;margin:10px 0;}
+.pom-box .p-kw{color:#ff7b72;}.pom-box .p-str{color:#a5d6ff;}.pom-box .p-tag{color:#7ee787;}
+.pom-box .p-cmt{color:#8b949e;font-style:italic;}.pom-box .p-num{color:#79c0ff;}
+.tree{background:#f8fafc;border:1px solid #e5ebf3;border-radius:10px;padding:16px 20px;font-family:"JetBrains Mono",Consolas,monospace;
+  font-size:13px;line-height:1.9;white-space:pre;margin:10px 0;color:#3c4757;}
+.tree .dir{color:#0969da;font-weight:700;}.tree .file{color:#1f2328;}.tree .note{color:#8b96a5;font-style:italic;}
+.browser-mock{background:#fff;border:1px solid #dde4ee;border-radius:10px;overflow:hidden;margin:14px 0;max-width:680px;}
+.browser-bar{background:#f4f7fb;padding:8px 12px;display:flex;gap:6px;align-items:center;border-bottom:1px solid #e5ebf3;}
+.browser-bar i{width:10px;height:10px;border-radius:50%;}
+.browser-url{flex:1;background:#fff;border:1px solid #d6dfea;border-radius:6px;padding:4px 10px;font-size:12px;color:#5b6673;font-family:Consolas,monospace;}
+.browser-body{padding:24px;background:#fff;min-height:160px;}
+.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0;}
+.kpi{flex:1 1 180px;background:linear-gradient(135deg,#fff8ec,#fef3e2);border:1px solid #f6e3c4;border-radius:10px;padding:14px 16px;}
+.kpi .v{font-size:22px;font-weight:800;color:#cf5320;}
+.kpi .l{font-size:12px;color:#8a5a00;margin-top:4px;}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px;}
+.kitem{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:.18s;}
+.kitem:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(23,40,70,.1);border-color:#b7c9dd;}
+.kitem .ic{font-size:22px;flex:0 0 30px;}
+.kitem .kt{font-size:13.5px;font-weight:700;color:#1b2430;}
+.kitem .kc{font-size:11.5px;color:#7b8795;margin-top:3px;}
+
+.navrow{display:flex;justify-content:space-between;margin-top:22px;gap:10px;flex-wrap:wrap;}
+.navrow button{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:8px;padding:8px 18px;font-size:13.5px;}
+.navrow button.primary{background:linear-gradient(135deg,#ff8a4c,#e8632a);color:#fff;border-color:transparent;font-weight:700;}
+.navrow button:hover{filter:brightness(1.05);}
+.navrow button:disabled{opacity:.4;cursor:not-allowed;}
+
+.toast{position:fixed;right:20px;bottom:24px;z-index:999;padding:12px 20px;border-radius:10px;
+  font-size:13.5px;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.2);opacity:0;transform:translateY(20px);
+  transition:.25s;pointer-events:none;max-width:360px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#1a7f37;}
+.toast.err{background:#cf222e;}
+.toast.warn{background:#bc4c00;}
+</style>
+</head>
+<body class="student-mode">
+
+<!-- ============ 顶栏 ============ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">JSP</div>
+    <div>
+      <div class="b1">JSP 项目式教学交互课件</div>
+      <div class="b2">第二次课 · JSP进阶 · 学生作业提交系统</div>
+    </div>
+  </div>
+  <div class="tmode" id="tmode">🛡️ 教师模式：关闭</div>
+</div>
+
+<!-- ============ 步骤轨道 ============ -->
+<div class="rail" id="rail"></div>
+
+<!-- ============ 主舞台 ============ -->
+<div class="wrap" id="stage"></div>
+
+<!-- ============ Toast ============ -->
+<div class="toast" id="toast"></div>
+
+<!-- ============ 源码容器（script text/plain 避免嵌套解析问题） ============ -->
+<script type="text/plain" id="src-c2-login">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>学生登录</title>
+    <style>
+        .box{width:400px;margin:100px auto;border:1px solid #eee;padding:30px;border-radius:8px;}
+        input{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
+        button{width:100%;padding:10px;background:#0969da;color:white;border:none;border-radius:4px;cursor:pointer;}
+    </style>
+</head>
+<body>
+<div class="box">
+    <h3>学生作业系统登录</h3>
+    <%-- 知识点：form表单method=post提交——表单数据放在请求体中，比GET更安全，适合登录/提交场景 --%>
+    <form action="submit.jsp" method="post">
+        <p>学号：<input type="text" name="stuId" required placeholder="请输入学号"></p>
+        <p>姓名：<input type="text" name="stuName" required placeholder="请输入姓名"></p>
+        <p><button type="submit">登录进入系统</button></p>
+    </form>
+</div>
+</body>
+</html>
+</script>
+<script type="text/plain" id="src-c2-submit">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    // 知识点：request内置对象，HttpServletRequest类型（jakarta.servlet.http），一次请求有效
+    // 解决POST提交中文乱码：必须在所有getParameter之前调用此方法，GET请求此方法无效
+    request.setCharacterEncoding("UTF-8");
+
+    // request.getParameter：根据表单input的name属性获取用户提交的参数值
+    String stuId = request.getParameter("stuId");
+    String stuName = request.getParameter("stuName");
+
+    /*
+     * 知识点：JSP九大内置对象（Tomcat翻译JSP时自动创建，无需new直接使用，必考点）
+     * 1. request：HttpServletRequest，一次请求，获取参数、请求域、转发
+     * 2. response：HttpServletResponse，一次响应，重定向、设置响应头
+     * 3. session：HttpSession，一次会话（默认30分钟无交互失效），存储登录状态
+     * 4. application：ServletContext，整个Web应用，服务器启动创建，所有用户共享
+     * 5. out：JspWriter，当前页面，向客户端输出文本内容
+     * 6. pageContext：PageContext，当前页面上下文，可获取其他8个对象
+     * 7. page：Object，代表当前JSP页面实例本身，相当于Servlet中的this
+     * 8. config：ServletConfig，当前Servlet的配置对象，获取初始化参数
+     * 9. exception：Throwable，仅在isErrorPage="true"的错误页可用
+     */
+
+    /*
+     * 知识点：JSP四大域对象（通过setAttribute/getAttribute存取数据，必考点）
+     * pageContext: PageScope         当前页面有效，跳转后丢失
+     * request:     RequestScope      一次请求有效（转发共享，重定向丢失）
+     * session:     SessionScope      一次会话有效（同一用户跨多次请求）
+     * application: ApplicationScope  整个应用有效（所有用户共享）
+     * 使用原则：在满足需求的前提下，优先使用作用域最小的域对象
+     */
+
+    // session内置对象：存储登录状态与用户信息，同一用户后续页面可获取
+    session.setAttribute("loginStuId", stuId);
+    session.setAttribute("loginStuName", stuName);
+    session.setAttribute("isLogin", true);
+%>
+<html>
+<head>
+    <title>提交作业</title>
+    <style>
+        .box{width:600px;margin:50px auto;border:1px solid #eee;padding:20px;border-radius:8px;}
+        input,textarea{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
+        button{padding:10px 20px;background:#0969da;color:white;border:none;border-radius:4px;cursor:pointer;}
+    </style>
+</head>
+<body>
+<div class="box">
+    <h3>欢迎你，<%= stuName %> 同学</h3>
+    <h4>提交JSP第二次课作业</h4>
+    <form action="result.jsp" method="post">
+        <p>作业标题：<input type="text" name="workTitle" required placeholder="如：JSP进阶作业"></p>
+        <p>作业内容：<textarea name="workContent" rows="5" cols="50" required placeholder="请输入作业核心内容"></textarea></p>
+        <p><button type="submit">提交作业</button></p>
+    </form>
+</div>
+</body>
+</html>
+</script>
+<script type="text/plain" id="src-c2-result">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%-- 知识点：taglib指令——引入JSTL标签库，prefix定义标签前缀，uri是标签库命名空间标识符（Jakarta JSTL 3.0 uri保持不变） --%>
+<%
+    request.setCharacterEncoding("UTF-8");
+    // 知识点：登录状态校验——未登录用户不能直接访问结果页，必须经过登录流程（所有需要登录的页面都需此判断）
+    Boolean isLogin = (Boolean) session.getAttribute("isLogin");
+    if(isLogin == null || !isLogin){
+        // 知识点：response内置对象sendRedirect方法——重定向（客户端跳转，302，浏览器发新请求）
+        response.sendRedirect("login.jsp");
+        return; // 知识点：重定向后必须return终止后续代码执行，否则后续HTML仍会输出
+    }
+%>
+<html>
+<head>
+    <title>提交结果</title>
+    <style>
+        .box{width:600px;margin:50px auto;border:1px solid #eee;padding:20px;border-radius:8px;}
+        .success{color:green;font-size:20px;}
+        a{color:#0969da;}
+    </style>
+</head>
+<body>
+<div class="box">
+    <h3 class="success">✅ 作业提交成功！</h3>
+    <%-- 知识点：EL表达式——简化页面数据输出，自动按pageContext→request→session→application顺序查找，无需手写getAttribute和类型转换 --%>
+    <p>你的学号：${loginStuId}</p>
+    <p>你的姓名：${loginStuName}</p>
+    <%-- 知识点：EL内置对象param——等价于request.getParameter，直接获取本次请求提交的表单/URL参数 --%>
+    <%-- 🏭 行业标准：输出用户输入必须使用c:out（默认escapeXml=true）做HTML转义，防范XSS攻击 --%>
+    <p>作业标题：<c:out value="${param.workTitle}"/></p>
+    <p>作业内容：<c:out value="${param.workContent}"/></p>
+    <p>提交时间：<%= new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()) %></p>
+
+    <h4>📊 系统访问统计：</h4>
+    <%-- 通过applicationScope明确指定从application域获取，避免与其他域同名属性冲突 --%>
+    <p>系统总访问量：${applicationScope.visitCount} 次</p>
+    <p>当前在线人数：${applicationScope.onlineCount} 人</p>
+
+    <p style="margin-top:20px;">
+        <%-- 知识点：JSTL c:if标签——实现页面逻辑判断，替代Java if脚本片段；test属性必须写EL表达式 --%>
+        <c:if test="${not empty loginStuName}">
+            <a href="count.jsp" style="margin-right:20px;">查看完整访问统计</a>
+        </c:if>
+        <a href="login.jsp">退出登录</a>
+    </p>
+</div>
+</body>
+</html>
+</script>
+<script type="text/plain" id="src-c2-count">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%
+    // 登录状态校验——未登录用户不能直接访问统计页
+    if(session.getAttribute("isLogin") == null){
+        response.sendRedirect("login.jsp");
+        return;
+    }
+
+    // 知识点：application内置对象——ServletContext类型，全局应用数据
+    // 生命周期：服务器启动创建，服务器关闭销毁，所有用户共享同一份数据
+    Integer visitCount = (Integer) application.getAttribute("visitCount");
+    if(visitCount == null){ visitCount = 1; } else { visitCount++; }
+    application.setAttribute("visitCount", visitCount);
+
+    Integer onlineCount = (Integer) application.getAttribute("onlineCount");
+    if(onlineCount == null){ onlineCount = 1; }
+    application.setAttribute("onlineCount", onlineCount);
+
+    // 知识点：out内置对象——JspWriter类型，向响应中输出文本内容（页面所有HTML最终都是out.write）
+    out.println("<!-- 页面生成时间：" + new java.util.Date() + " -->");
+%>
+<html>
+<head>
+    <title>访问统计</title>
+    <style>
+        .header{background:#2c3e50;color:white;padding:15px;text-align:center;font-size:18px;}
+        .box{width:600px;margin:30px auto;padding:20px;}
+        button{padding:8px 16px;background:#0969da;color:white;border:none;border-radius:4px;cursor:pointer;}
+        ul{line-height:2;}
+    </style>
+</head>
+<body>
+<div class="header">2024级软件技术1班 JSP课程作业系统</div>
+<div class="box">
+    <h3>📈 系统访问统计</h3>
+    <p>系统总访问次数：<b>${visitCount}</b></p>
+    <p>当前在线人数：<b>${onlineCount}</b></p>
+
+    <h4>最近提交作业的学生：</h4>
+    <ul>
+        <%-- 知识点：JSTL c:forEach标签——循环遍历集合或生成数字范围循环，替代Java for脚本 --%>
+        <%-- begin起始、end结束（包含）、var循环变量、varStatus状态（vs.count从1开始序号） --%>
+        <c:forEach begin="1" end="5" var="i" varStatus="vs">
+            <li>学生${i} - 已提交JSP进阶作业</li>
+        </c:forEach>
+    </ul>
+
+    <p><button onclick="location.href='submit.jsp'">返回提交页</button></p>
+</div>
+</body>
+</html>
+</script>
+
+
+<!-- ============ 知识点模板 ============ -->
+<script type="text/html" id="kp-form-method">
+<div class="kp-def"><b>form 表单的 method 属性</b>决定浏览器把表单参数以何种方式发送给服务器，<b>GET 和 POST 是 HTTP 协议中最常用的两种方法</b>，在数据传输方式、可见性、长度限制、用途上有本质区别。</div>
+
+<h5>📌 语法</h5>
+<pre class="kpcode"><span class="c-tag">&lt;form</span> <span class="c-attr">action</span>=<span class="c-str">"submit.jsp"</span> <span class="c-attr">method</span>=<span class="c-str">"post"</span><span class="c-tag">&gt;</span>
+  ...表单控件...
+<span class="c-tag">&lt;/form&gt;</span></pre>
+
+<h5>📋 GET vs POST 6 维度对比（必考点）</h5>
+<table class="kpt">
+<tr><th>对比维度</th><th>GET</th><th>POST</th></tr>
+<tr><td>参数位置</td><td>拼接在 URL 后面（Query String）<br><code>?stuId=2024001&stuName=张三</code></td><td>放在 HTTP 请求体中，URL 不可见</td></tr>
+<tr><td>地址栏可见性</td><td>✅ 所有参数在地址栏可见</td><td>❌ 地址栏只显示 action 路径</td></tr>
+<tr><td>数据长度</td><td>受浏览器 URL 长度限制（通常 2KB~8KB）</td><td>理论上无限制（服务器可配置）</td></tr>
+<tr><td>安全性</td><td>❌ 参数在 URL 中，会被历史记录、日志、Referrer 泄露</td><td>✅ 相对更安全，但 HTTPS 下同样会被加密</td></tr>
+<tr><td>中文编码</td><td>Tomcat 默认使用 ISO-8859-1 解析 URL 参数，需手动处理</td><td>通过 request.setCharacterEncoding("UTF-8") 一行解决</td></tr>
+<tr><td>浏览器行为</td><td>可收藏为书签、可分享、可回退</td><td>不可收藏，刷新时浏览器会提示"是否重新提交表单"</td></tr>
+<tr><td>典型用途</td><td>查询、搜索、分页、跳转等<b>幂等操作</b></td><td>登录、提交数据、修改、删除等<b>非幂等操作</b></td></tr>
+</table>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li>form 不写 method 时默认是 GET——很多新手以为是 POST，结果参数都出现在地址栏；</li><li>GET 请求不能用 request.setCharacterEncoding 解决中文乱码（因为它不作用于 URL），需对参数单独转码或在 server.xml 配置 Connector 的 URIEncoding="UTF-8"；</li><li>method 不区分大小写，但规范建议写小写 post/get。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b><b>RESTful 规范中严格区分 GET/POST/PUT/DELETE</b>：查询用 GET、新增用 POST、修改用 PUT、删除用 DELETE。所有会改变服务器状态的操作（登录、提交、删除、付款）一律用 POST/PUT/DELETE，绝对不能用 GET——否则用户刷新页面、爬虫访问、预加载都可能触发误操作。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="request-object">request 内置对象</span>
+<span class="kplink" data-jump="response-redirect">重定向与PRG模式</span>
+</script>
+<script type="text/html" id="kp-request-object">
+<div class="kp-def"><b>request 是 HttpServletRequest 类型的内置对象</b>（jakarta.servlet.http.HttpServletRequest），由 Tomcat 在每次 HTTP 请求时创建，封装了<b>请求行、请求头、请求参数、请求域、客户端信息</b>等所有请求相关数据，是最常用的内置对象之一。</div>
+
+<h5>📌 最常用的 5 个方法</h5>
+<table class="kpt">
+<tr><th>方法</th><th>作用</th><th>返回值</th></tr>
+<tr><td><code>request.getParameter(String name)</code></td><td>获取表单/URL 中单个参数值（最常用）</td><td>String，参数不存在返回 null</td></tr>
+<tr><td><code>request.getParameterValues(String name)</code></td><td>获取同名参数的多个值（如多选框）</td><td>String[]</td></tr>
+<tr><td><code>request.setCharacterEncoding("UTF-8")</code></td><td>设置请求体字符编码（仅对 POST 有效）</td><td>void</td></tr>
+<tr><td><code>request.setAttribute(name,value)</code></td><td>在 request 域中存储数据（转发时共享）</td><td>void</td></tr>
+<tr><td><code>request.getAttribute(name)</code></td><td>获取 request 域中的数据</td><td>Object，需要强转</td></tr>
+</table>
+<p>其他常用方法：<code>request.getRequestURL()</code>（完整URL）、<code>request.getRequestURI()</code>（路径部分）、<code>request.getRemoteAddr()</code>（客户端IP）、<code>request.getHeader("User-Agent")</code>（请求头）、<code>request.getMethod()</code>（GET/POST）、<code>request.getContextPath()</code>（应用根路径）。</p>
+
+<h5>💻 POST 中文乱码解决方案（必考）</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 这一行必须写在所有 getParameter 之前，放在页面最开头 --%&gt;</span>
+<span class="c-jsp">&lt;%</span>
+  request.setCharacterEncoding(<span class="c-str">"UTF-8"</span>);   <span class="c-cmt">// 仅解决 POST 请求体乱码</span>
+  String stuName = request.getParameter(<span class="c-str">"stuName"</span>);
+<span class="c-jsp">%&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 三个高频错误：</b><ol>
+<li><b>setCharacterEncoding 写在 getParameter 之后</b>：此时 Tomcat 已经用默认 ISO-8859-1 解析完参数，再设置编码无效；</li>
+<li><b>getParameter 返回值不判空直接使用</b>：参数不存在时返回 null，调用 .trim()/.length() 会抛 NullPointerException；</li>
+<li><b>混淆 getParameter 与 getAttribute</b>：getParameter 用于获取<b>客户端传来的参数</b>（String），getAttribute 用于获取<b>服务器端 setAttribute 存入的数据</b>（Object）。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b><ul><li>企业项目<b>不会在每个 JSP/Servlet 都写 setCharacterEncoding</b>，而是通过一个 <b>CharacterEncodingFilter</b> 统一拦截所有请求设置 UTF-8；</li><li>所有用户输入必须做<b>后端非空、长度、格式校验</b>，前端 JS 校验可以被绕过；</li><li>敏感参数（如用户ID、权限）绝不能只靠表单隐藏字段传递，必须从 session 中取，防止用户篡改。</li></ul></div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="nine-objects">九大内置对象</span>
+<span class="kplink" data-jump="four-scopes">四大域对象</span>
+<span class="kplink" data-jump="form-method">GET vs POST</span>
+</script>
+<script type="text/html" id="kp-nine-objects">
+<div class="kp-def"><b>JSP 九大内置对象</b>（又称隐式对象）是 Tomcat 在翻译 JSP 为 Servlet 时，在 <code>_jspService()</code> 方法中<b>自动创建并预先初始化</b>的 9 个对象，开发者<b>无需 new 即可直接使用</b>——这是 JSP 区别于普通 Java 类的核心特性，也是 JSP 部分的核心必考点。</div>
+
+<h5>📋 九大内置对象完整清单（必背）</h5>
+<table class="kpt">
+<tr><th>对象名</th><th>实际类型（Jakarta EE 10）</th><th>作用域</th><th>核心作用</th><th>重要度</th></tr>
+<tr><td><b>out</b></td><td>JspWriter</td><td>当前页面</td><td>向客户端输出文本内容</td><td>⭐⭐⭐</td></tr>
+<tr><td><b>request</b></td><td>HttpServletRequest</td><td>一次请求</td><td>获取请求参数、请求头、请求域、转发</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td><b>response</b></td><td>HttpServletResponse</td><td>一次响应</td><td>设置响应头、响应编码、重定向、输出流</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td><b>session</b></td><td>HttpSession</td><td>一次会话</td><td>存储登录状态、用户私有数据</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td><b>application</b></td><td>ServletContext</td><td>整个 Web 应用</td><td>全局共享数据、应用初始化参数</td><td>⭐⭐⭐⭐</td></tr>
+<tr><td><b>pageContext</b></td><td>PageContext</td><td>当前页面</td><td>页面上下文，可获取其他 8 个对象</td><td>⭐⭐⭐</td></tr>
+<tr><td><b>page</b></td><td>Object（this）</td><td>当前页面</td><td>代表当前 Servlet 实例本身</td><td>⭐</td></tr>
+<tr><td><b>config</b></td><td>ServletConfig</td><td>当前 Servlet</td><td>获取 Servlet 初始化参数</td><td>⭐⭐</td></tr>
+<tr><td><b>exception</b></td><td>Throwable</td><td>当前页面</td><td>仅在 isErrorPage="true" 的错误页可用</td><td>⭐⭐</td></tr>
+</table>
+
+<h5>💡 记忆口诀</h5>
+<pre class="kpcode">"四域二出一页面，配置异常再加一"
+四域：pageContext / request / session / application （对应四大域对象）
+二出：out（输出）/ response（响应输出）
+一页面：page（页面对象本身）
+配置：config（Servlet 配置）
+异常：exception（异常对象）</pre>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li>内置对象<b>只能在脚本片段 &lt;% %&gt; 和表达式脚本 &lt;%= %&gt; 中使用</b>，不能在声明脚本 &lt;%! %&gt; 中使用（因为声明脚本翻译到成员位置，而内置对象是 _jspService 方法的局部变量）；</li><li>exception 对象只有在 page 指令设置 <code>isErrorPage="true"</code> 时才存在，普通页面直接用会编译报错；</li><li>page 对象是 Object 类型，实际就是 Servlet 的 this，几乎不用直接调用。</li></ol></div>
+
+<div class="std"><b>🏭 面试高频考点：</b>JSP 九大内置对象是面试 JSP 部分最高频的问题，必须按"对象名-类型-作用"完整答出，并能讲清四大域对象的区别（详见"四大域对象"知识点卡片）。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="four-scopes">四大域对象</span>
+<span class="kplink" data-jump="request-object">request 对象</span>
+<span class="kplink" data-jump="session-object">session 对象</span>
+<span class="kplink" data-jump="application-object">application 对象</span>
+</script>
+<script type="text/html" id="kp-four-scopes">
+<div class="kp-def"><b>JSP 四大域对象</b>指可以通过 <code>setAttribute(name, value)</code> / <code>getAttribute(name)</code> / <code>removeAttribute(name)</code> 存取数据的 4 个对象，它们的生命周期和数据共享范围不同，是 JSP 数据传递的核心机制。</div>
+
+<h5>📌 三个存取方法（四大域通用 API）</h5>
+<pre class="kpcode">void setAttribute(String name, Object value);   <span class="c-cmt">// 存数据（value 必须是 Object）</span>
+Object getAttribute(String name);                <span class="c-cmt">// 取数据（返回 Object，需要强转）</span>
+void removeAttribute(String name);               <span class="c-cmt">// 删除数据</span></pre>
+
+<h5>📋 四大域对象完整对比（必背必考点）</h5>
+<table class="kpt">
+<tr><th>域对象</th><th>对应类</th><th>作用范围</th><th>生命周期起点</th><th>生命周期终点</th><th>典型用途</th></tr>
+<tr><td><b>pageContext</b><br>（PageScope）</td><td>PageContext</td><td>当前 JSP 页面</td><td>页面请求开始</td><td>页面响应结束</td><td>页面内部临时数据，几乎不用</td></tr>
+<tr><td><b>request</b><br>（RequestScope）</td><td>HttpServletRequest</td><td>一次请求（转发共享）</td><td>浏览器发送请求</td><td>服务器返回响应</td><td>Controller → View 传递数据（最常用）</td></tr>
+<tr><td><b>session</b><br>（SessionScope）</td><td>HttpSession</td><td>一次会话（同一用户跨请求）</td><td>用户首次访问</td><td>超时/调用 invalidate/关闭浏览器</td><td>登录状态、购物车、用户私有数据</td></tr>
+<tr><td><b>application</b><br>（ApplicationScope）</td><td>ServletContext</td><td>整个 Web 应用（所有用户共享）</td><td>服务器启动/应用部署</td><td>服务器关闭/应用卸载</td><td>全局配置、访问统计、在线人数</td></tr>
+</table>
+
+<div class="kp-def"><b>🎯 核心使用原则：最小域原则</b>——在满足功能需求的前提下，<b>优先使用作用域最小的域对象</b>。能用 request 就不用 session，能用 session 就不用 application。作用域越大，数据占用内存时间越长、并发安全问题越多。</div>
+
+<h5>💻 代码示例</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;%</span>
+  request.setAttribute(<span class="c-str">"msg"</span>, <span class="c-str">"查询成功"</span>);          <span class="c-cmt">// request 域：转发给 JSP 展示</span>
+  session.setAttribute(<span class="c-str">"loginUser"</span>, user);             <span class="c-cmt">// session 域：登录信息</span>
+  application.setAttribute(<span class="c-str">"visitCount"</span>, count);       <span class="c-cmt">// application 域：全局统计</span>
+
+  <span class="c-cmt">// EL 表达式按 pageContext → request → session → application 顺序查找</span>
+  <span class="c-cmt">// 可用 xxxScope 明确指定域，避免同名冲突：</span>
+  <span class="c-cmt">// ${requestScope.msg}  ${sessionScope.loginUser}  ${applicationScope.visitCount}</span>
+<span class="c-jsp">%&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><b>getAttribute 返回 Object，必须强转</b>：<code>String name = (String) session.getAttribute("loginName");</code>；</li><li><b>重定向不共享 request 域</b>：response.sendRedirect 会让浏览器发送新请求，request 域数据丢失，需要传值要么放 session，要么在 URL 后拼接参数；</li><li><b>application 域存在线程安全问题</b>：多个用户同时访问时 setAttribute 不是原子操作，统计访问量应使用 synchronized 或 AtomicInteger（简单教学可忽略）。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b>现代 MVC 架构中，<b>Controller（Servlet）把数据放入 request 域后 forward 到 JSP 展示</b>，这是 request 域最主要的用法；session 只存登录凭证等必须跨请求的数据；application 在真实项目中<b>极少用来存业务数据</b>，全局数据通常存 Redis 或数据库。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="nine-objects">九大内置对象</span>
+<span class="kplink" data-jump="session-object">session 对象</span>
+<span class="kplink" data-jump="application-object">application 对象</span>
+<span class="kplink" data-jump="el-expression">EL 表达式查找顺序</span>
+</script>
+<script type="text/html" id="kp-session-object">
+<div class="kp-def"><b>session 是 HttpSession 类型的内置对象</b>（jakarta.servlet.http.HttpSession），用于<b>在同一个用户的多次请求之间保存数据</b>。服务器通过 Cookie 中的 JSESSIONID 识别不同用户，为每个用户创建独立的 session 对象。</div>
+
+<h5>📌 工作原理</h5>
+<ol>
+<li>用户首次访问 JSP 时，Tomcat 创建一个新的 HttpSession 对象并生成唯一 ID（JSESSIONID）；</li>
+<li>响应通过 <code>Set-Cookie: JSESSIONID=xxxx</code> 把这个 ID 写到浏览器 Cookie；</li>
+<li>后续同一用户的请求会自动携带这个 JSESSIONID Cookie；</li>
+<li>Tomcat 根据 JSESSIONID 找到对应的 session 对象，从而实现"跨请求识别用户"。</li>
+</ol>
+
+<h5>📋 核心 API</h5>
+<table class="kpt">
+<tr><th>方法</th><th>作用</th></tr>
+<tr><td><code>session.setAttribute(name, value)</code></td><td>向 session 中存入数据</td></tr>
+<tr><td><code>session.getAttribute(name)</code></td><td>从 session 获取数据（返回 Object）</td></tr>
+<tr><td><code>session.removeAttribute(name)</code></td><td>移除 session 中某个数据</td></tr>
+<tr><td><code>session.invalidate()</code></td><td>销毁整个 session（退出登录用）</td></tr>
+<tr><td><code>session.setMaxInactiveInterval(秒)</code></td><td>设置超时时间（默认30分钟）</td></tr>
+<tr><td><code>session.getId()</code></td><td>获取 JSESSIONID</td></tr>
+<tr><td><code>session.isNew()</code></td><td>是否是本次请求新创建的 session</td></tr>
+</table>
+
+<h5>💻 登录状态管理典型用法</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 登录成功时存储用户信息 --%&gt;</span>
+<span class="c-jsp">&lt;%</span>
+  session.setAttribute(<span class="c-str">"loginStuId"</span>, stuId);
+  session.setAttribute(<span class="c-str">"loginStuName"</span>, stuName);
+  session.setAttribute(<span class="c-str">"isLogin"</span>, <span class="c-kw">true</span>);
+<span class="c-jsp">%&gt;</span>
+
+<span class="c-cmt">&lt;%-- 其他页面校验登录状态 --%&gt;</span>
+<span class="c-jsp">&lt;%</span>
+  Boolean isLogin = (Boolean) session.getAttribute(<span class="c-str">"isLogin"</span>);
+  <span class="c-kw">if</span>(isLogin == <span class="c-kw">null</span> || !isLogin){
+    response.sendRedirect(<span class="c-str">"login.jsp"</span>);
+    <span class="c-kw">return</span>;
+  }
+<span class="c-jsp">%&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><b>session 依赖 Cookie</b>：如果用户禁用了 Cookie，session 会失效（可通过 URL 重写 <code>response.encodeURL()</code> 解决，但不常用）；</li><li><b>关闭浏览器不等于 session 销毁</b>：session 存在服务器端，浏览器关闭只是丢失了 JSESSIONID Cookie，30分钟后 session 才会超时销毁；</li><li><b>invalidate 之后不能再使用 session</b>：调用后立即失效，再次 setAttribute 会抛 IllegalStateException。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b><ul><li><b>session 只存必要的登录凭证（用户ID、用户名、角色）</b>，禁止存储大对象（如查询结果List、文件字节），否则内存容易溢出；</li><li>分布式部署（多台 Tomcat）时必须使用<b>Redis + Spring Session</b> 等方案，否则不同 Tomcat 之间 session 不共享；</li><li>敏感操作（如修改密码、支付）需要重新验证身份，不能仅凭 session 登录状态。</li></ul></div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="login-check">登录状态校验</span>
+<span class="kplink" data-jump="four-scopes">四大域对象</span>
+<span class="kplink" data-jump="response-redirect">重定向</span>
+</script>
+<script type="text/html" id="kp-response-redirect">
+<div class="kp-def"><b>response 是 HttpServletResponse 类型的内置对象</b>（jakarta.servlet.http.HttpServletResponse），代表服务器对客户端的 HTTP 响应。<code>response.sendRedirect(URL)</code> 是其最常用方法，实现<b>客户端重定向</b>（302跳转）。</div>
+
+<h5>📌 重定向工作原理</h5>
+<ol>
+<li>服务器调用 sendRedirect 后，向浏览器返回 <b>302 状态码 + Location 响应头</b>；</li>
+<li>浏览器收到 302 后，<b>自动向 Location 指定的 URL 发送新请求</b>；</li>
+<li>地址栏 URL 变为新的 URL；</li>
+<li>这是<b>两次独立请求</b>。</li>
+</ol>
+
+<h5>📋 response 对象其他常用方法</h5>
+<table class="kpt">
+<tr><th>方法</th><th>作用</th></tr>
+<tr><td><code>response.sendRedirect(url)</code></td><td>302 重定向（客户端跳转）</td></tr>
+<tr><td><code>response.setContentType("text/html;charset=UTF-8")</code></td><td>设置响应类型与编码</td></tr>
+<tr><td><code>response.getWriter()</code></td><td>获取字符输出流（PrintWriter）</td></tr>
+<tr><td><code>response.setHeader(name, value)</code></td><td>设置响应头（如刷新、缓存控制）</td></tr>
+<tr><td><code>response.addCookie(cookie)</code></td><td>向浏览器写入 Cookie</td></tr>
+<tr><td><code>response.setStatus(code)</code></td><td>设置 HTTP 状态码</td></tr>
+</table>
+
+<h5>💻 典型用法</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 未登录重定向到登录页（权限保护） --%&gt;</span>
+<span class="c-jsp">&lt;%</span>
+  <span class="c-kw">if</span>(session.getAttribute(<span class="c-str">"isLogin"</span>) == <span class="c-kw">null</span>){
+    response.sendRedirect(<span class="c-str">"login.jsp"</span>);
+    <span class="c-kw">return</span>;   <span class="c-cmt">// 必须 return，否则后续代码继续执行</span>
+  }
+<span class="c-jsp">%&gt;</span>
+
+<span class="c-cmt">&lt;%-- 重定向到外部网站必须写完整 URL --%&gt;</span>
+<span class="c-cmt">&lt;% response.sendRedirect("https://www.example.com"); %&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 三个高频错误：</b><ol>
+<li><b>重定向后忘记 return</b>：sendRedirect 只是告诉浏览器跳转，<b>当前页面代码还会继续执行</b>，必须立即 return 终止后续逻辑；</li>
+<li><b>重定向前已经输出了内容</b>：会抛 IllegalStateException——因为响应已经提交，无法再设置 302 状态码；</li>
+<li><b>重定向路径问题</b>：相对路径是相对于当前 URL；以 <code>/</code> 开头表示服务器根（<code>http://localhost:8080/</code>），不是应用根。建议使用 <code>request.getContextPath() + "/login.jsp"</code> 拼接绝对路径。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b><b>PRG 模式（Post-Redirect-Get）</b>——所有 POST 表单提交成功后必须重定向到一个 GET 页面，防止用户刷新页面导致"重复提交表单"。这是登录、下单、支付等操作的标准做法。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="forward-vs-redirect">转发 vs 重定向</span>
+<span class="kplink" data-jump="login-check">登录状态校验</span>
+</script>
+<script type="text/html" id="kp-forward-vs-redirect">
+<div class="kp-def"><b>转发（forward）</b>和<b>重定向（redirect/sendRedirect）</b>是 JSP/Servlet 中两种页面跳转方式，它们的底层原理、地址栏表现、请求共享情况、使用场景完全不同，是 JSP 核心必考点。</div>
+
+<h5>📋 转发 vs 重定向 7 维度完整对比（必背）</h5>
+<table class="kpt">
+<tr><th>对比维度</th><th>转发 request.getRequestDispatcher().forward()</th><th>重定向 response.sendRedirect()</th></tr>
+<tr><td>跳转方式</td><td>服务器内部跳转</td><td>浏览器客户端跳转</td></tr>
+<tr><td>HTTP 请求次数</td><td><b>1 次请求</b></td><td><b>2 次请求</b></td></tr>
+<tr><td>地址栏变化</td><td>❌ 不变（显示原请求URL）</td><td>✅ 变为新 URL</td></tr>
+<tr><td>是否共享 request 域</td><td>✅ 共享（同一 request）</td><td>❌ 不共享（新请求）</td></tr>
+<tr><td>能否跳到外部网站</td><td>❌ 只能在当前 Web 应用内跳转</td><td>✅ 可以跳转到任意 URL</td></tr>
+<tr><td>能否访问 WEB-INF</td><td>✅ 可以（服务器内部访问）</td><td>❌ 不可以（浏览器无法访问 WEB-INF）</td></tr>
+<tr><td>速度</td><td>快（服务器内部）</td><td>慢（需要浏览器二次请求）</td></tr>
+<tr><td>典型用法</td><td>Controller → View 页面渲染</td><td>登录失败、提交成功后跳转、跨站跳转</td></tr>
+<tr><td>API</td><td><code>request.getRequestDispatcher("url").forward(req,resp)</code><br>或 JSP 中 <code>&lt;jsp:forward page="url"/&gt;</code></td><td><code>response.sendRedirect("url")</code></td></tr>
+</table>
+
+<h5>💡 形象比喻</h5>
+<div class="tip"><ul>
+<li><b>转发</b>相当于"A公司前台接到客户电话，说'这事不归我管，我给你转B部门'，然后前台内部把电话转给B部门，客户始终只拨了一次电话，不知道中间转了"；</li>
+<li><b>重定向</b>相当于"A公司前台告诉客户'你打错了，请重新打B部门的电话XXX'，客户挂断后自己重新拨B部门号码"。</li></ul></div>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol>
+<li><b>重定向的路径以 / 开头是服务器根（http://host:port/）</b>，转发的路径以 / 开头是应用根——这是最容易混淆的细节，建议重定向永远用 <code>request.getContextPath() + "/xxx.jsp"</code>；</li>
+<li>无论是转发还是重定向，执行完后都应<b>立即 return</b>，否则后续代码继续执行可能产生异常或多余输出。</li></ol></div>
+
+<div class="std"><b>🏭 选型口诀：</b>"同一个请求传数据用转发，跳转新请求或跨应用用重定向；POST 提交后必须重定向（PRG模式防重复提交），跳 WEB-INF 只能用转发"。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="response-redirect">response 重定向</span>
+<span class="kplink" data-jump="login-check">登录校验</span>
+<span class="kplink" data-jump="four-scopes">四大域对象（request域）</span>
+</script>
+<script type="text/html" id="kp-login-check">
+<div class="kp-def"><b>登录状态校验</b>是 Web 开发中最基础的权限控制逻辑：在所有<b>需要登录才能访问的页面</b>开头，检查 session 中是否存在登录标识（如 isLogin = true），如果不存在则立即重定向到登录页，阻止未授权访问。</div>
+
+<h5>📌 标准写法（页面最开头，所有HTML输出之前）</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;%</span>
+  <span class="c-cmt">// 登录状态校验必须放在页面最开头，任何HTML输出之前完成</span>
+  Boolean isLogin = (Boolean) session.getAttribute(<span class="c-str">"isLogin"</span>);
+  <span class="c-kw">if</span>(isLogin == <span class="c-kw">null</span> || !isLogin){
+    response.sendRedirect(request.getContextPath() + <span class="c-str">"/login.jsp"</span>);
+    <span class="c-kw">return</span>;   <span class="c-cmt">// 终止后续代码执行</span>
+  }
+<span class="c-jsp">%&gt;</span>
+<span class="c-tag">&lt;html&gt;</span>... 页面正文 ...<span class="c-tag">&lt;/html&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 为什么必须放在页面最开头？</b><ol>
+<li>如果先输出了 HTML 内容再做校验，即使最终重定向，前面的 HTML 已经发给浏览器了，用户仍能看到部分敏感内容；</li>
+<li>先输出内容再调用 sendRedirect 会抛出 <code>IllegalStateException: Cannot call sendRedirect() after the response has been committed</code>。</li></ol></div>
+
+<h5>💡 为什么用 Boolean 而不是直接判断是否为 null？</h5>
+<p>因为 <code>setAttribute("isLogin", true)</code> 存入的是 <b>Boolean.TRUE</b>（自动装箱），getAttribute 返回 Object，需要强转 Boolean。判断时要同时考虑"不存在（null）"和"存在但值为false"两种情况——前者是从未登录，后者是已登出。</p>
+
+<div class="std"><b>🏭 行业标准：</b><ul><li><b>企业项目不允许每个 JSP 重复写校验代码</b>——使用 <b>Filter（过滤器）</b> 统一拦截需要登录的 URL 模式（如 /user/*、/admin/*），校验不通过自动重定向，JSP 中完全不写权限判断代码；</li><li>更严格的权限校验需要<b>角色/权限标识</b>（如 RBAC），不只是"是否登录"；</li><li>敏感操作（如删除、修改）还需要校验 CSRF Token，防止跨站请求伪造。</li></ul></div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="session-object">session 对象</span>
+<span class="kplink" data-jump="response-redirect">response 重定向</span>
+<span class="kplink" data-jump="forward-vs-redirect">转发 vs 重定向</span>
+</script>
+<script type="text/html" id="kp-el-expression">
+<div class="kp-def"><b>EL（Expression Language，表达式语言）</b>是 JSP 2.0 引入的简化语法，格式为 <code>${表达式}</code>，用于<b>替代 JSP 表达式脚本 &lt;%= %&gt;</b>，更简洁地输出域对象中的数据和进行简单运算，彻底避免在页面中写 Java 代码。</div>
+
+<h5>📌 EL 的核心优势</h5>
+<ul>
+<li><b>简化书写</b>：无需写 getAttribute 和类型强转；</li>
+<li><b>自动类型转换</b>：从域中取出的 Object 自动转换为合适类型；</li>
+<li><b>null 友好</b>：属性不存在时输出<b>空字符串</b>而非 NullPointerException（这是最大优势！）；</li>
+<li><b>可做简单运算</b>：算术、比较、逻辑、三目、判空；</li>
+<li><b>自动按域查找</b>：从 pageContext → request → session → application 依次查找。</li>
+</ul>
+
+<h5>📋 EL 常用语法</h5>
+<table class="kpt">
+<tr><th>功能</th><th>EL 写法</th><th>等价的 JSP 脚本</th></tr>
+<tr><td>输出域对象属性</td><td><code>${stuName}</code></td><td><code>&lt;%=session.getAttribute("stuName")%&gt;</code></td></tr>
+<tr><td>点运算符取属性</td><td><code>${user.name}</code></td><td><code>&lt;%=((User)session.getAttribute("user")).getName()%&gt;</code></td></tr>
+<tr><td>中括号运算符（含特殊字符或变量）</td><td><code>${user["user-name"]}</code></td><td>—</td></tr>
+<tr><td>明确指定域</td><td><code>${sessionScope.loginStuId}</code></td><td>精确指定从 session 取值</td></tr>
+<tr><td>获取请求参数</td><td><code>${param.workTitle}</code></td><td><code>&lt;%=request.getParameter("workTitle")%&gt;</code></td></tr>
+<tr><td>算术运算</td><td><code>${count + 1}</code></td><td>—</td></tr>
+<tr><td>比较运算</td><td><code>${score >= 60}</code></td><td>—</td></tr>
+<tr><td>判空运算</td><td><code>${empty loginStuName}</code></td><td>—</td></tr>
+<tr><td>三目运算</td><td><code>${score>=60?'及格':'不及格'}</code></td><td>—</td></tr>
+</table>
+
+<h5>💻 示例对比</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 旧写法（脚本）：冗余、需要强转、NullPointerException风险 --%&gt;</span>
+&lt;p&gt;学号：&lt;%= session.getAttribute("loginStuId") %&gt;&lt;/p&gt;
+
+<span class="c-cmt">&lt;%-- EL 写法：简洁、自动强转、属性不存在输出空串 --%&gt;</span>
+&lt;p&gt;学号：${loginStuId}&lt;/p&gt;
+&lt;p&gt;姓名：${loginStuName}&lt;/p&gt;</pre>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><b>点运算符本质是调用 getter 方法</b>：<code>${user.name}</code> 实际调用 <code>user.getName()</code>，不是直接访问 name 字段——所以 JavaBean 必须有规范的 getter/setter；</li><li><b>EL 取值会按域从小到大查找</b>：如果四个域都存在同名属性只会取到 pageContext 中的，建议精确指定域（如 <code>${sessionScope.xxx}</code>）避免冲突；</li><li><b>EL 默认开启</b>：若 page 指令设置 <code>isELIgnored="true"</code> 或 web.xml 用了老版本 DTD，EL 会被当作普通字符串原样输出。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b>企业 MVC 项目中<b>JSP 页面输出数据 100% 使用 EL 表达式</b>，完全禁用 <code>&lt;%= %&gt;</code> 表达式脚本。配合 JSTL 标签可彻底消除 JSP 中的 Java 代码。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="el-objects">EL 内置对象</span>
+<span class="kplink" data-jump="four-scopes">四大域对象（查找顺序）</span>
+<span class="kplink" data-jump="jstl-if">JSTL c:if 标签</span>
+</script>
+<script type="text/html" id="kp-el-objects">
+<div class="kp-def"><b>EL 内置对象</b>（共 11 个）是 EL 表达式中可直接使用的隐式对象，无需存入域即可访问常用 Web 数据，其中 <b>param</b> 用于获取请求参数最常用。</div>
+
+<h5>📋 11 个 EL 内置对象分类</h5>
+<table class="kpt">
+<tr><th>类别</th><th>对象名</th><th>作用</th><th>典型用法</th></tr>
+<tr><td rowspan="4"><b>域对象</b></td><td><code>pageScope</code></td><td>pageContext 域 Map</td><td><code>${pageScope.xxx}</code></td></tr>
+<tr><td><code>requestScope</code></td><td>request 域 Map</td><td><code>${requestScope.xxx}</code></td></tr>
+<tr><td><code>sessionScope</code></td><td>session 域 Map</td><td><code>${sessionScope.loginUser}</code></td></tr>
+<tr><td><code>applicationScope</code></td><td>application 域 Map</td><td><code>${applicationScope.visitCount}</code></td></tr>
+<tr><td rowspan="2"><b>请求参数</b></td><td><code>param</code></td><td>单个请求参数 Map</td><td><code>${param.workTitle}</code> 等价于 getParameter</td></tr>
+<tr><td><code>paramValues</code></td><td>多值参数 Map</td><td><code>${paramValues.hobby[0]}</code> 等价于 getParameterValues</td></tr>
+<tr><td rowspan="2"><b>请求头</b></td><td><code>header</code></td><td>单个请求头 Map</td><td><code>${header["User-Agent"]}</code></td></tr>
+<tr><td><code>headerValues</code></td><td>多值请求头 Map</td><td>—</td></tr>
+<tr><td><b>Cookie</b></td><td><code>cookie</code></td><td>Cookie Map</td><td><code>${cookie.JSESSIONID.value}</code></td></tr>
+<tr><td><b>初始化参数</b></td><td><code>initParam</code></td><td>web.xml 全局参数 Map</td><td><code>${initParam.appName}</code></td></tr>
+<tr><td><b>页面上下文</b></td><td><code>pageContext</code></td><td>JSP PageContext 对象本身</td><td><code>${pageContext.request.contextPath}</code></td></tr>
+</table>
+
+<h5>💻 常用示例</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 获取表单参数 --%&gt;</span>
+作业标题：${param.workTitle}
+
+<span class="c-cmt">&lt;%-- 获取 Cookie 中的 JSESSIONID --%&gt;</span>
+SessionID: ${cookie.JSESSIONID.value}
+
+<span class="c-cmt">&lt;%-- 获取应用上下文路径（用于写绝对路径） --%&gt;</span>
+&lt;a href="${pageContext.request.contextPath}/login.jsp"&gt;登录&lt;/a&gt;</pre>
+
+<div class="tip"><b>💡 param vs 域对象：</b><code>${param.xxx}</code> 只能获取<b>本次请求 URL/表单 传来的参数</b>（即 getParameter 能取到的）；<code>${xxx}</code> 是从四大域按顺序查找 setAttribute 存入的数据。两者来源不同。</div>
+
+<div class="std"><b>🏭 安全提醒：</b><code>${param.xxx}</code> 直接输出用户输入存在 XSS 风险，企业项目必须用 <code>&lt;c:out value="${param.xxx}" /&gt;</code> 或 <code>${fn:escapeXml(param.xxx)}</code> 做 HTML 转义。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="el-expression">EL 表达式</span>
+<span class="kplink" data-jump="jstl-if">JSTL c:if</span>
+</script>
+<script type="text/html" id="kp-taglib-directive">
+<div class="kp-def"><b>taglib 指令</b>用于在 JSP 页面中引入自定义标签库或标准标签库（JSTL），引入后即可在页面中使用 <code>&lt;前缀:标签名&gt;</code> 的形式调用标签，完全替代 Java 脚本片段实现逻辑控制，让 JSP 成为"纯视图"。</div>
+
+<h5>📌 语法</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;%@</span> <span class="c-kw">taglib</span> <span class="c-attr">prefix</span>=<span class="c-str">"c"</span> <span class="c-attr">uri</span>=<span class="c-str">"http://java.sun.com/jsp/jstl/core"</span> <span class="c-jsp">%&gt;</span></pre>
+<p><b>prefix</b>是标签前缀（JSTL 核心库约定俗成用 <code>c</code>），<b>uri</b>是标签库的唯一命名空间标识符。</p>
+
+<h5>📋 JSTL 五大标签库</h5>
+<table class="kpt">
+<tr><th>标签库</th><th>前缀</th><th>uri</th><th>用途</th></tr>
+<tr><td><b>核心标签库</b></td><td>c</td><td>http://java.sun.com/jsp/jstl/core</td><td>if/forEach/choose/set/out/redirect（最常用）</td></tr>
+<tr><td>格式化标签库</td><td>fmt</td><td>http://java.sun.com/jsp/jstl/fmt</td><td>日期/数字格式化、国际化</td></tr>
+<tr><td>函数标签库</td><td>fn</td><td>http://java.sun.com/jsp/jstl/functions</td><td>字符串函数（length/substring/contains等）</td></tr>
+<tr><td>SQL 标签库</td><td>sql</td><td>http://java.sun.com/jsp/jstl/sql</td><td>直接在页面操作数据库（<b>企业禁用</b>）</td></tr>
+<tr><td>XML 标签库</td><td>x</td><td>http://java.sun.com/jsp/jstl/xml</td><td>XML 解析（几乎不用）</td></tr>
+</table>
+
+<h5>📦 Maven 依赖（Jakarta JSTL 3.0）</h5>
+<pre class="kpcode"><span class="p-tag">&lt;dependency&gt;</span>
+  <span class="p-tag">&lt;groupId&gt;</span>org.glassfish.web<span class="p-tag">&lt;/groupId&gt;</span>
+  <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp.jstl<span class="p-tag">&lt;/artifactId&gt;</span>
+  <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.0.1</span><span class="p-tag">&lt;/version&gt;</span>
+<span class="p-tag">&lt;/dependency&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><b>uri 必须严格写对</b>：Jakarta JSTL 3.0 的 uri 仍是 <code>http://java.sun.com/jsp/jstl/core</code>（不会变成 jakarta.ee），因为这是标签库定义的命名空间标识符，与包名无关；</li><li><b>必须加依赖</b>：Tomcat 不自带 JSTL，未加依赖会报"无法解析 uri"错误；</li><li><b>prefix 可自定义但不建议</b>：整个团队必须统一用 c/fmt/fn 等约定前缀。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b>现代 Spring Boot 项目多用 Thymeleaf 替代 JSP，但大量老项目仍在维护 JSP+JSTL，JSTL 是 Java Web 开发者必须掌握的基础技能。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="jstl-if">JSTL c:if</span>
+<span class="kplink" data-jump="jstl-foreach">JSTL c:forEach</span>
+<span class="kplink" data-jump="el-expression">EL 表达式</span>
+</script>
+<script type="text/html" id="kp-jstl-if">
+<div class="kp-def"><b>&lt;c:if&gt;</b>是 JSTL 核心标签库中实现<b>条件判断</b>的标签，用于替代页面中的 Java if 脚本片段，实现"根据条件决定是否输出某段 HTML"。</div>
+
+<h5>📌 语法</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;c:if</span> <span class="c-attr">test</span>=<span class="c-str">"判断条件（EL表达式）"</span> <span class="c-attr">var</span>=<span class="c-str">"结果变量名（可选）"</span> <span class="c-attr">scope</span>=<span class="c-str">"page（可选，默认page域）"</span><span class="c-jsp">&gt;</span>
+  条件为 true 时输出的内容（HTML/标签均可嵌套）
+<span class="c-jsp">&lt;/c:if&gt;</span></pre>
+
+<h5>💻 代码示例</h5>
+<pre class="kpcode"><span class="c-cmt">&lt;%-- 简单判断：用户已登录才显示链接 --%&gt;</span>
+<span class="c-jsp">&lt;c:if</span> <span class="c-attr">test</span>=<span class="c-str">"${not empty loginStuName}"</span><span class="c-jsp">&gt;</span>
+  &lt;a href="count.jsp"&gt;查看完整访问统计&lt;/a&gt;
+<span class="c-jsp">&lt;/c:if&gt;</span>
+
+<span class="c-cmt">&lt;%-- 判断成绩是否及格 --%&gt;</span>
+<span class="c-jsp">&lt;c:if</span> <span class="c-attr">test</span>=<span class="c-str">"${score >= 60}"</span><span class="c-jsp">&gt;</span>
+  &lt;span style="color:green"&gt;及格&lt;/span&gt;
+<span class="c-jsp">&lt;/c:if&gt;</span></pre>
+
+<h5>📌 多分支判断用 c:choose / c:when / c:otherwise（类似 if/else if/else）</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;c:choose&gt;</span>
+  <span class="c-jsp">&lt;c:when</span> <span class="c-attr">test</span>=<span class="c-str">"${score >= 90}"</span><span class="c-jsp">&gt;</span>优秀<span class="c-jsp">&lt;/c:when&gt;</span>
+  <span class="c-jsp">&lt;c:when</span> <span class="c-attr">test</span>=<span class="c-str">"${score >= 60}"</span><span class="c-jsp">&gt;</span>及格<span class="c-jsp">&lt;/c:when&gt;</span>
+  <span class="c-jsp">&lt;c:otherwise&gt;</span>不及格<span class="c-jsp">&lt;/c:otherwise&gt;</span>
+<span class="c-jsp">&lt;/c:choose&gt;</span></pre>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><b>test 属性值必须写 EL 表达式</b>：<code>test="${not empty xxx}"</code>，漏写 ${} 会把字符串当条件，永远为 true；</li><li><b>注意 EL 的 not/and/or/empty 等关键字</b>：对应 Java 的 !/&&/||/判空，不是 !/&&/||（EL 也支持 ! 和 &&，但 not/and/or 可读性更好）；</li><li><b>c:if 没有 else 标签</b>：要么写两个相反条件的 c:if，要么用 c:choose。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b>JSP 页面所有条件判断一律用 <code>c:if</code> / <code>c:choose</code>，<b>禁止使用 <code>&lt;% if(){%></code> 脚本片段</b>。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="taglib-directive">taglib 指令</span>
+<span class="kplink" data-jump="el-expression">EL 表达式</span>
+<span class="kplink" data-jump="jstl-foreach">c:forEach 循环</span>
+</script>
+<script type="text/html" id="kp-application-object">
+<div class="kp-def"><b>application 是 ServletContext 类型的内置对象</b>（jakarta.servlet.ServletContext），代表<b>整个 Web 应用的上下文环境</b>。它在服务器启动时创建、服务器关闭时销毁，<b>所有用户、所有页面共享同一个 application 对象</b>，是四个作用域中范围最大的。</div>
+
+<h5>📌 核心 API</h5>
+<table class="kpt">
+<tr><th>方法</th><th>作用</th></tr>
+<tr><td><code>application.setAttribute(name, value)</code></td><td>存储全局共享数据</td></tr>
+<tr><td><code>application.getAttribute(name)</code></td><td>获取全局数据（返回 Object）</td></tr>
+<tr><td><code>application.getInitParameter(name)</code></td><td>获取 web.xml 中配置的全局初始化参数</td></tr>
+<tr><td><code>application.getRealPath("/")</code></td><td>获取 Web 应用在服务器磁盘上的真实路径</td></tr>
+<tr><td><code>application.getContextPath()</code></td><td>获取应用根路径（等价 request.getContextPath）</td></tr>
+</table>
+
+<h5>💻 典型用法：全局访问统计</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;%</span>
+  Integer visitCount = (Integer) application.getAttribute(<span class="c-str">"visitCount"</span>);
+  <span class="c-kw">if</span>(visitCount == <span class="c-kw">null</span>){
+    visitCount = <span class="c-num">1</span>;               <span class="c-cmt">// 首次访问</span>
+  }<span class="c-kw">else</span>{
+    visitCount++;                   <span class="c-cmt">// 后续访问累加</span>
+  }
+  application.setAttribute(<span class="c-str">"visitCount"</span>, visitCount);
+<span class="c-jsp">%&gt;</span>
+总访问次数：${visitCount}</pre>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><b>application 数据在服务器重启后丢失</b>：存在内存中，真实项目的访问统计必须存数据库/Redis；</li><li><b>线程安全问题</b>：多个用户并发访问同时 visitCount++ 会丢失更新（教学示例可忽略，生产需加锁或用 AtomicInteger）；</li><li><b>不要用 application 存用户私有数据</b>：所有用户共享，会造成数据错乱、内存泄漏。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b><ul><li>application 在真实项目中主要用于<b>读取全局初始化参数、获取真实路径、缓存全局只读数据</b>（如字典表），几乎不用于业务数据读写；</li><li>在线人数、访问量等统计通常用 Redis 实现（支持分布式、持久化）；</li><li>ServletContext 在 Servlet 中通过 <code>getServletContext()</code> 获取，是同一个对象。</li></ul></div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="four-scopes">四大域对象</span>
+<span class="kplink" data-jump="nine-objects">九大内置对象</span>
+</script>
+<script type="text/html" id="kp-out-object">
+<div class="kp-def"><b>out 是 JspWriter 类型的内置对象</b>（jakarta.servlet.jsp.JspWriter），作用是<b>向响应输出流中写入文本内容</b>。JSP 页面中所有 HTML 代码本质上都会被翻译为 <code>out.write("...")</code>，而 <code>&lt;%= %&gt;</code> 表达式脚本会被翻译为 <code>out.print(...)</code>。</div>
+
+<h5>📌 常用方法</h5>
+<table class="kpt">
+<tr><th>方法</th><th>作用</th></tr>
+<tr><td><code>out.print(内容)</code></td><td>输出内容（任意类型，会转字符串）</td></tr>
+<tr><td><code>out.println(内容)</code></td><td>输出内容并换行（在 HTML 源码中换行，页面显示仍需 &lt;br&gt;）</td></tr>
+<tr><td><code>out.write(字符串)</code></td><td>输出字符串（只能是字符/字符串）</td></tr>
+<tr><td><code>out.flush()</code></td><td>刷新缓冲区，把内容立即发给浏览器</td></tr>
+<tr><td><code>out.clearBuffer()</code></td><td>清空缓冲区内容</td></tr>
+</table>
+
+<h5>💻 示例</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;%</span>
+  out.println(<span class="c-str">"&lt;h3&gt;欢迎光临&lt;/h3&gt;"</span>);
+  out.print(<span class="c-str">"当前时间："</span> + <span class="c-kw">new</span> java.util.Date());
+<span class="c-jsp">%&gt;</span>
+
+<span class="c-cmt">&lt;%-- 等价的简洁写法（更推荐） --%&gt;</span>
+&lt;h3&gt;欢迎光临&lt;/h3&gt;
+当前时间：&lt;%= new java.util.Date() %&gt;</pre>
+
+<div class="tip"><b>💡 out 与 response.getWriter() 的区别：</b>JSP 中的 out 是 <b>JspWriter</b>（带缓冲的包装类），response.getWriter() 返回 <b>PrintWriter</b>（直接输出）。在 JSP 中应该始终使用 out，直接操作 PrintWriter 可能导致内容顺序错乱（因为 out 有缓冲区）。</div>
+
+<div class="warn"><b>⚠️ 实际开发中 out 很少直接用</b>：直接在 <code>%&gt;</code> 后写 HTML 或用 <code>&lt;%= %&gt;</code> / EL 表达式更简洁、可读性更好。out.println 主要用于脚本片段内需要动态拼接大量 HTML 的场景（现代 JSP 中已不推荐）。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="three-scripts">三种脚本元素</span>
+<span class="kplink" data-jump="nine-objects">九大内置对象</span>
+</script>
+<script type="text/html" id="kp-jstl-foreach">
+<div class="kp-def"><b>&lt;c:forEach&gt;</b>是 JSTL 核心标签库中实现<b>循环遍历</b>的标签，可遍历集合（List、Set、Map、数组）或生成数字范围循环，用于替代页面中的 Java for/while 脚本片段。</div>
+
+<h5>📌 两种用法</h5>
+
+<h5>用法一：数字范围循环（begin/end）</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;c:forEach</span> <span class="c-attr">begin</span>=<span class="c-str">"1"</span> <span class="c-attr">end</span>=<span class="c-str">"5"</span> <span class="c-attr">var</span>=<span class="c-str">"i"</span><span class="c-jsp">&gt;</span>
+  &lt;li&gt;第 ${i} 条记录&lt;/li&gt;
+<span class="c-jsp">&lt;/c:forEach&gt;</span></pre>
+
+<h5>用法二：遍历集合（items）</h5>
+<pre class="kpcode"><span class="c-jsp">&lt;c:forEach</span> <span class="c-attr">items</span>=<span class="c-str">"${studentList}"</span> <span class="c-attr">var</span>=<span class="c-str">"stu"</span> <span class="c-attr">varStatus</span>=<span class="c-str">"vs"</span><span class="c-jsp">&gt;</span>
+  &lt;tr&gt;
+    &lt;td&gt;${vs.count}&lt;/td&gt;       <span class="c-cmt">&lt;!-- 行号，从1开始 --&gt;</span>
+    &lt;td&gt;${stu.id}&lt;/td&gt;
+    &lt;td&gt;${stu.name}&lt;/td&gt;
+  &lt;/tr&gt;
+<span class="c-jsp">&lt;/c:forEach&gt;</span></pre>
+
+<h5>📋 c:forEach 完整属性清单</h5>
+<table class="kpt">
+<tr><th>属性</th><th>类型</th><th>作用</th></tr>
+<tr><td><code>items</code></td><td>集合/数组</td><td>要遍历的数据（EL表达式），数字循环时不写</td></tr>
+<tr><td><code>var</code></td><td>String</td><td>当前元素变量名（存入 pageContext 域）</td></tr>
+<tr><td><code>begin</code></td><td>int</td><td>起始索引（数字循环必填）</td></tr>
+<tr><td><code>end</code></td><td>int</td><td>结束索引（数字循环必填）</td></tr>
+<tr><td><code>step</code></td><td>int</td><td>步长，默认1</td></tr>
+<tr><td><code>varStatus</code></td><td>String</td><td>循环状态变量名，提供 index/count/first/last 等属性</td></tr>
+</table>
+
+<h5>📋 varStatus 四个常用属性</h5>
+<table class="kpt">
+<tr><th>属性</th><th>含义</th></tr>
+<tr><td><code>${vs.index}</code></td><td>当前索引，从 0 开始</td></tr>
+<tr><td><code>${vs.count}</code></td><td>当前第几行，从 1 开始（常用于显示序号）</td></tr>
+<tr><td><code>${vs.first}</code></td><td>是否是第一个元素（boolean）</td></tr>
+<tr><td><code>${vs.last}</code></td><td>是否是最后一个元素（boolean）</td></tr>
+</table>
+
+<div class="warn"><b>⚠️ 易错点：</b><ol><li><b>items 必须用 EL 表达式</b>：<code>items="${studentList}"</code>，不能写 <code>items="studentList"</code>（后者会当字符串）；</li><li><b>var 指定的变量存于 pageContext 域</b>：循环结束后可继续用，但通常不需要；</li><li><b>遍历 Map 时 var 是 Map.Entry</b>：用 <code>${entry.key}</code> 和 <code>${entry.value}</code> 取键值。</li></ol></div>
+
+<div class="std"><b>🏭 行业标准：</b>JSP 页面所有循环一律使用 <code>c:forEach</code>，<b>禁止用 &lt;% for(){%> 脚本循环</b>。配合 c:if 可实现复杂的列表渲染逻辑。</div>
+
+<h5>🔗 相关知识点</h5>
+<span class="kplink" data-jump="taglib-directive">taglib 指令</span>
+<span class="kplink" data-jump="el-expression">EL 表达式</span>
+<span class="kplink" data-jump="jstl-if">c:if 判断</span>
+</script>
+
+<script>
+/* ============================================================
+   配置：教师模式开关（源码级设置，无 UI 开关）
+   教师使用时改为 true 即可复制代码，默认 false 为学生模式
+   ============================================================ */
+const TEACHER_MODE = false;
+
+/* ============================================================
+   课程配置（第二次课）
+   ============================================================ */
+const COURSE = {
+  title: '第二次课 · JSP进阶实战',
+  project: '学生作业提交小系统',
+  dur: '4课时（前2课时教师带敲，后2课时学生实操）',
+  sumGrid: 'sumGrid2',
+  categories: {
+    basic:   { icon:'📘', name:'基础语法', color:'#0969da', bg:'#eef4ff' },
+    object:  { icon:'📦', name:'内置对象', color:'#8250df', bg:'#f4edff' },
+    flow:    { icon:'🔄', name:'流程跳转', color:'#1a7f37', bg:'#e8f7ee' },
+    request: { icon:'📡', name:'请求响应', color:'#bc4c00', bg:'#fff3e8' },
+    tag:     { icon:'🏷️', name:'标签表达式', color:'#bf3989', bg:'#fcecf6' }
+  },
+  KPMETA: {
+    'form-method':       { title:'form表单GET vs POST提交对比', cat:'request' },
+    'request-object':    { title:'request内置对象与中文乱码处理', cat:'request' },
+    'nine-objects':      { title:'JSP九大内置对象完整清单', cat:'object' },
+    'four-scopes':       { title:'JSP四大域对象对比与使用原则', cat:'object' },
+    'session-object':    { title:'session内置对象与会话管理', cat:'object' },
+    'response-redirect': { title:'response内置对象与重定向', cat:'flow' },
+    'forward-vs-redirect':{ title:'转发 vs 重定向核心区别', cat:'flow' },
+    'login-check':       { title:'登录状态校验逻辑', cat:'flow' },
+    'el-expression':     { title:'EL表达式基础语法', cat:'tag' },
+    'el-objects':        { title:'EL表达式11个内置对象', cat:'tag' },
+    'taglib-directive':  { title:'taglib指令引入JSTL', cat:'tag' },
+    'jstl-if':           { title:'JSTL核心标签 c:if', cat:'tag' },
+    'application-object':{ title:'application内置对象与全局数据', cat:'object' },
+    'out-object':        { title:'out内置对象与页面输出', cat:'object' },
+    'jstl-foreach':      { title:'JSTL核心标签 c:forEach', cat:'tag' }
+  },
+  steps: [
+    { type:'info', tpl:'tpl-goal', kind:'任务目标', title:'任务目标与最终效果',
+      sub:'第二次课完成「学生作业提交小系统」，掌握JSP进阶核心技术' },
+    { type:'info', tpl:'tpl-env', kind:'环境准备', title:'环境与依赖准备',
+      sub:'配置Jakarta EE 10环境，添加JSTL依赖' },
+    { type:'info', tpl:'tpl-struct', kind:'项目结构', title:'项目结构',
+      sub:'Maven标准Web目录与4个JSP页面' },
+    { type:'code', src:'src-c2-login', file:'login.jsp', fileNote:'学生登录页',
+      kind:'页面编写', title:'编写login.jsp学生登录页',
+      sub:'学习form表单提交方式，实现登录入口',
+      dur:'约15分钟',
+      kps:['form-method'],
+      marks:[{from:'method="post"', k:'form-method'}],
+      guide:[
+        '<b>新建login.jsp</b>作为登录入口页面',
+        '创建居中的登录卡片容器（宽400px，居中显示）',
+        '添加form表单，设置action=submit.jsp、<b>method=post</b>',
+        '添加学号、姓名两个input输入框和登录按钮'
+      ]},
+    { type:'code', src:'src-c2-submit', file:'submit.jsp', fileNote:'作业提交页·核心页面',
+      kind:'核心页面', title:'编写submit.jsp作业提交页',
+      sub:'掌握request、session内置对象，处理表单参数并存储登录状态',
+      dur:'约25分钟',
+      kps:['request-object','nine-objects','four-scopes','session-object'],
+      marks:[
+        {from:'知识点：request内置对象',to:'getParameter',plus:1,k:'request-object'},
+        {from:'知识点：JSP九大内置对象',to:'仅isErrorPage',k:'nine-objects'},
+        {from:'知识点：JSP四大域对象',to:'优先使用最小域对象',k:'four-scopes'},
+        {from:'session内置对象：存储登录状态',to:'setAttribute("isLogin"',plus:1,k:'session-object'}
+      ],
+      guide:[
+        '<b>新建submit.jsp</b>，第一行调用request.setCharacterEncoding("UTF-8")解决中文乱码',
+        '通过request.getParameter获取login.jsp提交的学号和姓名',
+        '理解九大内置对象的类型与作用，<b>重点记住request/response/session/application/out这5个</b>',
+        '理解四大域对象的作用域范围差异，掌握"最小域原则"',
+        '使用session.setAttribute存储登录状态（isLogin=true、stuId、stuName）',
+        '写出作业提交表单，action=result.jsp、method=post，含作业标题和作业内容textarea'
+      ]},
+    { type:'code', src:'src-c2-result', file:'result.jsp', fileNote:'提交结果页',
+      kind:'页面编写', title:'编写result.jsp提交结果页',
+      sub:'掌握重定向、登录校验、EL表达式和JSTL核心标签',
+      dur:'约25分钟',
+      kps:['taglib-directive','login-check','response-redirect','forward-vs-redirect','el-expression','el-objects','jstl-if'],
+      marks:[
+        {from:'taglib指令——引入JSTL标签库',k:'taglib-directive'},
+        {from:'知识点：登录状态校验',to:'必须先经过登录流程',k:'login-check'},
+        {from:'知识点：response内置对象sendRedirect',to:'重定向（客户端跳转）',k:'response-redirect'},
+        {from:'return; // 重定向后必须return',k:'forward-vs-redirect'},
+        {from:'知识点：EL表达式——简化',to:'类型转换',k:'el-expression'},
+        {from:'知识点：EL内置对象param',to:'request.getParameter',k:'el-objects'},
+        {from:'知识点：JSTL c:if标签',to:'Java if脚本',k:'jstl-if'}
+      ],
+      guide:[
+        '<b>新建result.jsp</b>，用taglib指令引入JSTL核心标签库（prefix=c）',
+        '编写登录状态校验逻辑：从session取isLogin，为null或false则重定向到login.jsp并return',
+        '<b>理解response.sendRedirect重定向</b>的原理，与转发对比记忆',
+        '用<b>EL表达式</b>${loginStuId}、${loginStuName}、${param.workTitle}展示提交结果',
+        '理解EL从四大域从小到大查找的规则，以及applicationScope明确指定域的写法',
+        '用<b>c:if</b>标签判断用户已登录时才显示查看统计链接'
+      ]},
+    { type:'code', src:'src-c2-count', file:'count.jsp', fileNote:'访问统计页',
+      kind:'页面编写', title:'编写count.jsp访问统计页',
+      sub:'掌握application全局对象、out输出对象和c:forEach循环标签',
+      dur:'约20分钟',
+      kps:['application-object','out-object','jstl-foreach'],
+      marks:[
+        {from:'知识点：application内置对象',to:'所有用户共享',k:'application-object'},
+        {from:'知识点：out内置对象',to:'输出文本内容',k:'out-object'},
+        {from:'知识点：JSTL c:forEach标签',to:'Java for脚本',k:'jstl-foreach'}
+      ],
+      guide:[
+        '<b>新建count.jsp</b>，同样需要做登录状态校验',
+        '从application获取visitCount和onlineCount，首次访问时初始化为1，否则累加',
+        '<b>理解application生命周期</b>（服务器启动到关闭），不要用其存用户私有数据',
+        '用out.println输出一段HTML注释演示out对象用法',
+        '添加页头div（本页直接内联，不再用jsp:include——因为include已在第一次课讲过）',
+        '用<b>c:forEach begin=1 end=5</b>循环生成5条学生提交记录'
+      ]},
+    { type:'info', tpl:'tpl-verify', kind:'验证运行', title:'项目运行验证',
+      sub:'启动Tomcat 10.1.59，走通登录-提交-统计完整流程' },
+    { type:'info', tpl:'tpl-std', kind:'行业标准', title:'JSP进阶·会话与安全行业标准',
+      sub:'从课堂代码到企业实践，理解会话安全、权限校验与数据校验规范' },
+    { type:'info', tpl:'tpl-summary', kind:'知识总结', title:'知识点全景总结',
+      sub:'第二次课 15 个核心知识点总览', sumGrid:'sumGrid2' }
+  ]
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const state = { step:0, selKp:null };
+const srcCache = {};
+
+function $(id){return document.getElementById(id);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg, type){
+  const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (type||'ok');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>{t.className='toast';},2000);
+}
+
+function getSource(id){
+  if(srcCache[id]) return srcCache[id];
+  const el = document.getElementById(id);
+  let raw = el ? el.textContent : '';
+  // 去除首尾空行
+  raw = raw.replace(/\r/g,'').replace(/^\n+/,'').replace(/\n+$/,'');
+  const lines = raw.split('\n');
+  srcCache[id] = lines;
+  return lines;
+}
+
+function copyText(text, btn){
+  if(!TEACHER_MODE){ toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err'); return; }
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('✅ 代码已复制到剪贴板','ok');
+    if(btn){ const o=btn.textContent; btn.textContent='✅ 已复制'; setTimeout(()=>btn.textContent=o,1200);}
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('✅ 代码已复制','ok');
+  });
+}
+
+/* ============================================================
+   语法高亮（自研，白底GitHub Light风格）
+   ============================================================ */
+function hlJava(s, isDir){
+  const KW = ['abstract','assert','boolean','break','byte','case','catch','char','class','const','continue','default','do','double','else','enum','extends','final','finally','float','for','goto','if','implements','import','instanceof','int','interface','long','native','new','package','private','protected','public','return','short','static','strictfp','super','switch','synchronized','this','throw','throws','transient','try','void','volatile','while',
+             'true','false','null',
+             'String','Integer','Boolean','Double','Float','Long','Object','System','out','println','print','request','response','session','application','pageContext','config','out','page','exception'];
+  let out='',buf='',i=0,inStr=null;
+  const flush=()=>{if(buf){out+='<span class="tok-jspcode">'+esc(buf)+'</span>';buf='';}};
+  const flushKw=()=>{
+    if(!buf){return;}
+    if(/^\d/.test(buf)||/^0x[\da-f]+$/i.test(buf)){out+='<span class="tok-num">'+esc(buf)+'</span>';}
+    else if(KW.indexOf(buf)>=0){out+='<span class="tok-kw">'+esc(buf)+'</span>';}
+    else out+='<span class="tok-jspcode">'+esc(buf)+'</span>';
+    buf='';
+  };
+  while(i<s.length){
+    const c=s[i];
+    if(inStr){
+      buf+=c;
+      if(c===inStr&&s[i-1]!=='\\'){flush();inStr=null;}
+      i++;continue;
+    }
+    if(c==='"'||c==="'"){flushKw();buf+=c;inStr=c;i++;continue;}
+    if(c==='/'&&s[i+1]==='/'){flushKw();const e=s.indexOf('\n',i);out+='<span class="tok-cmt">'+esc(e<0?s.slice(i):s.slice(i,e))+'</span>';if(e<0)return out;i=e;continue;}
+    if(c==='/'&&s[i+1]==='*'){flushKw();const e=s.indexOf('*/',i+2);const end=e<0?s.length:e+2;out+='<span class="tok-cmt">'+esc(s.slice(i,end))+'</span>';i=end;continue;}
+    if(/[A-Za-z_$]/.test(c)){buf+=c;i++;continue;}
+    if(/\d/.test(c)&&(!buf||/[\d.]$/.test(buf))){buf+=c;i++;continue;}
+    if(/[\w.]/.test(c)){buf+=c;i++;continue;}
+    flushKw();
+    if(/\s/.test(c)){buf+=c;flush();i++;continue;}
+    out+='<span class="tok-punc">'+esc(c)+'</span>';i++;
+  }
+  if(inStr){out+='<span class="tok-str">'+esc(buf)+'</span>';}else{flushKw();}
+  return out;
+}
+function renderJsp(m){
+  const open=m.slice(0,3); let rest=m.slice(3,-2); if('@!='.indexOf(m[2])>=0){return '<span class="tok-dir">'+esc(open)+'</span>'+hlJava(rest,open==='<%@')+'<span class="tok-dir">%&gt;</span>';}
+  return '<span class="tok-jsp">'+esc(open)+'</span>'+hlJava(rest,false)+'<span class="tok-jsp">%&gt;</span>';
+}
+function renderTag(t){
+  const m=t.match(/^<\/?([a-zA-Z][\w:-]*)/);if(!m)return esc(t);
+  const rest=t.slice(m[0].length);
+  const re2=/("[^"]*"|'[^']*')|([a-zA-Z_:][\w:.-]*)(\s*=\s*)|(\/?>)|(\s+)|([^\s"'>=/]+)/g;
+  let out2='',last=0,mm;
+  while((mm=re2.exec(rest))){
+    out2+=esc(rest.slice(last,mm.index));
+    if(mm[1])out2+='<span class="tok-str">'+esc(mm[1])+'</span>';
+    else if(mm[2])out2+='<span class="tok-attr">'+esc(mm[2])+'</span><span class="tok-punc">'+esc(mm[3])+'</span>';
+    else if(mm[4])out2+='<span class="tok-punc">'+esc(mm[4])+'</span>';
+    else if(mm[5])out2+=mm[5];
+    else out2+=esc(mm[6]);
+    last=re2.lastIndex;
+  }
+  out2+=esc(rest.slice(last));
+  return '<span class="tok-tag">'+esc(m[0])+'</span>'+out2;
+}
+function tokenizeText(text){
+  let html='',buf='',i=0,pending=null;
+  const flush=()=>{if(buf){html+=esc(buf);buf='';}};
+  while(i<text.length){
+    const c=text[i];
+    if(c==='<'&&text.startsWith('<!--',i)){const e=text.indexOf('-->',i+4);const end=e>=0?e+3:text.length;flush();html+='<span class="tok-cmt">'+esc(text.slice(i,end))+'</span>';i=end;continue;}
+    if(c==='<'&&text.startsWith('<%',i)){
+      const e=text.indexOf('%>',i+2);
+      if(e<0){let open='<%',body=text.slice(i+2);if('@!='.indexOf(body[0])>=0){open='<%'+body[0];body=body.slice(1);}flush();const cls=(open==='<%@')?'tok-dir':'tok-jsp';html+='<span class="'+cls+'">'+esc(open)+'</span>'+hlJava(body,open==='<%@');pending={cls,dir:open==='<%@'};i=text.length;continue;}
+      flush();html+=renderJsp(text.slice(i,e+2));i=e+2;continue;
+    }
+    if(c==='$'&&text[i+1]==='{'){const e=text.indexOf('}',i+2);if(e>=0){flush();html+='<span class="tok-el">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    if(c==='<'&&(text[i+1]==='/'||/[A-Za-z]/.test(text[i+1]||''))){
+      let j=i+1,q=null;while(j<text.length){const ch=text[j];if(q){if(ch===q)q=null;}else if(ch==='"'||ch==="'"){q=ch;}else if(ch==='>'){break;}j++;}
+      if(j<text.length){flush();html+=renderTag(text.slice(i,j+1));i=j+1;continue;}
+    }
+    if(c==='"'||c==="'"){const e=text.indexOf(c,i+1);if(e>=0){flush();html+='<span class="tok-str">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    buf+=c;i++;
+  }
+  flush();return{html,pending};
+}
+function commentMask(lines){
+  const mask=new Array(lines.length).fill(false);let inC=false;
+  for(let i=0;i<lines.length;i++){const t=lines[i].trim();if(!inC){if(t.indexOf('<%--')===0){inC=true;mask[i]=true;if(t.indexOf('--%>',4)>=0)inC=false;}}else{mask[i]=true;if(t.slice(-4)==='--%>')inC=false;}}
+  return mask;
+}
+function highlightCode(lines){
+  const mask=commentMask(lines);const res=[];const st={open:false,cls:'tok-jsp',dir:false};
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(mask[i]){res.push('<span class="tok-cmt">'+esc(line)+'</span>');continue;}
+    let seg=line,html='';
+    if(st.open){
+      const e=seg.indexOf('%>');
+      if(e>=0){html+='<span class="'+st.cls+'">'+hlJava(seg.slice(0,e),st.dir)+'</span><span class="'+st.cls+'">%&gt;</span>';seg=seg.slice(e+2);st.open=false;}
+      else{html+='<span class="'+st.cls+'">'+hlJava(seg,st.dir)+'</span>';res.push(html||'&nbsp;');continue;}
+    }
+    const r=tokenizeText(seg);html+=r.html;if(r.pending){st.open=true;st.cls=r.pending.cls;st.dir=r.pending.dir;}
+    res.push(html||'&nbsp;');
+  }
+  return res;
+}
+
+/* ============================================================
+   标记解析
+   ============================================================ */
+function resolveMarks(lines, marks){
+  const out=[];
+  (marks||[]).forEach(m=>{
+    let s=-1;for(let i=0;i<lines.length;i++){if(lines[i].indexOf(m.from)>=0){s=i;break;}}
+    if(s<0)return;let e=s;
+    if(m.to){for(let i=s;i<lines.length;i++){if(lines[i].indexOf(m.to)>=0){e=i;break;}}}
+    e+=(m.plus||0);if(e>lines.length-1)e=lines.length-1;
+    out.push({s,e,k:m.k});
+  });
+  return out;
+}
+
+/* ============================================================
+   步骤索引查找
+   ============================================================ */
+function kpStepIndex(kp){
+  const steps=COURSE.steps;
+  for(let i=0;i<steps.length;i++){if(steps[i].type==='code'&&(steps[i].kps||[]).indexOf(kp)>=0)return i;}
+  return -1;
+}
+function kpList(){
+  const seen=[],out=[];
+  COURSE.steps.forEach(s=>{(s.kps||[]).forEach(k=>{if(seen.indexOf(k)<0){seen.push(k);out.push(k);}});});
+  return out;
+}
+
+/* ============================================================
+   渲染步骤轨道
+   ============================================================ */
+function renderRail(){
+  const rail=$('rail');rail.innerHTML='';
+  COURSE.steps.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='stepchip'+(i===state.step?' active':'')+(i<state.step?' done':'');
+    const isCode=s.type==='code';
+    b.innerHTML='<span class="n">'+(i+1)+'</span>'+(isCode?s.file:s.title);
+    b.onclick=()=>{state.step=i;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});};
+    rail.appendChild(b);
+  });
+  const act=rail.querySelector('.active');if(act&&act.scrollIntoView)act.scrollIntoView({block:'nearest',inline:'center'});
+}
+
+/* ============================================================
+   知识点卡片
+   ============================================================ */
+function kpCard(kp){
+  const meta=COURSE.KPMETA[kp];if(!meta)return '';
+  const cat=COURSE.categories[meta.cat];
+  const tpl=$('kp-'+kp);const inner=tpl?tpl.innerHTML:'<p>（未找到该知识点内容）</p>';
+  // 处理相关知识点跳转
+  const wrap=document.createElement('div');wrap.innerHTML=inner;
+  wrap.querySelectorAll('.kplink').forEach(el=>{
+    el.onclick=()=>{const target=el.dataset.jump;const si=kpStepIndex(target);
+      if(si>=0){state.step=si;state.selKp=target;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);}};
+  });
+  return '<div class="kpcard"><div class="kpcard-head" style="background:'+cat.bg+'"><span class="ic">'+cat.icon+'</span><span class="tt">'+meta.title+'</span><span class="cat" style="color:'+cat.color+';background:#fff;border:1px solid '+cat.color+'33">'+cat.name+'</span></div><div class="kpcard-body">'+wrap.innerHTML+'</div></div>';
+}
+
+function renderKpPanel(){
+  const body=$('kpBody');const chips=$('kpChips');
+  const st=COURSE.steps[state.step];
+  const kps=st.kps||[];
+  chips.innerHTML=kps.map(k=>{
+    const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+    return '<button class="kchip'+(state.selKp===k?' on':'')+'" data-kp="'+k+'">'+cat.icon+' '+meta.title+'</button>';
+  }).join('');
+  chips.querySelectorAll('.kchip').forEach(b=>{b.onclick=()=>{state.selKp=b.dataset.kp;renderKpPanel();};});
+  const sel=state.selKp;
+  if(sel&&kps.indexOf(sel)>=0){
+    const idx=kps.indexOf(sel);
+    body.innerHTML=kpCard(sel);body.scrollTop=0;
+    $('kpPrev').disabled=false;$('kpNext').disabled=false;
+    $('kpPrev').dataset.idx=idx;$('kpNext').dataset.idx=idx;
+    document.querySelectorAll('.cl.clickable').forEach(el=>{el.classList.toggle('active',(el.dataset.k||'').split(' ').indexOf(sel)>=0);});
+  }else{
+    body.innerHTML='<div class="kp-empty"><span class="big">👈</span>点击左侧<b>带图标的代码行</b><br>这里就会显示对应的完整知识点<br><br><span style="color:#b8c2cf;font-size:12.5px;">也可以点上方标签直接查看</span></div>';
+    $('kpPrev').disabled=true;$('kpNext').disabled=true;
+    document.querySelectorAll('.cl.clickable').forEach(el=>el.classList.remove('active'));
+  }
+}
+
+/* ============================================================
+   渲染代码步骤
+   ============================================================ */
+function renderCodeStep(s,host){
+  const lines=getSource(s.src);const marks=resolveMarks(lines,s.marks);
+  const lineK=lines.map((_,i)=>marks.filter(m=>i>=m.s&&i<=m.e).map(m=>m.k));
+  const htmls=highlightCode(lines);
+  const catsInStep=[];(s.kps||[]).forEach(k=>{const c=COURSE.KPMETA[k].cat;if(catsInStep.indexOf(c)<0)catsInStep.push(c);});
+  const legend=catsInStep.map(c=>{const cat=COURSE.categories[c];return '<span class="lg" style="border-color:'+cat.color+'33"><b>'+cat.icon+'</b>'+cat.name+'</span>';}).join('')+'<span class="lg" style="border-color:#d9e0ea"><b>▎</b>左侧色条 = 该行含知识点</span>';
+
+  let codeHtml='';
+  htmls.forEach((h,i)=>{
+    const ks=lineK[i];const hasK=ks.length>0;
+    const mainCat=hasK?COURSE.KPMETA[ks[0]].cat:'';
+    const icon=hasK?COURSE.categories[mainCat].icon:'';
+    codeHtml+='<div class="cl'+(hasK?' clickable marked k-'+mainCat:'')+'"'+(hasK?' data-k="'+ks.join(' ')+'" data-line="'+(i+1)+'"':'')+'><span class="ic">'+icon+'</span><span class="ln">'+(i+1)+'</span><code class="src">'+h+'</code></div>';
+  });
+
+  const guideHtml=s.guide?('<div class="guide-box"><h4>🧭 本步操作指引</h4><ol>'+s.guide.map(g=>'<li>'+g+'</li>').join('')+'</ol></div>'):'';
+
+  host.innerHTML=
+    '<div class="card"><div class="step-head"><span class="step-kind code">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+s.sub+'</div></div><div class="meta"><span class="pill file">📄 '+s.file+'</span><span class="pill time">⏱ '+s.dur+'</span><span class="pill">🧩 '+(s.kps||[]).length+' 个知识点</span></div></div></div>'+
+    '<div class="workbench"><div class="left-col">'+guideHtml+
+      '<div class="code-panel"><div class="code-head"><div class="filedot"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><div class="code-file">'+s.file+'<small>'+s.fileNote+'</small></div><div class="codeacts"><button class="mini-btn" id="btnCopy"'+(TEACHER_MODE?'':' disabled')+'>📋 复制代码</button><button class="mini-btn" id="btnClear">✖ 取消选中</button></div></div>'+
+      '<div class="legend">'+legend+'</div><div class="code-body" id="codeBody">'+codeHtml+'</div></div></div>'+
+      '<aside class="kp-panel"><div class="kp-head"><span class="t">📖 知识点解析</span><span class="hint">点左侧代码行 → 看完整讲解</span><div class="kp-nav"><button id="kpPrev" disabled>◀ 上一个</button><button id="kpNext" disabled>下一个 ▶</button></div></div><div class="kp-chips" id="kpChips"></div><div class="kp-body" id="kpBody"></div></aside></div>'+
+      navRow();
+
+  host.querySelectorAll('.cl.clickable').forEach(el=>{
+    el.onclick=()=>{const ks=(el.dataset.k||'').split(' ');state.selKp=ks[0];renderKpPanel();if(el.scrollIntoView)el.scrollIntoView({block:'nearest'});};
+  });
+  $('btnClear').onclick=()=>{state.selKp=null;renderKpPanel();};
+  $('btnCopy').onclick=(e)=>{copyText(lines.join('\n'),e.currentTarget);};
+  $('kpPrev').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=0;state.selKp=kps[(i-1+kps.length)%kps.length];renderKpPanel();};
+  $('kpNext').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=-1;state.selKp=kps[(i+1)%kps.length];renderKpPanel();};
+  bindNav();
+  renderKpPanel();
+}
+
+function navRow(){
+  const i=state.step,total=COURSE.steps.length;
+  return '<div class="navrow"><button id="navPrev"'+(i<=0?' disabled':'')+'>◀ 上一步</button><button id="navNext" class="primary"'+(i>=total-1?' disabled':'')+'>下一步 ▶</button></div>';
+}
+function bindNav(){
+  const pv=$('navPrev'),nx=$('navNext');
+  if(pv)pv.onclick=()=>{if(state.step>0){state.step--;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+  if(nx)nx.onclick=()=>{if(state.step<COURSE.steps.length-1){state.step++;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+}
+
+/* ============================================================
+   渲染信息步骤
+   ============================================================ */
+function renderInfoStep(s,host){
+  const tpl=$(s.tpl);const inner=tpl?tpl.innerHTML:'<p>内容缺失</p>';
+  host.innerHTML='<div class="card"><div class="step-head"><span class="step-kind '+(s.kind==='环境准备'?'env':s.kind==='行业标准'?'std':'')+'">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+s.sub+'</div></div></div><div class="info-section">'+inner+'</div></div>'+navRow();
+  bindNav();
+  if(s.sumGrid){
+    const grid=document.getElementById(s.sumGrid);
+    if(grid){
+      const wrap=grid.previousElementSibling;
+      if(wrap){const h=wrap.querySelector('h4');if(h)h.textContent='📚 第二次课 · 知识点全景（共 '+kpList().length+' 个，点击卡片可跳回对应代码位置）';}
+      grid.innerHTML=kpList().map(k=>{
+        const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+        return '<div class="kitem" data-kp="'+k+'"><span class="ic">'+cat.icon+'</span><div><div class="kt">'+meta.title+'</div><div class="kc">'+cat.name+' ｜ 位于步骤 '+(kpStepIndex(k)+1)+'</div></div></div>';
+      }).join('');
+      grid.querySelectorAll('.kitem').forEach(el=>{el.onclick=()=>{const kp=el.dataset.kp;const si=kpStepIndex(kp);if(si<0)return;state.step=si;state.selKp=kp;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);};});
+    }
+  }
+}
+
+/* ============================================================
+   主渲染
+   ============================================================ */
+function render(){
+  renderRail();
+  const stage=$('stage');
+  const s=COURSE.steps[state.step];
+  if(s.type==='code')renderCodeStep(s,stage);else renderInfoStep(s,stage);
+  // 更新教师模式显示
+  $('tmode').textContent=TEACHER_MODE?'✅ 教师模式：开启':'🛡️ 教师模式：关闭';
+  $('tmode').className='tmode'+(TEACHER_MODE?' on':'');
+  document.body.classList.toggle('student-mode',!TEACHER_MODE);
+}
+
+/* ============================================================
+   学生模式复制拦截
+   ============================================================ */
+document.addEventListener('contextmenu',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止右键菜单','warn');}});
+document.addEventListener('dragstart',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('copy',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err');}});
+document.addEventListener('cut',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('keydown',e=>{
+  if(TEACHER_MODE)return;
+  const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&(k==='c'||k==='a'||k==='s'||k==='p'||k==='u')){e.preventDefault();toast('🔒 学生模式下该快捷键已禁用','warn');}
+  if(k==='f12'||(e.ctrlKey&&e.shiftKey&&(k==='i'||k==='j'||k==='c'))){e.preventDefault();toast('🔒 学生模式下禁止打开开发者工具','warn');}
+});
+document.addEventListener('mouseup',()=>{if(!TEACHER_MODE)window.getSelection().removeAllRanges();});
+if(!TEACHER_MODE&&navigator.clipboard){
+  navigator.clipboard.writeText=()=>Promise.reject('student mode');
+}
+
+/* ============ 信息步骤模板 ============ */
+</script>
+
+<script type="text/html" id="tpl-goal">
+<h3>🎯 本次课任务目标</h3>
+<p>完成一个<b>学生作业提交小系统</b>项目，通过"跟着敲项目"掌握 JSP 进阶核心技术，最终实现：</p>
+<div class="kpi-row">
+  <div class="kpi"><div class="v">4 课时</div><div class="l">项目式教学</div></div>
+  <div class="kpi"><div class="v">4 个</div><div class="l">JSP 页面</div></div>
+  <div class="kpi"><div class="v">15 个</div><div class="l">核心知识点</div></div>
+  <div class="kpi"><div class="v">JSTL</div><div class="l">标签库依赖</div></div>
+</div>
+<h3>🖥️ 最终效果预览</h3>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
+  <div class="browser-url">http://localhost:8080/jsp-homework/login.jsp</div></div>
+  <div class="browser-body" style="text-align:center;">
+    <div style="margin-top:20px;display:inline-block;text-align:left;width:400px;border:1px solid #eee;padding:20px;border-radius:8px;">
+      <b>学生作业系统登录</b><p>学号：<input placeholder="请输入学号" style="width:100%;padding:6px;"></p><p>姓名：<input placeholder="请输入姓名" style="width:100%;padding:6px;"></p><p><button style="width:100%;padding:8px;background:#0969da;color:white;border:none;border-radius:4px;">登录进入系统</button></p>
+    </div>
+  </div>
+</div>
+
+<h3>✅ 验收清单</h3>
+<ul>
+<li>🔲 项目在 Tomcat 10.1.59 中能正常启动，无 404/500 错误</li>
+<li>🔲 login.jsp 输入学号姓名点击登录，进入作业提交页，名字显示正确</li>
+<li>🔲 submit.jsp 填写作业提交后，result.jsp 显示提交信息（含作业标题）</li>
+<li>🔲 未登录直接访问 result.jsp 或 count.jsp 会被重定向到登录页</li>
+<li>🔲 count.jsp 访问量每次刷新 +1，统计数据正确</li>
+<li>🔲 页面中文不乱码，编码统一使用 UTF-8</li>
+</ul>
+</script>
+
+<script type="text/html" id="tpl-env">
+<h3>🖥️ 环境清单</h3>
+<table>
+<tr><th>软件</th><th>版本</th><th>说明</th></tr>
+<tr><td>JDK</td><td>17 LTS</td><td>Tomcat 10.1 最低要求 JDK 11，推荐 17</td></tr>
+<tr><td>IDE</td><td>IntelliJ IDEA 2024.1 Ultimate</td><td>Community 版不支持 Web 项目，推荐 Ultimate</td></tr>
+<tr><td>服务器</td><td>Apache Tomcat 10.1.59</td><td>注意：Tomcat 10+ 使用 Jakarta EE 9+，包名是 jakarta.*</td></tr>
+<tr><td>构建工具</td><td>Maven 3.9+</td><td>IDEA 2024.1 已内置 Maven 3.9</td></tr>
+<tr><td>标签库</td><td>Jakarta JSTL 3.0</td><td>提供 c:if / c:forEach 等核心标签</td></tr>
+<tr><td>浏览器</td><td>Chrome/Edge 最新版</td><td>用于查看效果、调试</td></tr>
+</table>
+
+<h3>📦 Maven 依赖（pom.xml）</h3>
+<p>在 IDEA 中创建<b>Maven Web 项目（maven-archetype-webapp）</b>后，将 pom.xml 的 dependencies 替换为以下 Jakarta 版本依赖：</p>
+<div class="pom-box"><span class="p-cmt">&lt;!-- Servlet/JSP API（Tomcat 自带，provided） --&gt;</span>
+<span class="p-tag">&lt;dependencies&gt;</span>
+  <span class="p-tag">&lt;dependency&gt;</span>
+    <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet<span class="p-tag">&lt;/groupId&gt;</span>
+    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet-api<span class="p-tag">&lt;/artifactId&gt;</span>
+    <span class="p-tag">&lt;version&gt;</span><span class="p-num">6.0.0</span><span class="p-tag">&lt;/version&gt;</span>
+    <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
+  <span class="p-tag">&lt;/dependency&gt;</span>
+  <span class="p-tag">&lt;dependency&gt;</span>
+    <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet.jsp<span class="p-tag">&lt;/groupId&gt;</span>
+    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp-api<span class="p-tag">&lt;/artifactId&gt;</span>
+    <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.1.1</span><span class="p-tag">&lt;/version&gt;</span>
+    <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
+  <span class="p-tag">&lt;/dependency&gt;</span>
+  <span class="p-cmt">&lt;!-- JSTL 标签库（需要打进 WEB-INF/lib，默认 compile 作用域） --&gt;</span>
+  <span class="p-tag">&lt;dependency&gt;</span>
+    <span class="p-tag">&lt;groupId&gt;</span>org.glassfish.web<span class="p-tag">&lt;/groupId&gt;</span>
+    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp.jstl<span class="p-tag">&lt;/artifactId&gt;</span>
+    <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.0.1</span><span class="p-tag">&lt;/version&gt;</span>
+  <span class="p-tag">&lt;/dependency&gt;</span>
+<span class="p-tag">&lt;/dependencies&gt;</span></div>
+<p class="tip"><b>💡 为什么 JSTL 不能用 provided？</b>因为 Tomcat 10.1 默认不自带 JSTL 实现，必须把 JSTL jar 随项目一同打包进 WEB-INF/lib。使用 <code>org.glassfish.web:jakarta.servlet.jsp.jstl</code> 是 Jakarta JSTL 3.0 的官方参考实现。</p>
+
+<h3>🚀 IDEA 配置步骤（同第一次课，仅新增 JSTL 依赖）</h3>
+<ol>
+<li>若第一次课已创建好项目，直接在 pom.xml 中加入 JSTL 依赖，点击 Maven 面板刷新即可；</li>
+<li>若新建项目：按第一次课 6 步走流程，创建 <code>jsp-homework</code> 项目；</li>
+<li>刷新 Maven 依赖后，在 <code>webapp/</code> 目录下新建 login.jsp、submit.jsp、result.jsp、count.jsp 四个文件；</li>
+<li>启动 Tomcat 访问 <code>http://localhost:8080/jsp-homework/login.jsp</code> 即可看到登录页。</li>
+</ol>
+
+<h3>⚠️ JSTL 常见报错速查</h3>
+<table>
+<tr><th>报错现象</th><th>原因</th><th>解决方案</th></tr>
+<tr><td>绝对 uri: http://java.sun.com/jsp/jstl/core 无法在 web.xml 或与此应用一起部署的 jar 文件中解析</td><td>缺少 JSTL 依赖</td><td>在 pom.xml 加入 glassfish 的 jakarta.servlet.jsp.jstl:3.0.1 依赖并刷新 Maven</td></tr>
+<tr><td>c:if/c:forEach 标签原样输出到页面</td><td>未写 taglib 指令</td><td>页面顶部加 <code>&lt;%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %&gt;</code></td></tr>
+<tr><td>java.lang.NoClassDefFoundError: jakarta/servlet/jsp/jstl/core/LoopTag</td><td>JSTL 依赖版本与 Servlet 版本不匹配</td><td>Jakarta 项目必须用 JSTL 3.0（glassfish 实现），不要用旧的 javax.servlet:jstl:1.2</td></tr>
+</table>
+</script>
+
+<script type="text/html" id="tpl-struct">
+<h3>📂 第二次课项目结构</h3>
+<p>在第一次课项目基础上<b>新增 4 个 JSP 文件</b>，最终 webapp 目录结构如下：</p>
+<div class="tree"><span class="dir">webapp/</span>
+├── <span class="file">login.jsp</span>         <span class="note"># 【新增】登录入口页</span>
+├── <span class="file">submit.jsp</span>        <span class="note"># 【新增】作业提交页（核心逻辑）</span>
+├── <span class="file">result.jsp</span>        <span class="note"># 【新增】提交结果页（EL + JSTL）</span>
+├── <span class="file">count.jsp</span>         <span class="note"># 【新增】访问统计页（application + c:forEach）</span>
+├── <span class="file">index.jsp</span>         <span class="note"># 第一次课的考勤首页（保留）</span>
+├── <span class="file">header.jsp</span>        <span class="note"># 第一次课的页头组件（count.jsp内联自己的页头）</span>
+├── <span class="file">footer.jsp</span>        <span class="note"># 第一次课的页脚组件（保留）</span>
+├── <span class="file">detail.jsp</span>        <span class="note"># 第一次课的详情页（保留）</span>
+└── <span class="dir">WEB-INF/</span>
+    ├── <span class="file">web.xml</span>       <span class="note"># Web 部署描述符</span>
+    └── <span class="dir">lib/</span>          <span class="note"># Maven 打包时自动复制 JSTL jar 到此</span>
+</div>
+
+<h3>📌 四个页面的职责分工</h3>
+<ul>
+<li><b>login.jsp</b>：纯展示层，一个 form 表单，演示 <b>POST 提交</b>方式，不写任何 Java 代码；</li>
+<li><b>submit.jsp</b>：核心业务页，接收登录参数、存储 session、展示作业提交表单——集中演示 <b>request、session 内置对象</b>和四大域概念；</li>
+<li><b>result.jsp</b>：提交结果页，演示<b>登录校验、response 重定向、EL 表达式、JSTL c:if</b>；</li>
+<li><b>count.jsp</b>：访问统计页，演示<b>application 全局域、out 对象、c:forEach 循环</b>。</li>
+</ul>
+
+<div class="warn"><b>⚠️ 第二次课新手高频错误：</b>
+<ol><li><b>忘记加 JSTL 依赖</b>：导致 c:if/c:forEach 报错；</li>
+<li><b>重定向后忘记 return</b>：导致后续代码继续执行，页面出现多余内容；</li>
+<li><b>中文乱码</b>：request.setCharacterEncoding 必须写在<b>所有 getParameter 之前</b>，否则无效；</li>
+<li><b>直接访问 result.jsp/count.jsp</b>：必须经过登录页设置 session，否则被重定向回 login.jsp（这是正常的权限保护行为，不是 bug）。</li></ol>
+</div>
+</script>
+
+<script type="text/html" id="tpl-verify">
+<h3>▶️ 启动验证步骤</h3>
+<ol>
+<li>确认 pom.xml 中已加入 JSTL 依赖，Maven 已刷新；</li>
+<li>点击 IDEA 右上角<b>绿色运行按钮</b>（Shift+F10）启动 Tomcat；</li>
+<li>浏览器访问 <code>http://localhost:8080/jsp-homework/login.jsp</code>；</li>
+<li>走通以下<b>完整流程</b>：</li>
+</ol>
+<table>
+<tr><th>步骤</th><th>访问路径 / 操作</th><th>预期效果</th></tr>
+<tr><td>1</td><td>/login.jsp</td><td>看到登录卡片，输入学号（如 2024001）、姓名（如 张三）点击登录</td></tr>
+<tr><td>2</td><td>自动跳转到 submit.jsp</td><td>显示"欢迎你，张三 同学"，下方有作业标题和内容输入框</td></tr>
+<tr><td>3</td><td>填写作业标题"JSP进阶作业"、内容任意，点提交</td><td>自动跳转到 result.jsp，显示学号、姓名、作业标题正确</td></tr>
+<tr><td>4</td><td>点击"查看完整访问统计"</td><td>跳转到 count.jsp，总访问次数 +1，显示最近学生列表</td></tr>
+<tr><td>5</td><td>新打开浏览器隐私窗口直接访问 result.jsp</td><td>未登录，立即被重定向回 login.jsp（权限校验生效）</td></tr>
+<tr><td>6</td><td>返回 result.jsp，点击"退出登录"</td><td>回到 login.jsp（扩展：可加一个 logout.jsp 清除 session，本次可手动关闭浏览器验证）</td></tr>
+</table>
+
+<div class="tip"><b>💡 常见问题排查：</b>
+<ul><li><b>登录后 submit.jsp 中文姓名乱码</b>：检查 submit.jsp 第一行是否有 <code>request.setCharacterEncoding("UTF-8");</code>，且必须在 getParameter 之前；</li>
+<li><b>EL 表达式原样输出 ${xxx}</b>：page 指令不要写 <code>isELIgnored="true"</code>；JSP 2.0+ 默认开启 EL；</li>
+<li><b>点击提交按钮报 404</b>：检查 form action 路径是否正确（相对路径同级目录下直接写文件名）；</li>
+<li><b>count.jsp 访问量始终是 1</b>：检查 application.setAttribute 之后是否又在别处覆盖了；重启 Tomcat 后数据清零（正常，因为 application 是内存中对象）。</li></ul>
+</div>
+</script>
+
+<script type="text/html" id="tpl-std">
+<h3>🏭 1. 会话管理规范</h3>
+<div class="std"><b>session 是最常用的内置对象之一</b>，企业中使用必须遵守以下规范：
+<ul>
+<li><b>登录凭证存入 session 后必须设置合理超时时间</b>：web.xml 中通过 <code>&lt;session-config&gt;&lt;session-timeout&gt;30&lt;/session-timeout&gt;&lt;/session-config&gt;</code> 配置，单位是分钟，默认 30 分钟；</li>
+<li><b>退出登录必须主动销毁 session</b>：调用 <code>session.invalidate()</code>，不能只移除 isLogin 属性，防止会话固定攻击；</li>
+<li><b>session 中禁止存储大对象</b>（如整个 List、文件内容）：每个用户都有独立 session，大量用户同时在线会导致内存溢出；</li>
+<li><b>分布式部署必须使用 Redis 等外部存储</b>：Tomcat 集群环境下多台服务器内存不共享，session 需统一存入 Redis。</li>
+</ul></div>
+
+<h3>🏭 2. 权限校验规范</h3>
+<ul>
+<li><b>所有需要登录的页面都必须校验 session</b>：不要以为用户"一定会从登录页进来"，用户可以直接输入 URL、收藏页面、从历史记录访问；</li>
+<li><b>权限校验代码必须放在页面最开头</b>：所有 HTML 输出之前完成校验，否则即使最终重定向，前面的内容也已经发给浏览器；</li>
+<li><b>企业中不允许每个 JSP 重复写校验代码</b>：使用 <b>Filter（过滤器）</b> 统一拦截所有需要登录的 URL（后续 Servlet 课会讲），JSP 本身不负责权限判断；</li>
+<li><b>敏感操作必须用 POST 请求</b>（如提交数据、修改密码、删除），避免 URL 参数泄露和 CSRF 攻击。</li>
+</ul>
+
+<h3>🏭 3. 数据校验与安全规范</h3>
+<ul>
+<li><b>后端校验永远不能省</b>：前端 JS 校验可以被浏览器禁用绕过，JSP/Servlet 必须再次校验所有参数（非空、长度、格式）；</li>
+<li><b>输出用户输入到页面前必须做 HTML 转义</b>：使用 <code>&lt;c:out value="${param.workContent}" /&gt;</code> 而非直接 <code>${param.workContent}</code>，防范 XSS 攻击——这是最常见的 Web 安全漏洞；</li>
+<li><b>中文编码统一处理</b>：用 Filter 设置 <code>request.setCharacterEncoding("UTF-8")</code>，不要每个页面重复写；</li>
+<li><b>敏感操作加 CSRF Token</b>：表单提交时携带一次性 token 防止跨站请求伪造（进阶内容）。</li>
+</ul>
+
+<h3>🏭 4. 转发与重定向选型规范</h3>
+<div class="std"><b>记住口诀："同一个请求内用转发（forward），跳转新请求用重定向（redirect）"</b>。登录成功、提交成功后必须用<b>重定向</b>（PRG 模式：Post-Redirect-Get），防止用户刷新页面导致表单重复提交；跳转到 WEB-INF 下的资源只能用转发（因为浏览器无法直接访问 WEB-INF）。</div>
+
+<h3>🏭 5. MVC 与代码分层规范</h3>
+<ul>
+<li><b>JSP 的终极定位是"纯视图"</b>：企业项目中 JSP 里不应该出现 <code>&lt;% %&gt;</code> 脚本片段，所有数据都由 Controller（Servlet）提前准备好，通过 request.setAttribute 传给 JSP；</li>
+<li><b>页面渲染统一用 EL + JSTL</b>：禁止在 JSP 中写 JDBC、业务计算、流程控制的 Java 代码；</li>
+<li><b>JSTL 是行业标准</b>：不要使用 Struts、Velocity 等已淘汰技术，新项目推荐 Thymeleaf，老项目维护仍需掌握 JSTL；</li>
+<li><b>application 域慎用</b>：全局数据（如访问量）应存入数据库或 Redis，重启 Tomcat 不会丢失。</li>
+</ul>
+
+<h3>🏭 6. 12 项 JSP 进阶安全自查清单</h3>
+<ol style="column-count:2;-webkit-column-count:2;font-size:13px;">
+<li>✅ 所有需要登录的页面都有 session 校验</li>
+<li>✅ 重定向后紧跟 return 终止后续代码</li>
+<li>✅ POST 请求参数设置 UTF-8 编码</li>
+<li>✅ 用户输入输出使用 c:out 转义</li>
+<li>✅ 敏感操作使用 POST 而非 GET</li>
+<li>✅ session 设置合理超时时间</li>
+<li>✅ 退出登录调用 session.invalidate()</li>
+<li>✅ JSP 中无数据库访问代码</li>
+<li>✅ JSP 中无脚本片段，纯 EL+JSTL</li>
+<li>✅ 重定向路径使用绝对路径</li>
+<li>✅ 错误页面通过 web.xml 统一配置</li>
+<li>✅ 登录失败给出友好提示不泄露敏感信息</li>
+</ol>
+</script>
+
+<script type="text/html" id="tpl-summary">
+<h3>🎉 恭喜完成第二次课！</h3>
+<p>通过这节课，你已经完整掌握了 JSP 进阶的全部核心内容，两次课下来，JSP 技术部分的所有知识点已全部覆盖：</p>
+<h4>第二次课 15 个核心知识点</h4>
+<div class="sumgrid" id="sumGrid2"></div>
+<h3>📝 课后作业</h3>
+<ol>
+<li>不看课件独立完成第二次课的 4 个 JSP 文件（建议时间：2 课时）</li>
+<li>扩展功能：增加 <b>logout.jsp</b>，调用 <code>session.invalidate()</code> 实现真正的退出登录；</li>
+<li>扩展功能：在 result.jsp 用 <code>&lt;c:out&gt;</code> 替换裸 EL 输出作业内容，防范 XSS；</li>
+<li>思考：将本项目的"用户登录校验"代码抽成一个 Filter（过滤器），统一拦截 result.jsp 和 count.jsp（为后续 Servlet 课程铺垫）；</li>
+<li>思考：提交的作业数据目前只在页面显示一次就消失了，如果要"保存"作业到下次访问还能看到，需要用到什么技术？（为 JDBC / 数据库课程铺垫）</li>
+</ol>
+<div class="tip"><b>💡 两次课总结：</b>至此 JSP 技术模块全部学完，你已掌握 JSP 三大基本语法（指令、脚本、动作）+ 九大内置对象 + 四大域对象 + 两种页面跳转方式 + EL 表达式 + JSTL 核心标签。JSP 是学习 Servlet、Spring MVC 的重要基础，后续课程会继续讲解 Servlet + Filter + Listener + MVC 模式，届时会彻底实现"JSP 只做视图、Java 代码全部从 JSP 中剥离"。</div>
+</script>
+
+<script>render();</script>
+</body>
+</html>
