@@ -206,10 +206,12 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
 .info-section table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
 .info-section table th,.info-section table td{border:1px solid #e3eaf3;padding:8px 12px;text-align:left;}
 .info-section table th{background:#f4f7fb;color:#2b3542;}
-.pom-box{background:#1b2430;color:#eef1f6;border-radius:10px;padding:16px 18px;font-family:"JetBrains Mono",Consolas,monospace;
-  font-size:12.5px;line-height:1.75;overflow-x:auto;margin:10px 0;}
-.pom-box .p-kw{color:#ff7b72;}.pom-box .p-str{color:#a5d6ff;}.pom-box .p-tag{color:#7ee787;}
-.pom-box .p-cmt{color:#8b949e;font-style:italic;}.pom-box .p-num{color:#79c0ff;}
+.pom-box{background:#f6f8fa;color:#24292f;border:1px solid #d0d7de;border-left:4px solid #0969da;border-radius:10px;padding:18px 22px;font-family:"JetBrains Mono","Fira Code",Consolas,"Courier New",monospace;font-size:13.5px;line-height:1.75;white-space:pre;overflow-x:auto;tab-size:4;box-shadow:0 1px 3px rgba(0,0,0,.06);margin:14px 0;}
+.pom-box .p-kw{color:#cf222e;font-weight:600;}
+.pom-box .p-str{color:#0a3069;}
+.pom-box .p-tag{color:#116329;}
+.pom-box .p-cmt{color:#6e7781;font-style:italic;}
+.pom-box .p-num{color:#953800;}
 .tree{background:#f8fafc;border:1px solid #e5ebf3;border-radius:10px;padding:16px 20px;font-family:"JetBrains Mono",Consolas,monospace;
   font-size:13px;line-height:1.9;white-space:pre;margin:10px 0;color:#3c4757;}
 .tree .dir{color:#0969da;font-weight:700;}.tree .file{color:#1f2328;}.tree .note{color:#8b96a5;font-style:italic;}
@@ -242,6 +244,15 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
 .toast.ok{background:#1a7f37;}
 .toast.err{background:#cf222e;}
 .toast.warn{background:#bc4c00;}
+
+/* ============ 水印 ============ */
+.wm-layer{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9998;overflow:hidden;}
+.wm-layer .wm-tile{position:absolute;color:rgba(9,105,218,.13);font:700 24px/1.2 "Microsoft YaHei",sans-serif;
+  transform:rotate(-28deg);white-space:nowrap;letter-spacing:2px;user-select:none;}
+/* ============ 页脚版权 ============ */
+.cr-foot{margin-top:24px;padding:14px 18px;text-align:center;font-size:12.5px;color:#6e7781;
+  border-top:1px solid #eaeef2;background:#f6f8fa;border-radius:0 0 10px 10px;line-height:1.8;}
+.cr-foot b{color:#24292f;}.cr-foot .dot{color:#d0d7de;margin:0 8px;}
 </style>
 </head>
 <body class="student-mode">
@@ -268,8 +279,7 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
 <div class="toast" id="toast"></div>
 
 <!-- ============ 源码容器（script text/plain 避免嵌套解析问题） ============ -->
-<script type="text/plain" id="src-c1-header">
-<%--
+<script type="text/plain" id="src-c1-header"><%--
   对应知识点模块：JSP注释、page指令全属性、静态包含基础
   教师备注：这是第一个敲的文件，先给学生演示公共组件复用的意义，不用每个页面重复写导航
 --%>
@@ -277,16 +287,16 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
   知识点：JSP原生注释，格式<%-- 注释内容 --%>
   仅在JSP源码中可见，翻译Servlet时会被直接丢弃，不会发送到浏览器
 --%>
-<%@ page 
-    contentType="text/html;charset=UTF-8" 
-    language="java" 
+<%@ page
+    contentType="text/html;charset=UTF-8"
+    language="java"
     pageEncoding="UTF-8"
     session="true"
     isELIgnored="false"
 %>
 <%--
   知识点：page指令，定义当前JSP页面的全局配置
-  常用属性：language/contentType/pageEncoding/import/session/errorPage/isErrorPage/isELIgnored
+  常用属性：language / contentType / pageEncoding / import / session / errorPage / isErrorPage / isELIgnored
 --%>
 
 <div style="background: #2c3e50; color: white; padding: 15px; text-align: center;">
@@ -295,25 +305,30 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
 </div>
 </script>
 
-<script type="text/plain" id="src-c1-footer">
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<script type="text/plain" id="src-c1-footer"><%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <div style="background: #ecf0f1; padding: 10px; text-align: center; margin-top: 30px;">
     <p style="margin:0;">Java Web课程教学演示 © 2025 | 运行环境：Tomcat 10.1.59 + Jakarta EE 10</p>
 </div>
 </script>
 
-<script type="text/plain" id="src-c1-index">
-<%@ page import="java.util.Date,java.text.SimpleDateFormat" %>
+<script type="text/plain" id="src-c1-index"><%@ page import="java.util.Date,java.text.SimpleDateFormat" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%-- page指令import属性：导入Java类，多个类用逗号分隔，是唯一可以重复出现的page属性 --%>
-
-
-    课程考勤首页</title>
-    
-        .container { width: 800px; margin: 20px auto; }
-        .stat-card { border: 1px solid #eee; padding: 20px; margin: 10px 0; border-radius: 8px; }
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>课程考勤首页</title>
+    <style>
+        body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f8f9fa;}
+        .container{width:800px;margin:20px auto;background:white;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+        .stat-card{border:1px solid #eee;padding:20px;margin:10px 0;border-radius:8px;background:#fafbfc;}
+        .stat-card h3{margin-top:0;color:#2c3e50;}
+        ul{line-height:2;}
+        button{padding:10px 20px;background:#0969da;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;}
+        button:hover{background:#0550ae;}
     </style>
 </head>
+<body>
 
 <%-- jsp:include动态包含：运行时合并执行结果，页面变量互不影响 --%>
 <jsp:include page="header.jsp"/>
@@ -334,8 +349,8 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
     %>
 
     <div class="stat-card">
-        今日课程：JSP基础语法</h3>
-        
+        <h3>📅 今日课程：JSP基础语法</h3>
+        <p>
             当前页面生成时间：
             <%-- 表达式脚本：输出数据到页面，结尾绝对不能加分号！ --%>
             <%= new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss").format(new Date()) %>
@@ -343,22 +358,24 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
     </div>
 
     <div class="stat-card">
-        今日考勤统计</h3>
+        <h3>📊 今日考勤统计</h3>
         <%-- 代码脚本片段：写在_jspService方法内，局部变量，线程安全 --%>
         <%
             String teacherName = "张老师";
             String courseWeek = "第6教学周";
         %>
-        授课教师：<%= teacherName %>  |  教学周：<%= courseWeek %></p>
-        
-            班级总人数：<%= totalStudent %>人</li>
-            出勤人数：<span style="color: green"><%= attendCount %>人</span></li>
-            迟到人数：<span style="color: orange"><%= lateCount %>人</span></li>
-            缺勤人数：<span style="color: red"><%= absentCount %>人</span></li>
-            今日出勤率：<%= getAttendRate() %></b></li>
+        <p>授课教师：<b><%= teacherName %></b>  |  教学周：<b><%= courseWeek %></b></p>
+        <ul>
+            <li>班级总人数：<b><%= totalStudent %></b> 人</li>
+            <li>出勤人数：<span style="color:green;font-weight:bold;"><%= attendCount %> 人</span></li>
+            <li>迟到人数：<span style="color:orange;font-weight:bold;"><%= lateCount %> 人</span></li>
+            <li>缺勤人数：<span style="color:red;font-weight:bold;"><%= absentCount %> 人</span></li>
+            <li>今日出勤率：<b style="color:#0969da;font-size:18px;"><%= getAttendRate() %></b></li>
         </ul>
 
-        <button onclick="location.href='detail.jsp?courseId=jsp001'">查看详细考勤名单</button>
+        <p>
+            <button onclick="location.href='detail.jsp?courseId=jsp001'">查看详细考勤名单 →</button>
+        </p>
     </div>
 
     <%@ include file="footer.jsp" %>
@@ -369,34 +386,56 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
 
 <script type="text/plain" id="src-c1-detail">
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-
-
-    考勤详情</title>
-    .container{width:800px;margin:20px auto;} table{border-collapse: collapse;}</style>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>考勤详情</title>
+    <style>
+        body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f8f9fa;}
+        .container{width:800px;margin:20px auto;background:white;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+        table{border-collapse:collapse;width:100%;margin:15px 0;}
+        th,td{border:1px solid #ddd;padding:10px;text-align:center;}
+        th{background:#f5f5f5;}
+        .attend{color:green;}
+        .late{color:orange;}
+        .absent{color:red;}
+        button{padding:10px 20px;background:#6c757d;color:white;border:none;border-radius:4px;cursor:pointer;}
+        button:hover{background:#5a6268;}
+        h3{color:#2c3e50;}
+    </style>
 </head>
+<body>
 
 <jsp:include page="header.jsp"/>
 <div class="container">
-    今日考勤详细名单</h3>
+    <h3>📋 今日考勤详细名单</h3>
     <table border="1" cellpadding="8" cellspacing="0" width="100%">
-        <tr style="background:#f5f5f5;">学号</th>姓名</th>考勤状态</th>备注</th></tr>
+        <tr style="background:#f5f5f5;">
+            <th>学号</th>
+            <th>姓名</th>
+            <th>考勤状态</th>
+            <th>备注</th>
+        </tr>
         <%-- 代码脚本片段与HTML穿插：Java循环控制HTML结构生成，实现动态表格 --%>
         <%
             String[] stuList = {"张三","李四","王五","赵六","孙七"};
-            String[] status = {"出勤","迟到","缺勤","出勤","出勤"};
-            String[] remark = {"-","迟到10分钟","未请假","-","-"};
-            for(int i=0;i<stuList.length;i++){
+            String[] status  = {"出勤","迟到","缺勤","出勤","出勤"};
+            String[] remark  = {"-","迟到10分钟","未请假","-","-"};
+            String[] cls     = {"attend","late","absent","attend","attend"};
+            for(int i = 0; i < stuList.length; i++){
         %>
-            
-                202400<%= i+1 %></td>
-                <%= stuList[i] %></td>
-                <%= status[i] %></td>
-                <%= remark[i] %></td>
-            </tr>
+        <tr>
+            <td>202400<%= i+1 %></td>
+            <td><%= stuList[i] %></td>
+            <td class="<%= cls[i] %>"><b><%= status[i] %></b></td>
+            <td><%= remark[i] %></td>
+        </tr>
         <% } %>
     </table>
-    
-    <button onclick="location.href='index.jsp'">返回首页</button>
+
+    <p>
+        <button onclick="location.href='index.jsp'">← 返回首页</button>
+    </p>
 
     <%-- JSP动作标签：jsp:forward服务器内部转发，配合jsp:param传参，地址栏不变 --%>
     <%--
@@ -673,6 +712,16 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
    教师使用时改为 true 即可复制代码，默认 false 为学生模式
    ============================================================ */
 const TEACHER_MODE = false;
+// ========== 【版权与水印开关】 ==========
+//   SHOW_COPYRIGHT = true/false  是否显示页脚版权信息条
+//   SHOW_WATERMARK = true/false  是否显示整页斜向水印
+//   COPYRIGHT_TEXT = "..."       版权文字内容（支持HTML）
+//   WATERMARK_TEXT = "..."       水印文字（建议 10~20 字，会平铺整页）
+const SHOW_COPYRIGHT = true;
+const SHOW_WATERMARK = true;
+const COPYRIGHT_TEXT = '© 2026 《Java Web 应用开发》JSP 模块教学课件 · 作者版权所有 · 仅限授权课程教学使用 · 未经许可禁止转载或商用';
+const WATERMARK_TEXT = '© JSP教学课件 · 版权所有';
+
 
 /* ============================================================
    课程配置（第一次课）
@@ -680,7 +729,7 @@ const TEACHER_MODE = false;
 const COURSE = {
   title: '第一次课 · JSP基础语法实战',
   project: '班级课程考勤展示页',
-  dur: '4课时（前2课时教师带敲，后2课时学生实操）',
+  dur: '4课时×40分钟（前80分钟教师带敲，后80分钟学生实操，共160分钟）',
   categories: {
     basic:   { icon:'📘', name:'基础语法', color:'#0969da', bg:'#eef4ff' },
     object:  { icon:'📦', name:'内置对象', color:'#8250df', bg:'#f4edff' },
@@ -1101,34 +1150,80 @@ if(!TEACHER_MODE&&navigator.clipboard){
 
 <script type="text/html" id="tpl-goal">
 <h3>🎯 本次课任务目标</h3>
-<p>完成一个<b>班级课程考勤展示页</b>项目，通过"跟着敲项目"掌握 JSP 基础语法，最终实现：</p>
+<p>完成一个<b>独立的「班级课程考勤展示页」项目（jsp-attendance）</b>，通过"跟着敲项目"掌握 JSP 基础语法，最终实现：</p>
 <div class="kpi-row">
-  <div class="kpi"><div class="v">4 课时</div><div class="l">项目式教学</div></div>
+  <div class="kpi"><div class="v">4×40 分钟</div><div class="l">共160分钟</div></div>
   <div class="kpi"><div class="v">4 个</div><div class="l">JSP 页面</div></div>
-  <div class="kpi"><div class="v">7 个</div><div class="l">核心知识点</div></div>
-  <div class="kpi"><div class="v">0 个</div><div class="l">外部依赖（基础部分）</div></div>
+  <div class="kpi"><div class="v">8 个</div><div class="l">核心知识点</div></div>
+  <div class="kpi"><div class="v">独立项目</div><div class="l">不依赖第二次课</div></div>
 </div>
-<h3>🖥️ 最终效果预览</h3>
+
+<h3>🖥️ 最终效果预览（2 个主要页面）</h3>
+<p><b>① 首页 index.jsp：考勤统计主页</b></p>
 <div class="browser-mock">
   <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
   <div class="browser-url">http://localhost:8080/jsp-attendance/index.jsp</div></div>
   <div class="browser-body" style="text-align:center;">
-    <div style="background:#2c3e50;color:#fff;padding:12px;">2024级软件技术1班 JSP课程考勤系统</div>
-    <div style="margin-top:20px;text-align:left;padding:15px;border:1px solid #eee;border-radius:8px;">
-      <b>今日课程：JSP基础语法</b><p>当前页面生成时间：（动态时间）</p>
-      <b>今日考勤统计</b><ul><li>班级总人数：45人</li><li>出勤人数：<span style="color:green">42人</span></li><li>出勤率：93.3%</li></ul>
-      <button>查看详细考勤名单</button>
+    <div style="background:#2c3e50;color:#fff;padding:12px;font-size:16px;">2024级软件技术1班 JSP课程考勤系统</div>
+    <div style="margin:20px auto;text-align:left;width:520px;padding:18px;border:1px solid #e5e7eb;border-radius:8px;background:#fafbfc;">
+      <div style="font-size:15px;color:#2c3e50;"><b>📘 今日课程：JSP基础语法</b></div>
+      <div style="color:#6b7280;font-size:13px;margin:6px 0 12px;">页面生成时间：（JSP动态时间）</div>
+      <div style="background:#fff;padding:10px 14px;border-radius:6px;border-left:4px solid #3b82f6;">
+        <b>📊 今日考勤统计</b>
+        <ul style="margin:8px 0 0 18px;padding:0;font-size:13px;line-height:1.9;">
+          <li>班级总人数：<b>45人</b></li>
+          <li>出勤人数：<b style="color:#16a34a">42人</b></li>
+          <li>出勤率：<b style="color:#16a34a">93.3%</b></li>
+          <li>迟到：2人 ｜ 请假：1人</li>
+        </ul>
+      </div>
+      <div style="margin-top:14px;text-align:center;">
+        <button style="padding:7px 18px;background:#2c3e50;color:#fff;border:none;border-radius:4px;cursor:pointer;">查看详细考勤名单 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:20px;"><b>② 详情页 detail.jsp：动态考勤名单表格</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
+  <div class="browser-url">http://localhost:8080/jsp-attendance/detail.jsp</div></div>
+  <div class="browser-body" style="padding:15px;">
+    <div style="background:#2c3e50;color:#fff;padding:10px 14px;border-radius:4px 4px 0 0;font-size:14px;">
+      📋 2024级软件技术1班 · 今日考勤名单
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:0;">
+      <thead>
+        <tr style="background:#f3f4f6;">
+          <th style="border:1px solid #e5e7eb;padding:8px;">序号</th>
+          <th style="border:1px solid #e5e7eb;padding:8px;">学号</th>
+          <th style="border:1px solid #e5e7eb;padding:8px;">姓名</th>
+          <th style="border:1px solid #e5e7eb;padding:8px;">考勤状态</th>
+          <th style="border:1px solid #e5e7eb;padding:8px;">备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">1</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2024001</td><td style="border:1px solid #e5e7eb;padding:7px;">张三</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;color:#16a34a;">出勤</td><td style="border:1px solid #e5e7eb;padding:7px;color:#6b7280;">-</td></tr>
+        <tr><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2024002</td><td style="border:1px solid #e5e7eb;padding:7px;">李四</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;color:#16a34a;">出勤</td><td style="border:1px solid #e5e7eb;padding:7px;color:#6b7280;">-</td></tr>
+        <tr style="background:#fef3c7;"><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">3</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2024003</td><td style="border:1px solid #e5e7eb;padding:7px;">王五</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;color:#d97706;">迟到</td><td style="border:1px solid #e5e7eb;padding:7px;color:#92400e;">迟到10分钟</td></tr>
+        <tr><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">4</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2024004</td><td style="border:1px solid #e5e7eb;padding:7px;">赵六</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;color:#16a34a;">出勤</td><td style="border:1px solid #e5e7eb;padding:7px;color:#6b7280;">-</td></tr>
+        <tr style="background:#fee2e2;"><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">5</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2024005</td><td style="border:1px solid #e5e7eb;padding:7px;">孙七</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;color:#dc2626;">缺勤</td><td style="border:1px solid #e5e7eb;padding:7px;color:#991b1b;">未请假</td></tr>
+        <tr><td colspan="5" style="border:1px solid #e5e7eb;padding:7px;text-align:center;color:#9ca3af;">…… 共 45 条数据由 JSP 脚本循环动态生成 ……</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px;text-align:center;">
+      <button style="padding:6px 14px;background:#6b7280;color:#fff;border:none;border-radius:4px;cursor:pointer;">← 返回首页</button>
     </div>
   </div>
 </div>
 
 <h3>✅ 验收清单</h3>
 <ul>
-<li>🔲 项目在 Tomcat 10.1.59 中能正常启动，无 404/500 错误</li>
-<li>🔲 header.jsp / footer.jsp 作为公共组件被两个页面正确包含</li>
-<li>🔲 index.jsp 显示动态时间与考勤统计，出勤率计算正确</li>
-<li>🔲 detail.jsp 动态展示学生考勤名单表格，可返回首页</li>
-<li>🔲 页面中文不乱码，编码统一使用 UTF-8</li>
+<li>🔲 独立项目 <code>jsp-attendance</code> 在 Tomcat 10.1.59 中能正常启动，无 404/500 错误</li>
+<li>🔲 header.jsp / footer.jsp 作为公共组件被 index.jsp、detail.jsp 正确包含</li>
+<li>🔲 index.jsp 显示动态时间与考勤统计，出勤率计算正确（出勤人数/总人数）</li>
+<li>🔲 detail.jsp 动态循环展示 45 名学生的考勤名单表格，迟到/缺勤行有高亮色</li>
+<li>🔲 页面中文不乱码，编码统一使用 UTF-8，所有标签正确闭合</li>
 </ul>
 </script>
 
@@ -1144,24 +1239,45 @@ if(!TEACHER_MODE&&navigator.clipboard){
 </table>
 
 <h3>📦 Maven 依赖（pom.xml）</h3>
-<p>在 IDEA 中创建<b>Maven Web 项目（maven-archetype-webapp）</b>后，将 pom.xml 的 dependencies 替换为以下 Jakarta 版本依赖：</p>
-<div class="pom-box"><span class="p-cmt">&lt;!-- JSP 第一次课暂时只需要 servlet-api 和 jsp-api --&gt;</span>
-<span class="p-tag">&lt;dependencies&gt;</span>
-  <span class="p-tag">&lt;dependency&gt;</span>
-    <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet<span class="p-tag">&lt;/groupId&gt;</span>
-    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet-api<span class="p-tag">&lt;/artifactId&gt;</span>
-    <span class="p-tag">&lt;version&gt;</span><span class="p-num">6.0.0</span><span class="p-tag">&lt;/version&gt;</span>
-    <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
-  <span class="p-tag">&lt;/dependency&gt;</span>
-  <span class="p-tag">&lt;dependency&gt;</span>
-    <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet.jsp<span class="p-tag">&lt;/groupId&gt;</span>
-    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp-api<span class="p-tag">&lt;/artifactId&gt;</span>
-    <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.1.1</span><span class="p-tag">&lt;/version&gt;</span>
-    <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
-  <span class="p-tag">&lt;/dependency&gt;</span>
-<span class="p-tag">&lt;/dependencies&gt;</span></div>
-<p class="tip"><b>💡 为什么用 provided？</b>因为 Tomcat 10.1 自己的 lib 目录已经自带了 Servlet 和 JSP 的 API 包，打包时不应该再把它们带进 WEB-INF/lib，否则会产生类冲突。</p>
+<p>在 IDEA 中创建<b>Maven Web 项目（maven-archetype-webapp）</b>后，将 pom.xml 的 <code>&lt;dependencies&gt;</code> 块替换为以下 Jakarta 版本依赖（<b>与第二次课保持同一套坐标</b>，避免环境差异）：</p>
+<div class="pom-box"><span class="p-cmt">&lt;!-- ======================== Maven 依赖配置 ======================== --&gt;</span>
+<span class="p-cmt">&lt;!-- 适用环境：JDK 17 + Tomcat 10.1.x + Servlet 6.0 + JSTL 3.0            --&gt;</span>
+<span class="p-cmt">&lt;!-- 说明：Servlet/JSP API 由 Tomcat 自带，scope=provided 避免打包冲突      --&gt;</span>
+<span class="p-cmt">&lt;!-- JSTL：API + GlassFish 实现（TCK认证），需随项目打包                   --&gt;</span>
+<span class="p-cmt">&lt;!-- ================================================================ --&gt;</span>
 
+<span class="p-tag">&lt;dependencies&gt;</span>
+
+    <span class="p-cmt">&lt;!-- ① Servlet API（Tomcat 自带，provided，不打包进war） --&gt;</span>
+    <span class="p-tag">&lt;dependency&gt;</span>
+        <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet<span class="p-tag">&lt;/groupId&gt;</span>
+        <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet-api<span class="p-tag">&lt;/artifactId&gt;</span>
+        <span class="p-tag">&lt;version&gt;</span><span class="p-num">6.0.0</span><span class="p-tag">&lt;/version&gt;</span>
+        <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
+    <span class="p-tag">&lt;/dependency&gt;</span>
+
+    <span class="p-cmt">&lt;!-- ② JSTL API for Jakarta EE（标签接口定义，会传递依赖 JSP API） --&gt;</span>
+    <span class="p-tag">&lt;dependency&gt;</span>
+        <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet.jsp.jstl<span class="p-tag">&lt;/groupId&gt;</span>
+        <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp.jstl-api<span class="p-tag">&lt;/artifactId&gt;</span>
+        <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.0.0</span><span class="p-tag">&lt;/version&gt;</span>
+    <span class="p-tag">&lt;/dependency&gt;</span>
+
+    <span class="p-cmt">&lt;!-- ③ JSTL Implementation for Jakarta EE（GlassFish 官方实现，必须打包） --&gt;</span>
+    <span class="p-tag">&lt;dependency&gt;</span>
+        <span class="p-tag">&lt;groupId&gt;</span>org.glassfish.web<span class="p-tag">&lt;/groupId&gt;</span>
+        <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp.jstl<span class="p-tag">&lt;/artifactId&gt;</span>
+        <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.0.1</span><span class="p-tag">&lt;/version&gt;</span>
+    <span class="p-tag">&lt;/dependency&gt;</span>
+
+<span class="p-tag">&lt;/dependencies&gt;</span></div>
+<p class="tip"><b>💡 依赖说明：</b>
+<ul>
+  <li><b>jakarta.servlet-api:6.0.0</b>：Servlet 6.0 API，Tomcat 10.1 自带，scope=provided 避免打包冲突；</li>
+  <li><b>jakarta.servlet.jsp.jstl-api:3.0.0</b>：JSTL 1.2 对应的 3.0 API 包，提供 c: 标签的接口定义，会自动传递依赖 JSP API；</li>
+  <li><b>org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1</b>：GlassFish 官方 JSTL 实现（Jakarta JSTL 3.0 TCK 认证），Tomcat 默认不自带，必须随项目打包。</li>
+</ul>
+使用这套坐标可避免"绝对 uri 无法解析""ClassNotFoundException"等常见报错。</p>
 <h3>🚀 IDEA 配置 6 步走</h3>
 <ol>
 <li>打开 IDEA 2024.1 → New Project → Maven → 勾选 <b>"Create from archetype"</b> → 选择 <code>org.apache.maven.archetypes:maven-archetype-webapp</code></li>
@@ -1277,13 +1393,97 @@ if(!TEACHER_MODE&&navigator.clipboard){
 <div class="sumgrid" id="sumGrid1"></div>
 <h3>📝 课后作业</h3>
 <ol>
-<li>不看课件独立完成本次课的 4 个 JSP 文件（建议时间：2 课时）</li>
+<li>不看课件独立完成本次课的所有 JSP 文件（建议时间：2 课时×40分钟 = 80分钟）</li>
 <li>扩展项目：给考勤页增加一个"本周出勤率趋势"的简单模拟展示</li>
 <li>思考题：如果不使用脚本片段，只使用 EL 和 JSTL，index.jsp 的考勤数据应该从哪里来？（为第二次课和 MVC 铺垫）</li>
 <li>预习：JSP 九大内置对象、EL 表达式、JSTL 标签（第二次课内容）</li>
 </ol>
 </script>
+<script>
 
-<script>render();</script>
+function installWatermarkAndCopyright(){
+  var watermark = document.getElementById('__wm__');
+  var copyright = document.getElementById('__cr__');
+
+  // ============ 水印（浅灰色fixed铺满视口，随滚动始终可见，不依赖页面高度）============
+  if (typeof SHOW_WATERMARK !== 'undefined' && SHOW_WATERMARK) {
+    if (watermark) watermark.remove();
+    watermark = document.createElement('div');
+    watermark.id = '__wm__';
+    document.body.appendChild(watermark);
+
+    var text = (typeof WATERMARK_TEXT !== 'undefined') ? WATERMARK_TEXT : '';
+    var charCount = text.length || 10;
+    var fontSize = 16;
+    var unitW = fontSize * 1.05;
+    var textPixelWidth = charCount * unitW;
+    var stepX = Math.ceil(textPixelWidth * 1.8);     // 水平步长=字宽×1.8，16字也绝对不重叠
+    var stepY = 160;                                  // 垂直步长
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    // 多铺一圈，视口滚动resize时不出现空白
+    var cols = Math.ceil(vw / stepX) + 3;
+    var rows = Math.ceil(vh / stepY) + 3;
+
+    watermark.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:9998;pointer-events:none;overflow:hidden;';
+    var frag = document.createDocumentFragment();
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var t = document.createElement('span');
+        t.textContent = text;
+        // 奇数行错开半个步长，形成菱形交错
+        var offsetX = (r % 2 === 0) ? 0 : stepX / 2;
+        t.style.cssText = 'position:absolute;'
+          + 'left:' + (c * stepX + offsetX - stepX) + 'px;'
+          + 'top:'  + (r * stepY - stepY) + 'px;'
+          + 'font-size:' + fontSize + 'px;'
+          + 'color:#a8a8a8;'                  // 浅灰色
+          + 'opacity:0.07;'                   // 极淡，仅隐约可见
+          + 'font-weight:400;'
+          + 'letter-spacing:2px;'
+          + 'white-space:nowrap;'
+          + 'transform:rotate(-25deg);'
+          + 'transform-origin:left top;'
+          + 'user-select:none;';
+        frag.appendChild(t);
+      }
+    }
+    watermark.appendChild(frag);
+  } else {
+    if (watermark) { watermark.remove(); watermark = null; }
+  }
+
+  // ============ 版权信息条（追加到 main 末尾）============
+  if (typeof SHOW_COPYRIGHT !== 'undefined' && SHOW_COPYRIGHT) {
+    if (copyright) copyright.remove();
+    copyright = document.createElement('div');
+    copyright.id = '__cr__';
+    copyright.style.cssText = 'text-align:center;padding:22px 20px;color:#8a8f98;font-size:12px;border-top:1px solid #eaecef;background:#f6f8fa;margin-top:40px;line-height:1.9;clear:both;';
+    var main = document.getElementById('main');
+    var projName = document.title.replace(' - JSP交互教学课件','').replace(' · 分步向导','');
+    copyright.innerHTML = '<div style="font-weight:600;color:#57606a;margin-bottom:4px;letter-spacing:0.5px;">'
+      + ((typeof COPYRIGHT_TEXT !== 'undefined') ? COPYRIGHT_TEXT : '')
+      + '</div>'
+      + '<div>项目：<b style="color:#0969da;">' + projName + '</b> · 课时：4×40分钟=160分钟 · 适用环境：JDK 17 + IDEA 2024.1 + Tomcat 10.1.59 + Maven 3.9+</div>';
+    if (main) main.appendChild(copyright);
+    else document.body.appendChild(copyright);
+  } else {
+    if (copyright) { copyright.remove(); copyright = null; }
+  }
+}
+window.addEventListener('resize', function(){ installWatermarkAndCopyright(); });
+
+var _origRender = render;
+render = function(){
+  try { _origRender.apply(this, arguments); }
+  catch(e){ console.error(e); }
+  // 切换步骤/知识点后面板展开可能改变布局，重新铺设一次
+  setTimeout(installWatermarkAndCopyright, 100);
+};
+
+// 首次渲染
+render();
+
+</script>
 </body>
 </html>

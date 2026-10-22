@@ -206,10 +206,12 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
 .info-section table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
 .info-section table th,.info-section table td{border:1px solid #e3eaf3;padding:8px 12px;text-align:left;}
 .info-section table th{background:#f4f7fb;color:#2b3542;}
-.pom-box{background:#1b2430;color:#eef1f6;border-radius:10px;padding:16px 18px;font-family:"JetBrains Mono",Consolas,monospace;
-  font-size:12.5px;line-height:1.75;overflow-x:auto;margin:10px 0;}
-.pom-box .p-kw{color:#ff7b72;}.pom-box .p-str{color:#a5d6ff;}.pom-box .p-tag{color:#7ee787;}
-.pom-box .p-cmt{color:#8b949e;font-style:italic;}.pom-box .p-num{color:#79c0ff;}
+.pom-box{background:#f6f8fa;color:#24292f;border:1px solid #d0d7de;border-left:4px solid #0969da;border-radius:10px;padding:18px 22px;font-family:"JetBrains Mono","Fira Code",Consolas,"Courier New",monospace;font-size:13.5px;line-height:1.75;white-space:pre;overflow-x:auto;tab-size:4;box-shadow:0 1px 3px rgba(0,0,0,.06);margin:14px 0;}
+.pom-box .p-kw{color:#cf222e;font-weight:600;}
+.pom-box .p-str{color:#0a3069;}
+.pom-box .p-tag{color:#116329;}
+.pom-box .p-cmt{color:#6e7781;font-style:italic;}
+.pom-box .p-num{color:#953800;}
 .tree{background:#f8fafc;border:1px solid #e5ebf3;border-radius:10px;padding:16px 20px;font-family:"JetBrains Mono",Consolas,monospace;
   font-size:13px;line-height:1.9;white-space:pre;margin:10px 0;color:#3c4757;}
 .tree .dir{color:#0969da;font-weight:700;}.tree .file{color:#1f2328;}.tree .note{color:#8b96a5;font-style:italic;}
@@ -242,6 +244,15 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
 .toast.ok{background:#1a7f37;}
 .toast.err{background:#cf222e;}
 .toast.warn{background:#bc4c00;}
+
+/* ============ 水印 ============ */
+.wm-layer{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9998;overflow:hidden;}
+.wm-layer .wm-tile{position:absolute;color:rgba(9,105,218,.13);font:700 24px/1.2 "Microsoft YaHei",sans-serif;
+  transform:rotate(-28deg);white-space:nowrap;letter-spacing:2px;user-select:none;}
+/* ============ 页脚版权 ============ */
+.cr-foot{margin-top:24px;padding:14px 18px;text-align:center;font-size:12.5px;color:#6e7781;
+  border-top:1px solid #eaeef2;background:#f6f8fa;border-radius:0 0 10px 10px;line-height:1.8;}
+.cr-foot b{color:#24292f;}.cr-foot .dot{color:#d0d7de;margin:0 8px;}
 </style>
 </head>
 <body class="student-mode">
@@ -268,30 +279,45 @@ pre.kpcode .c-tag{color:#116329;font-weight:700;}
 <div class="toast" id="toast"></div>
 
 <!-- ============ 源码容器（script text/plain 避免嵌套解析问题） ============ -->
-<script type="text/plain" id="src-c2-login">
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<script type="text/plain" id="src-c2-login"><%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>学生登录</title>
     <style>
-        .box{width:400px;margin:100px auto;border:1px solid #eee;padding:30px;border-radius:8px;}
-        input{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
-        button{width:100%;padding:10px;background:#0969da;color:white;border:none;border-radius:4px;cursor:pointer;}
+        body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+        .box{width:400px;background:white;padding:35px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2);}
+        .box h3{text-align:center;color:#333;margin-top:0;font-size:22px;}
+        .box p{margin:12px 0;}
+        label{display:block;font-size:14px;color:#555;margin-bottom:5px;}
+        input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;font-size:14px;}
+        input:focus{outline:none;border-color:#0969da;box-shadow:0 0 0 2px rgba(9,105,218,0.1);}
+        button{width:100%;padding:12px;background:#0969da;color:white;border:none;border-radius:6px;cursor:pointer;font-size:15px;margin-top:10px;}
+        button:hover{background:#0550ae;}
+        .tip{font-size:12px;color:#888;text-align:center;margin-top:15px;}
     </style>
 </head>
 <body>
 <div class="box">
-    <h3>学生作业系统登录</h3>
+    <h3>🎓 学生作业系统登录</h3>
     <%-- 知识点：form表单method=post提交——表单数据放在请求体中，比GET更安全，适合登录/提交场景 --%>
     <form action="submit.jsp" method="post">
-        <p>学号：<input type="text" name="stuId" required placeholder="请输入学号"></p>
-        <p>姓名：<input type="text" name="stuName" required placeholder="请输入姓名"></p>
-        <p><button type="submit">登录进入系统</button></p>
+        <p>
+            <label>学号</label>
+            <input type="text" name="stuId" required placeholder="请输入学号（如2024001）">
+        </p>
+        <p>
+            <label>姓名</label>
+            <input type="text" name="stuName" required placeholder="请输入姓名">
+        </p>
+        <p><button type="submit">登 录 进 入 系 统</button></p>
     </form>
+    <p class="tip">JSP进阶实战项目 · Jakarta EE环境</p>
 </div>
 </body>
 </html>
 </script>
+
 <script type="text/plain" id="src-c2-submit">
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
@@ -1018,6 +1044,16 @@ SessionID: ${cookie.JSESSIONID.value}
    教师使用时改为 true 即可复制代码，默认 false 为学生模式
    ============================================================ */
 const TEACHER_MODE = false;
+// ========== 【版权与水印开关】 ==========
+//   SHOW_COPYRIGHT = true/false  是否显示页脚版权信息条
+//   SHOW_WATERMARK = true/false  是否显示整页斜向水印
+//   COPYRIGHT_TEXT = "..."       版权文字内容（支持HTML）
+//   WATERMARK_TEXT = "..."       水印文字（建议 10~20 字，会平铺整页）
+const SHOW_COPYRIGHT = true;
+const SHOW_WATERMARK = true;
+const COPYRIGHT_TEXT = '© 2026 《Java Web 应用开发》JSP 模块教学课件 · 作者版权所有 · 仅限授权课程教学使用 · 未经许可禁止转载或商用';
+const WATERMARK_TEXT = '© JSP教学课件 · 版权所有';
+
 
 /* ============================================================
    课程配置（第二次课）
@@ -1025,7 +1061,7 @@ const TEACHER_MODE = false;
 const COURSE = {
   title: '第二次课 · JSP进阶实战',
   project: '学生作业提交小系统',
-  dur: '4课时（前2课时教师带敲，后2课时学生实操）',
+  dur: '4课时×40分钟（前80分钟教师带敲，后80分钟学生实操，共160分钟）',
   sumGrid: 'sumGrid2',
   categories: {
     basic:   { icon:'📘', name:'基础语法', color:'#0969da', bg:'#eef4ff' },
@@ -1098,7 +1134,7 @@ const COURSE = {
         {from:'taglib指令——引入JSTL标签库',k:'taglib-directive'},
         {from:'知识点：登录状态校验',to:'必须先经过登录流程',k:'login-check'},
         {from:'知识点：response内置对象sendRedirect',to:'重定向（客户端跳转）',k:'response-redirect'},
-        {from:'return; // 重定向后必须return',k:'forward-vs-redirect'},
+        {from:'return; // 知识点：重定向后必须return',k:'forward-vs-redirect'},
         {from:'知识点：EL表达式——简化',to:'类型转换',k:'el-expression'},
         {from:'知识点：EL内置对象param',to:'request.getParameter',k:'el-objects'},
         {from:'知识点：JSTL c:if标签',to:'Java if脚本',k:'jstl-if'}
@@ -1467,32 +1503,114 @@ if(!TEACHER_MODE&&navigator.clipboard){
 
 <script type="text/html" id="tpl-goal">
 <h3>🎯 本次课任务目标</h3>
-<p>完成一个<b>学生作业提交小系统</b>项目，通过"跟着敲项目"掌握 JSP 进阶核心技术，最终实现：</p>
+<p>完成一个<b>全新独立的「学生作业提交系统」项目（jsp-homework）</b>，<b>不依赖第一次课的任何文件</b>，通过"跟着敲项目"掌握 JSP 进阶核心知识点，最终实现完整的"登录 → 提交作业 → 查看结果 → 访问统计"流程：</p>
 <div class="kpi-row">
-  <div class="kpi"><div class="v">4 课时</div><div class="l">项目式教学</div></div>
+  <div class="kpi"><div class="v">4×40 分钟</div><div class="l">共160分钟</div></div>
   <div class="kpi"><div class="v">4 个</div><div class="l">JSP 页面</div></div>
   <div class="kpi"><div class="v">15 个</div><div class="l">核心知识点</div></div>
-  <div class="kpi"><div class="v">JSTL</div><div class="l">标签库依赖</div></div>
+  <div class="kpi"><div class="v">全新独立</div><div class="l">含JSTL依赖</div></div>
 </div>
-<h3>🖥️ 最终效果预览</h3>
+
+<h3>🖥️ 最终效果预览（4 个主要页面）</h3>
+<p><b>① login.jsp：学生登录页</b></p>
 <div class="browser-mock">
   <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
   <div class="browser-url">http://localhost:8080/jsp-homework/login.jsp</div></div>
-  <div class="browser-body" style="text-align:center;">
-    <div style="margin-top:20px;display:inline-block;text-align:left;width:400px;border:1px solid #eee;padding:20px;border-radius:8px;">
-      <b>学生作业系统登录</b><p>学号：<input placeholder="请输入学号" style="width:100%;padding:6px;"></p><p>姓名：<input placeholder="请输入姓名" style="width:100%;padding:6px;"></p><p><button style="width:100%;padding:8px;background:#0969da;color:white;border:none;border-radius:4px;">登录进入系统</button></p>
+  <div class="browser-body" style="padding:60px 20px;text-align:center;">
+    <div style="display:inline-block;text-align:left;width:380px;border:1px solid #e5e7eb;padding:28px;border-radius:10px;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.06);">
+      <div style="text-align:center;font-size:18px;font-weight:bold;color:#1e40af;margin-bottom:4px;">📝 学生作业提交系统</div>
+      <div style="text-align:center;font-size:12px;color:#6b7280;margin-bottom:20px;">请先登录</div>
+      <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;color:#374151;margin-bottom:4px;">学号</label><input type="text" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:4px;box-sizing:border-box;" placeholder="请输入学号" value="2024001"></div>
+      <div style="margin-bottom:18px;"><label style="display:block;font-size:13px;color:#374151;margin-bottom:4px;">姓名</label><input type="text" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:4px;box-sizing:border-box;" placeholder="请输入姓名" value="张三"></div>
+      <button style="width:100%;padding:9px;background:#2563eb;color:#fff;border:none;border-radius:4px;font-size:14px;cursor:pointer;">登 录</button>
     </div>
+  </div>
+</div>
+
+<p style="margin-top:20px;"><b>② submit.jsp：作业提交页（登录后可访问）</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
+  <div class="browser-url">http://localhost:8080/jsp-homework/submit.jsp</div></div>
+  <div class="browser-body" style="padding:25px;">
+    <div style="background:#065f46;color:#fff;padding:12px 18px;border-radius:4px;font-size:14px;">
+      👋 欢迎你，<b>张三</b> 同学（学号：2024001）｜ <a style="color:#bbf7d0;">退出登录</a>
+    </div>
+    <div style="margin-top:18px;max-width:600px;">
+      <h4 style="margin:0 0 14px;color:#1f2937;">📤 提交今日作业</h4>
+      <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;color:#374151;margin-bottom:4px;">作业标题</label><input type="text" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:4px;box-sizing:border-box;" placeholder="请输入作业标题"></div>
+      <div style="margin-bottom:14px;"><label style="display:block;font-size:13px;color:#374151;margin-bottom:4px;">作业内容</label><textarea rows="6" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:4px;box-sizing:border-box;font-family:inherit;" placeholder="请输入作业正文..."></textarea></div>
+      <button style="padding:8px 22px;background:#2563eb;color:#fff;border:none;border-radius:4px;font-size:14px;cursor:pointer;">提交作业</button>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:20px;"><b>③ result.jsp：提交结果页（EL + JSTL 渲染）</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
+  <div class="browser-url">http://localhost:8080/jsp-homework/result.jsp</div></div>
+  <div class="browser-body" style="padding:25px;">
+    <div style="background:#dcfce7;border:1px solid #16a34a;color:#14532d;padding:14px 18px;border-radius:6px;margin-bottom:16px;">
+      ✅ 作业提交成功！提交时间：2026-10-21 10:45:23
+    </div>
+    <div style="max-width:560px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+      <div style="background:#f9fafb;padding:10px 16px;border-bottom:1px solid #e5e7eb;font-weight:bold;color:#1f2937;">📄 作业详情</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr><td style="padding:10px 16px;background:#f9fafb;width:100px;color:#6b7280;">学号</td><td style="padding:10px 16px;">2024001</td></tr>
+        <tr><td style="padding:10px 16px;background:#f9fafb;color:#6b7280;">姓名</td><td style="padding:10px 16px;">张三</td></tr>
+        <tr><td style="padding:10px 16px;background:#f9fafb;color:#6b7280;">作业标题</td><td style="padding:10px 16px;">JSP进阶第三次作业</td></tr>
+        <tr><td style="padding:10px 16px;background:#f9fafb;color:#6b7280;vertical-align:top;">作业内容</td><td style="padding:10px 16px;">完成九大内置对象与四大域对象的对比练习，编写登录校验示例...（EL表达式自动读取）</td></tr>
+      </table>
+    </div>
+    <div style="margin-top:16px;">
+      <button style="padding:7px 16px;background:#2563eb;color:#fff;border:none;border-radius:4px;margin-right:8px;cursor:pointer;">再提交一份</button>
+      <button style="padding:7px 16px;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;">查看访问统计 →</button>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:20px;"><b>④ count.jsp：访问统计页（application + c:forEach）</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
+  <div class="browser-url">http://localhost:8080/jsp-homework/count.jsp</div></div>
+  <div class="browser-body" style="padding:25px;">
+    <div style="display:flex;gap:20px;margin-bottom:20px;">
+      <div style="flex:1;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;padding:20px;border-radius:8px;text-align:center;">
+        <div style="font-size:32px;font-weight:bold;">128</div><div style="font-size:13px;opacity:.9;">本站总访问次数</div>
+      </div>
+      <div style="flex:1;background:linear-gradient(135deg,#10b981,#047857);color:#fff;padding:20px;border-radius:8px;text-align:center;">
+        <div style="font-size:32px;font-weight:bold;">36</div><div style="font-size:13px;opacity:.9;">今日提交作业人数</div>
+      </div>
+      <div style="flex:1;background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;padding:20px;border-radius:8px;text-align:center;">
+        <div style="font-size:32px;font-weight:bold;">15</div><div style="font-size:13px;opacity:.9;">当前在线学生</div>
+      </div>
+    </div>
+    <h4 style="margin:0 0 10px;color:#1f2937;">📋 最近提交作业的学生名单（c:forEach 循环渲染）</h4>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:#f3f4f6;">
+        <th style="border:1px solid #e5e7eb;padding:8px;">序号</th>
+        <th style="border:1px solid #e5e7eb;padding:8px;">学号</th>
+        <th style="border:1px solid #e5e7eb;padding:8px;">姓名</th>
+        <th style="border:1px solid #e5e7eb;padding:8px;">提交时间</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">1</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2024001</td><td style="border:1px solid #e5e7eb;padding:7px;">张三</td><td style="border:1px solid #e5e7eb;padding:7px;color:#6b7280;">2026-10-21 10:45</td></tr>
+        <tr><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2024015</td><td style="border:1px solid #e5e7eb;padding:7px;">李雷</td><td style="border:1px solid #e5e7eb;padding:7px;color:#6b7280;">2026-10-21 10:42</td></tr>
+        <tr><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">3</td><td style="border:1px solid #e5e7eb;padding:7px;text-align:center;">2024023</td><td style="border:1px solid #e5e7eb;padding:7px;">韩梅梅</td><td style="border:1px solid #e5e7eb;padding:7px;color:#6b7280;">2026-10-21 10:38</td></tr>
+        <tr><td colspan="4" style="border:1px solid #e5e7eb;padding:7px;text-align:center;color:#9ca3af;">…… 由 c:forEach 遍历 List 集合动态生成 ……</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:12px;"><button style="padding:7px 16px;background:#6b7280;color:#fff;border:none;border-radius:4px;cursor:pointer;">← 返回提交页</button></div>
   </div>
 </div>
 
 <h3>✅ 验收清单</h3>
 <ul>
-<li>🔲 项目在 Tomcat 10.1.59 中能正常启动，无 404/500 错误</li>
-<li>🔲 login.jsp 输入学号姓名点击登录，进入作业提交页，名字显示正确</li>
-<li>🔲 submit.jsp 填写作业提交后，result.jsp 显示提交信息（含作业标题）</li>
-<li>🔲 未登录直接访问 result.jsp 或 count.jsp 会被重定向到登录页</li>
-<li>🔲 count.jsp 访问量每次刷新 +1，统计数据正确</li>
-<li>🔲 页面中文不乱码，编码统一使用 UTF-8</li>
+<li>🔲 <b>全新独立项目 <code>jsp-homework</code></b>，不依赖第一次课的任何文件，在 Tomcat 10.1.59 中能正常启动，无 404/500 错误</li>
+<li>🔲 login.jsp 使用 POST 方式提交表单，中文参数不乱码</li>
+<li>🔲 submit.jsp 通过 request.getParameter 接收参数、session 存储登录信息、展示作业提交表单</li>
+<li>🔲 result.jsp 使用 EL 表达式读取数据、c:if 判断登录状态，未登录时重定向到 login.jsp</li>
+<li>🔲 count.jsp 使用 application 统计访问量、c:forEach 循环渲染学生列表</li>
+<li>🔲 直接访问 result.jsp / count.jsp 时会被重定向回登录页（权限校验生效）</li>
 </ul>
 </script>
 
@@ -1510,34 +1628,49 @@ if(!TEACHER_MODE&&navigator.clipboard){
 
 <h3>📦 Maven 依赖（pom.xml）</h3>
 <p>在 IDEA 中创建<b>Maven Web 项目（maven-archetype-webapp）</b>后，将 pom.xml 的 dependencies 替换为以下 Jakarta 版本依赖：</p>
-<div class="pom-box"><span class="p-cmt">&lt;!-- Servlet/JSP API（Tomcat 自带，provided） --&gt;</span>
-<span class="p-tag">&lt;dependencies&gt;</span>
-  <span class="p-tag">&lt;dependency&gt;</span>
-    <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet<span class="p-tag">&lt;/groupId&gt;</span>
-    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet-api<span class="p-tag">&lt;/artifactId&gt;</span>
-    <span class="p-tag">&lt;version&gt;</span><span class="p-num">6.0.0</span><span class="p-tag">&lt;/version&gt;</span>
-    <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
-  <span class="p-tag">&lt;/dependency&gt;</span>
-  <span class="p-tag">&lt;dependency&gt;</span>
-    <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet.jsp<span class="p-tag">&lt;/groupId&gt;</span>
-    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp-api<span class="p-tag">&lt;/artifactId&gt;</span>
-    <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.1.1</span><span class="p-tag">&lt;/version&gt;</span>
-    <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
-  <span class="p-tag">&lt;/dependency&gt;</span>
-  <span class="p-cmt">&lt;!-- JSTL 标签库（需要打进 WEB-INF/lib，默认 compile 作用域） --&gt;</span>
-  <span class="p-tag">&lt;dependency&gt;</span>
-    <span class="p-tag">&lt;groupId&gt;</span>org.glassfish.web<span class="p-tag">&lt;/groupId&gt;</span>
-    <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp.jstl<span class="p-tag">&lt;/artifactId&gt;</span>
-    <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.0.1</span><span class="p-tag">&lt;/version&gt;</span>
-  <span class="p-tag">&lt;/dependency&gt;</span>
-<span class="p-tag">&lt;/dependencies&gt;</span></div>
-<p class="tip"><b>💡 为什么 JSTL 不能用 provided？</b>因为 Tomcat 10.1 默认不自带 JSTL 实现，必须把 JSTL jar 随项目一同打包进 WEB-INF/lib。使用 <code>org.glassfish.web:jakarta.servlet.jsp.jstl</code> 是 Jakarta JSTL 3.0 的官方参考实现。</p>
+<div class="pom-box"><span class="p-cmt">&lt;!-- ======================== Maven 依赖配置 ======================== --&gt;</span>
+<span class="p-cmt">&lt;!-- 适用环境：JDK 17 + Tomcat 10.1.x + Servlet 6.0 + JSTL 3.0            --&gt;</span>
+<span class="p-cmt">&lt;!-- 说明：Servlet/JSP API 由 Tomcat 自带，scope=provided 避免打包冲突      --&gt;</span>
+<span class="p-cmt">&lt;!-- JSTL：API + GlassFish 实现（TCK认证），需随项目打包                   --&gt;</span>
+<span class="p-cmt">&lt;!-- ================================================================ --&gt;</span>
 
+<span class="p-tag">&lt;dependencies&gt;</span>
+
+    <span class="p-cmt">&lt;!-- ① Servlet API（Tomcat 自带，provided，不打包进war） --&gt;</span>
+    <span class="p-tag">&lt;dependency&gt;</span>
+        <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet<span class="p-tag">&lt;/groupId&gt;</span>
+        <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet-api<span class="p-tag">&lt;/artifactId&gt;</span>
+        <span class="p-tag">&lt;version&gt;</span><span class="p-num">6.0.0</span><span class="p-tag">&lt;/version&gt;</span>
+        <span class="p-tag">&lt;scope&gt;</span>provided<span class="p-tag">&lt;/scope&gt;</span>
+    <span class="p-tag">&lt;/dependency&gt;</span>
+
+    <span class="p-cmt">&lt;!-- ② JSTL API for Jakarta EE（标签接口定义，会传递依赖 JSP API） --&gt;</span>
+    <span class="p-tag">&lt;dependency&gt;</span>
+        <span class="p-tag">&lt;groupId&gt;</span>jakarta.servlet.jsp.jstl<span class="p-tag">&lt;/groupId&gt;</span>
+        <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp.jstl-api<span class="p-tag">&lt;/artifactId&gt;</span>
+        <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.0.0</span><span class="p-tag">&lt;/version&gt;</span>
+    <span class="p-tag">&lt;/dependency&gt;</span>
+
+    <span class="p-cmt">&lt;!-- ③ JSTL Implementation for Jakarta EE（GlassFish 官方实现，必须打包） --&gt;</span>
+    <span class="p-tag">&lt;dependency&gt;</span>
+        <span class="p-tag">&lt;groupId&gt;</span>org.glassfish.web<span class="p-tag">&lt;/groupId&gt;</span>
+        <span class="p-tag">&lt;artifactId&gt;</span>jakarta.servlet.jsp.jstl<span class="p-tag">&lt;/artifactId&gt;</span>
+        <span class="p-tag">&lt;version&gt;</span><span class="p-num">3.0.1</span><span class="p-tag">&lt;/version&gt;</span>
+    <span class="p-tag">&lt;/dependency&gt;</span>
+
+<span class="p-tag">&lt;/dependencies&gt;</span></div>
+<p class="tip"><b>💡 依赖说明：</b>
+<ul>
+  <li><b>jakarta.servlet-api:6.0.0</b>：Servlet 6.0 API，Tomcat 10.1 自带，scope=provided 避免打包冲突；</li>
+  <li><b>jakarta.servlet.jsp.jstl-api:3.0.0</b>：JSTL 1.2 对应的 3.0 API 包，提供 c: 标签的接口定义，会自动传递依赖 JSP API；</li>
+  <li><b>org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1</b>：GlassFish 官方 JSTL 实现（Jakarta JSTL 3.0 TCK 认证），Tomcat 默认不自带，必须随项目打包。</li>
+</ul>
+使用这套坐标可避免"绝对 uri 无法解析""ClassNotFoundException"等常见报错。</p>
 <h3>🚀 IDEA 配置步骤（同第一次课，仅新增 JSTL 依赖）</h3>
 <ol>
-<li>若第一次课已创建好项目，直接在 pom.xml 中加入 JSTL 依赖，点击 Maven 面板刷新即可；</li>
-<li>若新建项目：按第一次课 6 步走流程，创建 <code>jsp-homework</code> 项目；</li>
-<li>刷新 Maven 依赖后，在 <code>webapp/</code> 目录下新建 login.jsp、submit.jsp、result.jsp、count.jsp 四个文件；</li>
+<li>按第一次课相同的 6 步流程，<b>新建</b>一个 Maven Web 项目，ArtifactId 命名为 <code>jsp-homework</code>（<b>不要在第一次课的 jsp-attendance 项目里加文件</b>）；</li>
+<li>将 pom.xml 的 dependencies 替换为本页步骤1给出的完整依赖（含 JSTL），点击 Maven 面板刷新；</li>
+<li>在 <code>webapp/</code> 目录下<b>依次新建</b> login.jsp、submit.jsp、result.jsp、count.jsp 四个文件（共 4 个文件，无其他公共组件）；</li>
 <li>启动 Tomcat 访问 <code>http://localhost:8080/jsp-homework/login.jsp</code> 即可看到登录页。</li>
 </ol>
 
@@ -1551,23 +1684,25 @@ if(!TEACHER_MODE&&navigator.clipboard){
 </script>
 
 <script type="text/html" id="tpl-struct">
-<h3>📂 第二次课项目结构</h3>
-<p>在第一次课项目基础上<b>新增 4 个 JSP 文件</b>，最终 webapp 目录结构如下：</p>
-<div class="tree"><span class="dir">webapp/</span>
-├── <span class="file">login.jsp</span>         <span class="note"># 【新增】登录入口页</span>
-├── <span class="file">submit.jsp</span>        <span class="note"># 【新增】作业提交页（核心逻辑）</span>
-├── <span class="file">result.jsp</span>        <span class="note"># 【新增】提交结果页（EL + JSTL）</span>
-├── <span class="file">count.jsp</span>         <span class="note"># 【新增】访问统计页（application + c:forEach）</span>
-├── <span class="file">index.jsp</span>         <span class="note"># 第一次课的考勤首页（保留）</span>
-├── <span class="file">header.jsp</span>        <span class="note"># 第一次课的页头组件（count.jsp内联自己的页头）</span>
-├── <span class="file">footer.jsp</span>        <span class="note"># 第一次课的页脚组件（保留）</span>
-├── <span class="file">detail.jsp</span>        <span class="note"># 第一次课的详情页（保留）</span>
-└── <span class="dir">WEB-INF/</span>
-    ├── <span class="file">web.xml</span>       <span class="note"># Web 部署描述符</span>
-    └── <span class="dir">lib/</span>          <span class="note"># Maven 打包时自动复制 JSTL jar 到此</span>
+<h3>📂 全新独立项目结构（jsp-homework）</h3>
+<p>本次课是<b>全新独立的 Maven Web 项目</b>，<b>不引用第一次课的任何文件</b>。创建方式同第一次课（maven-archetype-webapp），手动补齐目录后，在 webapp 下新建 4 个 JSP 页面：</p>
+<div class="tree"><span class="dir">jsp-homework/</span>                       <span class="note"># 全新项目根目录（Maven artifactId）</span>
+├── <span class="file">pom.xml</span>                          <span class="note"># Maven 依赖（含 Servlet + JSTL）</span>
+└── <span class="dir">src/</span>
+    └── <span class="dir">main/</span>
+        ├── <span class="dir">java/</span>                        <span class="note"># Java 源码目录（本次课暂不使用）</span>
+        ├── <span class="dir">resources/</span>                   <span class="note"># 配置文件目录</span>
+        └── <span class="dir">webapp/</span>                      <span class="note"># Web 根目录</span>
+            ├── <span class="file">login.jsp</span>             <span class="note"># ① 登录入口页（form POST 提交）</span>
+            ├── <span class="file">submit.jsp</span>            <span class="note"># ② 作业提交页（request/session 核心）</span>
+            ├── <span class="file">result.jsp</span>            <span class="note"># ③ 提交结果页（EL + JSTL + 重定向）</span>
+            ├── <span class="file">count.jsp</span>             <span class="note"># ④ 访问统计页（application + c:forEach）</span>
+            └── <span class="dir">WEB-INF/</span>
+                ├── <span class="file">web.xml</span>           <span class="note"># Web 部署描述符（可省略）</span>
+                └── <span class="dir">lib/</span>              <span class="note"># Maven 打包时自动复制 JSTL jar 到此</span>
 </div>
 
-<h3>📌 四个页面的职责分工</h3>
+<h3>📌 四个页面的职责分工（独立项目，彼此协作完成一个完整流程）</h3>
 <ul>
 <li><b>login.jsp</b>：纯展示层，一个 form 表单，演示 <b>POST 提交</b>方式，不写任何 Java 代码；</li>
 <li><b>submit.jsp</b>：核心业务页，接收登录参数、存储 session、展示作业提交表单——集中演示 <b>request、session 内置对象</b>和四大域概念；</li>
@@ -1678,7 +1813,91 @@ if(!TEACHER_MODE&&navigator.clipboard){
 </ol>
 <div class="tip"><b>💡 两次课总结：</b>至此 JSP 技术模块全部学完，你已掌握 JSP 三大基本语法（指令、脚本、动作）+ 九大内置对象 + 四大域对象 + 两种页面跳转方式 + EL 表达式 + JSTL 核心标签。JSP 是学习 Servlet、Spring MVC 的重要基础，后续课程会继续讲解 Servlet + Filter + Listener + MVC 模式，届时会彻底实现"JSP 只做视图、Java 代码全部从 JSP 中剥离"。</div>
 </script>
+<script>
 
-<script>render();</script>
+function installWatermarkAndCopyright(){
+  var watermark = document.getElementById('__wm__');
+  var copyright = document.getElementById('__cr__');
+
+  // ============ 水印（浅灰色fixed铺满视口，随滚动始终可见，不依赖页面高度）============
+  if (typeof SHOW_WATERMARK !== 'undefined' && SHOW_WATERMARK) {
+    if (watermark) watermark.remove();
+    watermark = document.createElement('div');
+    watermark.id = '__wm__';
+    document.body.appendChild(watermark);
+
+    var text = (typeof WATERMARK_TEXT !== 'undefined') ? WATERMARK_TEXT : '';
+    var charCount = text.length || 10;
+    var fontSize = 16;
+    var unitW = fontSize * 1.05;
+    var textPixelWidth = charCount * unitW;
+    var stepX = Math.ceil(textPixelWidth * 1.8);     // 水平步长=字宽×1.8，16字也绝对不重叠
+    var stepY = 160;                                  // 垂直步长
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    // 多铺一圈，视口滚动resize时不出现空白
+    var cols = Math.ceil(vw / stepX) + 3;
+    var rows = Math.ceil(vh / stepY) + 3;
+
+    watermark.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:9998;pointer-events:none;overflow:hidden;';
+    var frag = document.createDocumentFragment();
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var t = document.createElement('span');
+        t.textContent = text;
+        // 奇数行错开半个步长，形成菱形交错
+        var offsetX = (r % 2 === 0) ? 0 : stepX / 2;
+        t.style.cssText = 'position:absolute;'
+          + 'left:' + (c * stepX + offsetX - stepX) + 'px;'
+          + 'top:'  + (r * stepY - stepY) + 'px;'
+          + 'font-size:' + fontSize + 'px;'
+          + 'color:#a8a8a8;'                  // 浅灰色
+          + 'opacity:0.07;'                   // 极淡，仅隐约可见
+          + 'font-weight:400;'
+          + 'letter-spacing:2px;'
+          + 'white-space:nowrap;'
+          + 'transform:rotate(-25deg);'
+          + 'transform-origin:left top;'
+          + 'user-select:none;';
+        frag.appendChild(t);
+      }
+    }
+    watermark.appendChild(frag);
+  } else {
+    if (watermark) { watermark.remove(); watermark = null; }
+  }
+
+  // ============ 版权信息条（追加到 main 末尾）============
+  if (typeof SHOW_COPYRIGHT !== 'undefined' && SHOW_COPYRIGHT) {
+    if (copyright) copyright.remove();
+    copyright = document.createElement('div');
+    copyright.id = '__cr__';
+    copyright.style.cssText = 'text-align:center;padding:22px 20px;color:#8a8f98;font-size:12px;border-top:1px solid #eaecef;background:#f6f8fa;margin-top:40px;line-height:1.9;clear:both;';
+    var main = document.getElementById('main');
+    var projName = document.title.replace(' - JSP交互教学课件','').replace(' · 分步向导','');
+    copyright.innerHTML = '<div style="font-weight:600;color:#57606a;margin-bottom:4px;letter-spacing:0.5px;">'
+      + ((typeof COPYRIGHT_TEXT !== 'undefined') ? COPYRIGHT_TEXT : '')
+      + '</div>'
+      + '<div>项目：<b style="color:#0969da;">' + projName + '</b> · 课时：4×40分钟=160分钟 · 适用环境：JDK 17 + IDEA 2024.1 + Tomcat 10.1.59 + Maven 3.9+</div>';
+    if (main) main.appendChild(copyright);
+    else document.body.appendChild(copyright);
+  } else {
+    if (copyright) { copyright.remove(); copyright = null; }
+  }
+}
+window.addEventListener('resize', function(){ installWatermarkAndCopyright(); });
+
+var _origRender = render;
+render = function(){
+  try { _origRender.apply(this, arguments); }
+  catch(e){ console.error(e); }
+  // 切换步骤/知识点后面板展开可能改变布局，重新铺设一次
+  setTimeout(installWatermarkAndCopyright, 100);
+};
+
+// 首次渲染
+render();
+
+</script>
 </body>
 </html>
