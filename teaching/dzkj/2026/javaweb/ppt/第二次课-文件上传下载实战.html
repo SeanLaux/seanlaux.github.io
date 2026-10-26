@@ -1,0 +1,2894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第二次课 · 文件上传下载实战 · 学生作业提交系统</title>
+<style>
+:root{
+  --bg:#eef1f6;--panel:#fff;--line:#e1e7ef;--line2:#eef2f7;
+  --text:#1f2328;--muted:#6b7480;--brand:#e8632a;--brand2:#cf5320;
+  --data:#0b6b53;--data2:#8a5a00;
+  --codebg:#ffffff;--gut:#f7f9fc;--gut2:#fbfcfe;
+  --basic:#0969da;--object:#8250df;--flow:#1a7f37;--request:#bc4c00;--tag:#bf3989;
+  --std:#4a5563;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.75;}
+button{font-family:inherit;cursor:pointer;}
+code,pre,.mono{font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New","Microsoft YaHei",monospace;}
+body.student-mode,body.student-mode *{-webkit-user-select:none!important;user-select:none!important;}
+body.student-mode .kp-body,body.student-mode .kp-body *{-webkit-user-select:text!important;user-select:text!important;}
+
+.topbar{position:sticky;top:0;z-index:80;background:#1b2430;color:#fff;
+  display:flex;align-items:center;gap:22px;padding:10px 22px;flex-wrap:wrap;
+  box-shadow:0 2px 14px rgba(15,25,40,.22);}
+.brand{display:flex;align-items:center;gap:12px;min-width:270px;}
+.logo{width:42px;height:42px;flex:0 0 42px;border-radius:10px;background:linear-gradient(135deg,#ff8a4c,#e8632a);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:.5px;}
+.b1{font-size:15.5px;font-weight:700;letter-spacing:.3px;}
+.b2{font-size:12px;color:#9fb0c4;margin-top:1px;letter-spacing:.4px;}
+.tmode{margin-left:auto;font-size:12.5px;padding:5px 12px;border-radius:999px;
+  background:#2d3a49;color:#c3cfdd;border:1px solid #3a495b;}
+.tmode.on{background:#e8f7ee;color:#12693a;border-color:#6ebf8a;}
+
+.rail{position:sticky;top:62px;z-index:70;background:#fff;border-bottom:1px solid var(--line);
+  padding:9px 22px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(20,35,60,.05);}
+.rail::-webkit-scrollbar{height:5px;}
+.rail::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+.stepchip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:6px 14px;font-size:13px;color:#48525f;transition:.16s;flex:0 0 auto;}
+.stepchip .n{width:19px;height:19px;border-radius:50%;background:#eef2f7;color:#5b6673;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;}
+.stepchip:hover{border-color:#b9c6d6;background:#f7fafd;}
+.stepchip.active{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.stepchip.active .n{background:var(--brand);color:#fff;}
+.stepchip.done .n{background:#d8f0e2;color:#1a7f37;}
+
+.wrap{max-width:1600px;margin:0 auto;padding:22px 22px 80px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 3px 16px rgba(23,40,70,.06);padding:26px 30px;}
+.step-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+.step-kind{font-size:12px;font-weight:700;letter-spacing:.6px;padding:4px 11px;border-radius:6px;
+  background:#eef4ff;color:#0969da;flex:0 0 auto;margin-top:3px;}
+.step-kind.code{background:#fff1e8;color:#c9541c;}
+.step-kind.env{background:#e8f7ee;color:#12693a;}
+.step-kind.std{background:#f4edff;color:#8250df;}
+.step-title{font-size:20px;font-weight:800;letter-spacing:.2px;margin:0;}
+.step-sub{color:var(--muted);font-size:13px;margin-top:2px;}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;margin-top:4px;}
+.pill{font-size:12px;padding:4px 11px;border-radius:999px;background:#f2f5f9;color:#55606d;border:1px solid #e6ecf4;}
+.pill.time{background:#fff8ec;color:#9a6400;border-color:#f6e3c4;}
+.pill.file{background:#eef7f1;color:#12693a;border-color:#d5ebdd;}
+
+.workbench{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(360px,1fr);
+  gap:18px;align-items:start;margin-top:18px;}
+@media (max-width:1180px){.workbench{grid-template-columns:1fr;}}
+
+.left-col{min-width:0;display:flex;flex-direction:column;gap:16px;}
+.guide-box{background:#f8fafd;border:1px solid var(--line);border-left:4px solid var(--brand);
+  border-radius:10px;padding:14px 18px;}
+.guide-box h4{margin:0 0 8px;font-size:14px;color:#243040;letter-spacing:.3px;}
+.guide-box ol{margin:0;padding-left:20px;}
+.guide-box li{margin:5px 0;font-size:13.5px;color:#3c4757;}
+.guide-box li b{color:#16202c;}
+
+.code-panel{background:var(--codebg);border:1px solid #dde4ee;border-radius:12px;
+  overflow:hidden;box-shadow:0 4px 18px rgba(22,40,70,.07);}
+.code-head{display:flex;align-items:center;gap:12px;padding:9px 14px;background:#f8fafc;
+  border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.filedot{display:flex;gap:5px;}
+.filedot i{width:10px;height:10px;border-radius:50%;display:block;}
+.code-file{font-size:13px;font-weight:700;color:#33404f;letter-spacing:.3px;}
+.code-file small{font-weight:400;color:var(--muted);margin-left:6px;}
+.codeacts{margin-left:auto;display:flex;gap:8px;}
+.mini-btn{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:7px;
+  padding:5px 12px;font-size:12.5px;transition:.15s;}
+.mini-btn:hover{background:#eef4fb;border-color:#b7c9dd;color:#12212f;}
+.mini-btn.ok{background:#e8f7ee;border-color:#bfe3cd;color:#12693a;}
+.mini-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.legend{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;background:#fcfdff;
+  border-bottom:1px solid #eef2f8;}
+.lg{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#5d6875;
+  background:#fff;border:1px solid #e6ecf4;border-radius:999px;padding:3px 10px;}
+.lg b{font-size:12.5px;}
+
+.code-body{max-height:640px;overflow:auto;padding:8px 0;background:var(--codebg);}
+.code-body::-webkit-scrollbar{width:10px;height:10px;}
+.code-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px;}
+.code-body::-webkit-scrollbar-track{background:#f4f7fb;}
+.cl{display:flex;align-items:flex-start;min-height:22px;border-left:3px solid transparent;}
+.cl:hover{background:#f4f8ff;}
+.cl.clickable{cursor:pointer;}
+.cl.clickable:hover{background:#eaf3ff;}
+.cl.active{background:#e4f0ff!important;border-left-color:#0969da!important;}
+.cl .ic{flex:0 0 30px;text-align:center;font-size:13px;line-height:22px;user-select:none;padding-top:1px;}
+.cl .ln{flex:0 0 40px;text-align:right;padding-right:12px;font-size:12px;color:#a6b3c2;
+  line-height:22px;user-select:none;font-family:Consolas,monospace;}
+.cl.active .ln{color:#0969da;font-weight:700;}
+.cl .src{flex:1 1 auto;white-space:pre;padding-right:20px;font-size:13px;line-height:22px;
+  color:#1f2328;font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;}
+.cl.marked{border-left-width:3px;border-left-style:solid;}
+.cl.marked.k-basic{border-left-color:var(--basic);background:rgba(9,105,218,.035);}
+.cl.marked.k-object{border-left-color:var(--object);background:rgba(130,80,223,.035);}
+.cl.marked.k-flow{border-left-color:var(--flow);background:rgba(26,127,55,.035);}
+.cl.marked.k-request{border-left-color:var(--request);background:rgba(188,76,0,.035);}
+.cl.marked.k-tag{border-left-color:var(--tag);background:rgba(191,57,137,.035);}
+.cl.marked:hover{filter:saturate(1.15);}
+.code-body .cl.marked:hover{background:#eff5ff;}
+.code-body .cl.active .ic{transform:scale(1.25);}
+
+.tok-cmt{color:#6e7781;font-style:italic;}
+.tok-kw{color:#cf222e;font-weight:700;}
+.tok-str{color:#0a3069;}
+.tok-num{color:#0550ae;}
+.tok-tag{color:#116329;font-weight:700;}
+.tok-attr{color:#0550ae;}
+.tok-punc{color:#57606a;}
+.tok-jsp{color:#8250df;font-weight:700;}
+.tok-jspcode{color:#953800;}
+.tok-el{color:#8250df;font-weight:700;background:#faf5ff;border-radius:3px;padding:0 2px;}
+.tok-dir{color:#bf3989;font-weight:700;}
+
+.kp-panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  box-shadow:0 4px 18px rgba(22,40,70,.07);position:sticky;top:118px;max-height:calc(100vh - 140px);
+  display:flex;flex-direction:column;}
+@media (max-width:1180px){.kp-panel{position:static;max-height:none;}}
+.kp-head{display:flex;align-items:center;gap:10px;padding:11px 16px;
+  background:linear-gradient(135deg,#f7f9fc,#eef3fa);border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.kp-head .t{font-size:14px;font-weight:800;color:#1b2430;letter-spacing:.3px;}
+.kp-head .hint{font-size:11.5px;color:var(--muted);}
+.kp-nav{margin-left:auto;display:flex;gap:6px;}
+.kp-nav button{background:#fff;border:1px solid #d6dfea;border-radius:7px;padding:4px 10px;
+  font-size:12px;color:#41505f;}
+.kp-nav button:hover{background:#eef4fb;border-color:#b7c9dd;}
+.kp-nav button:disabled{opacity:.4;cursor:not-allowed;}
+.kp-chips{display:flex;gap:6px;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid #eef2f8;background:#fcfdff;}
+.kchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:999px;
+  background:#f3f6fa;border:1px solid #e3eaf3;color:#4c5765;transition:.15s;}
+.kchip:hover{background:#e9f1fb;border-color:#c3d5e9;}
+.kchip.on{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.kp-body{padding:16px 18px 24px;overflow:auto;flex:1 1 auto;}
+.kp-body::-webkit-scrollbar{width:9px;}
+.kp-body::-webkit-scrollbar-thumb{background:#cfd8e3;border-radius:5px;}
+.kp-empty{text-align:center;color:#8b96a5;padding:50px 20px;font-size:14px;line-height:2;}
+.kp-empty .big{font-size:40px;display:block;margin-bottom:12px;}
+.kp-empty b{color:#2d3a49;}
+.kpcard{border:1px solid #e6ecf4;border-radius:11px;overflow:hidden;margin-bottom:16px;background:#fff;}
+.kpcard-head{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid #eef2f8;}
+.kpcard-head .ic{font-size:16px;}
+.kpcard-head .tt{font-size:15px;font-weight:800;color:#141b23;}
+.kpcard-head .cat{margin-left:auto;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;}
+.kpcard-body{padding:14px 16px 18px;font-size:13.5px;color:#2c3540;}
+.kp-def{background:#f7fafd;border:1px solid #e6eef7;border-left:4px solid #4a90d9;
+  border-radius:8px;padding:11px 14px;margin-bottom:14px;color:#26313d;}
+.kpcard h5{margin:16px 0 8px;font-size:13.5px;color:#16202c;display:flex;align-items:center;gap:7px;
+  padding-bottom:5px;border-bottom:1px dashed #e3eaf3;}
+.kpcard h5:first-of-type{margin-top:6px;}
+.kpcard ul,.kpcard ol{margin:6px 0;padding-left:20px;}
+.kpcard li{margin:4px 0;}
+.kpcard b{color:#101820;}
+table.kpt{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:12.8px;}
+table.kpt th{background:#f4f7fb;color:#2b3542;text-align:left;padding:7px 10px;
+  border:1px solid #e3eaf3;font-weight:700;}
+table.kpt td{padding:7px 10px;border:1px solid #e8eef6;vertical-align:top;}
+table.kpt tr:nth-child(even) td{background:#fbfcfe;}
+table.kpt code{background:#eef4fb;padding:1px 5px;border-radius:4px;font-size:12px;color:#0a3d78;}
+pre.kpcode{background:#f8fafc;border:1px solid #e5ebf3;border-radius:8px;padding:11px 13px;
+  overflow-x:auto;font-size:12.6px;line-height:1.7;color:#1f2937;margin:8px 0 12px;white-space:pre;}
+pre.kpcode .c-str{color:#0a3069;}
+pre.kpcode .c-kw{color:#cf222e;font-weight:700;}
+pre.kpcode .c-cmt{color:#6e7781;font-style:italic;}
+pre.kpcode .c-jsp{color:#8250df;font-weight:700;}
+pre.kpcode .c-el{color:#8250df;font-weight:700;}
+pre.kpcode .c-tag{color:#116329;font-weight:700;}
+.tip{background:#e8f7ee;border:1px solid #bfe3cd;border-left:4px solid #1a7f37;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#124225;}
+.warn{background:#fff8ec;border:1px solid #f6e3c4;border-left:4px solid #bc4c00;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#6b3f00;}
+.std{background:#f4edff;border:1px solid #e0d1ff;border-left:4px solid #8250df;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#4a2e87;}
+.kplink{display:inline-block;margin:3px 4px 3px 0;padding:4px 10px;border-radius:6px;
+  background:#eef4fb;border:1px solid #cfe0f2;color:#0a3d78;font-size:12px;cursor:pointer;}
+.kplink:hover{background:#ddeaf8;}
+
+.info-section{margin-top:18px;}
+.info-section h3{font-size:17px;margin:20px 0 10px;color:#1b2430;padding-left:10px;border-left:4px solid var(--brand);}
+.info-section h4{font-size:14.5px;margin:16px 0 8px;color:#2d3a49;}
+.info-section p{font-size:13.5px;color:#3c4757;margin:8px 0;}
+.info-section ul,.info-section ol{padding-left:22px;}
+.info-section li{margin:4px 0;font-size:13.5px;color:#3c4757;}
+.info-section table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
+.info-section table th,.info-section table td{border:1px solid #e3eaf3;padding:8px 12px;text-align:left;}
+.info-section table th{background:#f4f7fb;color:#2b3542;}
+.pom-box{background:#f6f8fa;color:#24292f;border:1px solid #d0d7de;border-left:4px solid #0969da;border-radius:10px;padding:18px 22px;font-family:"JetBrains Mono","Fira Code",Consolas,"Courier New",monospace;font-size:13.5px;line-height:1.75;white-space:pre;overflow-x:auto;tab-size:4;box-shadow:0 1px 3px rgba(0,0,0,.06);margin:14px 0;}
+.pom-box .p-kw{color:#cf222e;font-weight:600;}
+.pom-box .p-str{color:#0a3069;}
+.pom-box .p-tag{color:#116329;}
+.pom-box .p-cmt{color:#6e7781;font-style:italic;}
+.pom-box .p-num{color:#953800;}
+.tree{background:#f8fafc;border:1px solid #e5ebf3;border-radius:10px;padding:16px 20px;font-family:"JetBrains Mono",Consolas,monospace;
+  font-size:13px;line-height:1.9;white-space:pre;margin:10px 0;color:#3c4757;}
+.tree .dir{color:#0969da;font-weight:700;}.tree .file{color:#1f2328;}.tree .note{color:#8b96a5;font-style:italic;}
+.browser-mock{background:#fff;border:1px solid #dde4ee;border-radius:10px;overflow:hidden;margin:14px 0;max-width:680px;}
+.browser-bar{background:#f4f7fb;padding:8px 12px;display:flex;gap:6px;align-items:center;border-bottom:1px solid #e5ebf3;}
+.browser-bar i{width:10px;height:10px;border-radius:50%;}
+.browser-url{flex:1;background:#fff;border:1px solid #d6dfea;border-radius:6px;padding:4px 10px;font-size:12px;color:#5b6673;font-family:Consolas,monospace;}
+.browser-body{padding:24px;background:#fff;min-height:160px;}
+.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0;}
+.kpi{flex:1 1 180px;background:linear-gradient(135deg,#fff8ec,#fef3e2);border:1px solid #f6e3c4;border-radius:10px;padding:14px 16px;}
+.kpi .v{font-size:22px;font-weight:800;color:#cf5320;}
+.kpi .l{font-size:12px;color:#8a5a00;margin-top:4px;}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px;}
+.kitem{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:.18s;}
+.kitem:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(23,40,70,.1);border-color:#b7c9dd;}
+.kitem .ic{font-size:22px;flex:0 0 30px;}
+.kitem .kt{font-size:13.5px;font-weight:700;color:#1b2430;}
+.kitem .kc{font-size:11.5px;color:#7b8795;margin-top:3px;}
+
+.navrow{display:flex;justify-content:space-between;margin-top:22px;gap:10px;flex-wrap:wrap;}
+.navrow button{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:8px;padding:8px 18px;font-size:13.5px;}
+.navrow button.primary{background:linear-gradient(135deg,#ff8a4c,#e8632a);color:#fff;border-color:transparent;font-weight:700;}
+.navrow button:hover{filter:brightness(1.05);}
+.navrow button:disabled{opacity:.4;cursor:not-allowed;}
+
+.toast{position:fixed;right:20px;bottom:24px;z-index:999;padding:12px 20px;border-radius:10px;
+  font-size:13.5px;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.2);opacity:0;transform:translateY(20px);
+  transition:.25s;pointer-events:none;max-width:360px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#1a7f37;}
+.toast.err{background:#cf222e;}
+.toast.warn{background:#bc4c00;}
+
+/* ============ 水印 ============ */
+.wm-layer{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9998;overflow:hidden;}
+.wm-layer .wm-tile{position:absolute;color:rgba(9,105,218,.13);font:700 24px/1.2 "Microsoft YaHei",sans-serif;
+  transform:rotate(-28deg);white-space:nowrap;letter-spacing:2px;user-select:none;}
+/* ============ 页脚版权 ============ */
+.cr-foot{margin-top:24px;padding:14px 18px;text-align:center;font-size:12.5px;color:#6e7781;
+  border-top:1px solid #eaeef2;background:#f6f8fa;border-radius:0 0 10px 10px;line-height:1.8;}
+.cr-foot b{color:#24292f;}.cr-foot .dot{color:#d0d7de;margin:0 8px;}
+</style>
+</head>
+<body class="student-mode">
+
+<!-- ============ 顶栏 ============ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">S2</div>
+    <div>
+      <div class="b1">Servlet 高级 · 项目式教学交互课件</div>
+      <div class="b2">第二次课 · 文件上传下载 · 学生作业提交系统</div>
+    </div>
+  </div>
+  <div class="tmode" id="tmode">🛡️ 教师模式：关闭</div>
+</div>
+
+<!-- ============ 步骤轨道 ============ -->
+<div class="rail" id="rail"></div>
+
+<!-- ============ 主舞台 ============ -->
+<div class="wrap" id="stage"></div>
+
+<!-- ============ Toast ============ -->
+<div class="toast" id="toast"></div>
+
+<!-- ============ 源码容器（script text/plain 避免嵌套解析问题） ============ -->
+<script>
+/* ============================================================
+   配置：教师模式开关（源码级设置，无 UI 开关）
+   教师使用时改为 true 即可复制代码，默认 false 为学生模式
+   ============================================================ */
+const TEACHER_MODE = false;
+// ========== 【版权与水印开关】 ==========
+//   SHOW_COPYRIGHT = true/false  是否显示页脚版权信息条
+//   SHOW_WATERMARK = true/false  是否显示整页斜向水印
+//   COPYRIGHT_TEXT = "..."       版权文字内容（支持HTML）
+//   WATERMARK_TEXT = "..."       水印文字（建议 10~20 字，会平铺整页）
+const SHOW_COPYRIGHT = true;
+const SHOW_WATERMARK = true;
+const COPYRIGHT_TEXT = '© 2026 《Java Web 应用开发》Servlet高级模块教学课件 · 作者版权所有 · 仅限授权课程教学使用 · 未经许可禁止转载或商用';
+const WATERMARK_TEXT = '© Servlet教学课件 · 版权所有';
+
+
+/* ============================================================
+   课程配置（第一次课）
+   ============================================================ */
+const COURSE = {
+  course: 'Java Web 应用开发 · Servlet 高级',
+  title: '第二次课 · 文件上传下载实战',
+  proj : 'servlet-homework-file',
+  time : '4课时 × 40分钟 = 160分钟',
+  env  : 'JDK 17 + IDEA 2024.1 + Tomcat 10.1.59 + Maven 3.9+',
+
+  categories: {
+    basic:   { name:'基础语法', icon:'📘', color:'#0969da', bg:'#0969da' },
+    object:  { name:'内置对象', icon:'📦', color:'#8250df', bg:'#8250df' },
+    flow:    { name:'流程跳转', icon:'🔄', color:'#1a7f37', bg:'#1a7f37' },
+    request: { name:'请求响应', icon:'📡', color:'#bc4c00', bg:'#bc4c00' },
+    tag:     { name:'标签注解', icon:'🏷️', color:'#bf3989', bg:'#bf3989' },
+    sec:     { name:'安全配置', icon:'🔒', color:'#cf222e', bg:'#cf222e' }
+  },
+
+  KPMETA: {
+    'webservlet':          { title:'@WebServlet 注解',              cat:'tag'     },
+    'doget':               { title:'doGet 处理GET请求',             cat:'request' },
+    'dopost':              { title:'doPost 处理POST请求',           cat:'request' },
+    'getparam':            { title:'request.getParameter 取参数',   cat:'request' },
+    'session':             { title:'HttpSession 会话对象',          cat:'object'  },
+    'sendredirect':        { title:'response.sendRedirect 重定向',  cat:'flow'    },
+    'forward':             { title:'request.getRequestDispatcher().forward', cat:'flow' },
+    'multipart-config':    { title:'@MultipartConfig 文件上传配置', cat:'tag'     },
+    'getpart':             { title:'request.getPart 获取文件',      cat:'request' },
+    'submitted-filename':  { title:'Part.getSubmittedFileName 原文件名', cat:'request' },
+    'part-write':          { title:'Part.write 保存文件',           cat:'basic'   },
+    'file-upload-security':{ title:'文件上传安全校验',              cat:'sec'     },
+    'content-type':        { title:'response.setContentType MIME类型', cat:'request' },
+    'content-disposition': { title:'Content-Disposition 下载头',    cat:'request' },
+    'output-stream':       { title:'response.getOutputStream 输出流', cat:'object' },
+    'file-delete':         { title:'文件删除与路径防穿越',          cat:'sec'     },
+    'weblistener':         { title:'@WebListener 监听器',           cat:'tag'     },
+    'servletcontext-file': { title:'ServletContext 全局共享目录',   cat:'object'  },
+    'file-meta':           { title:'FileMeta 文件实体类',           cat:'basic'   },
+    'file-list':           { title:'File.listFiles 遍历目录',       cat:'basic'   },
+    'setattribute':        { title:'setAttribute 域对象存值',       cat:'object'  },
+    'webfilter':           { title:'@WebFilter 过滤器注解',         cat:'tag'     },
+    'filter':              { title:'Filter 过滤器接口',             cat:'basic'   },
+    'chain-dofilter':      { title:'chain.doFilter 过滤器链放行',   cat:'basic'   }
+  },
+
+  steps: [
+    { type:'info', kind:'任务目标', title:'🎯 任务目标与最终效果', tpl:'goal', sub:'学生作业提交系统：上传+列表+下载+删除' },
+    { type:'info', kind:'环境准备', title:'🛠️ 环境与依赖准备',    tpl:'env',  sub:'统一Jakarta环境，文件上传用Servlet原生API' },
+    { type:'info', kind:'项目结构', title:'📁 项目结构',           tpl:'struct', sub:'按entity/filter/listener分包，JSP放webapp' },
+
+    { type:'code', kind:'编写代码', title:'pom.xml：Maven依赖配置', file:'pom.xml', fileNote:'（和第一次课相同4个Jakarta依赖，无需额外上传包）',
+      src:'src-pom', dur:'8分钟',
+      kps:['basic-java'],
+      marks:[
+        { from:'<modelVersion>', k:'basic-java' },
+        { from:'<groupId>com.example', k:'basic-java' },
+        { from:'<artifactId>servlet-homework-file', k:'basic-java' },
+        { from:'<packaging>war', k:'basic-java' },
+        { from:'<maven.compiler.source>17', k:'basic-java' },
+        { from:'jakarta.servlet-api', k:'basic-java' },
+        { from:'<scope>provided</scope>', k:'basic-java' },
+        { from:'jakarta.servlet.jsp-api', k:'basic-java' },
+        { from:'jakarta.servlet.jsp.jstl-api', k:'basic-java' },
+        { from:'org.glassfish.web', k:'basic-java' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'FileMeta.java：文件元数据实体类', file:'FileMeta.java', fileNote:'（entity包，封装文件信息+JavaBean规范）',
+      src:'src-file-meta', dur:'8分钟',
+      kps:['file-meta'],
+      marks:[
+        { from:'package com.example.homework.entity;', k:'file-meta' },
+        { from:'public class FileMeta {', k:'file-meta' },
+        { from:'private String id;', k:'file-meta' },
+        { from:'private String originalName;', k:'file-meta' },
+        { from:'private Long size;', k:'file-meta' },
+        { from:'public FileMeta()', k:'file-meta' },
+        { from:'public String getSizeText()', k:'file-meta' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'UploadDirInitListener.java：启动初始化上传目录', file:'UploadDirInitListener.java', fileNote:'（listener包，@WebListener，contextInitialized创建目录）',
+      src:'src-dir-listener', dur:'8分钟',
+      kps:['weblistener','servletcontext-file'],
+      marks:[
+        { from:'@WebListener', k:'weblistener' },
+        { from:'public class UploadDirInitListener implements ServletContextListener', k:'weblistener' },
+        { from:'public void contextInitialized', k:'weblistener' },
+        { from:'application.getRealPath("/WEB-INF/upload")', k:'servletcontext-file' },
+        { from:'uploadDir.mkdirs()', k:'servletcontext-file' },
+        { from:'application.setAttribute("uploadPath", uploadPath)', k:'servletcontext-file' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'LoginServlet.java：登录处理', file:'LoginServlet.java', fileNote:'（根包，@WebServlet("/login")，成功后重定向到/upload）',
+      src:'src-login-servlet', dur:'10分钟',
+      kps:['webservlet','dopost','getparam','session','sendredirect','forward','doget'],
+      marks:[
+        { from:'@WebServlet("/login")', k:'webservlet' },
+        { from:'protected void doPost', k:'dopost' },
+        { from:'req.setCharacterEncoding("UTF-8")', k:'getparam' },
+        { from:'req.getParameter("username")', k:'getparam' },
+        { from:'HttpSession session = req.getSession()', k:'session' },
+        { from:'session.setAttribute("loginUser"', k:'session' },
+        { from:'resp.sendRedirect(req.getContextPath() + "/list"', k:'sendredirect' },
+        { from:'req.getRequestDispatcher("/login.jsp").forward', k:'forward' },
+        { from:'protected void doGet', k:'doget' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'EncodingFilter.java：统一编码过滤器（复用）', file:'EncodingFilter.java', fileNote:'（filter包，@WebFilter("/*")，全局）',
+      src:'src-encoding-filter', dur:'6分钟',
+      kps:['webfilter','filter','getparam','chain-dofilter'],
+      marks:[
+        { from:'@WebFilter', k:'webfilter' },
+        { from:'implements Filter', k:'filter' },
+        { from:'setCharacterEncoding', k:'getparam' },
+        { from:'chain.doFilter', k:'chain-dofilter' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'LoginFilter.java：登录校验过滤器（复用）', file:'LoginFilter.java', fileNote:'（拦截/list、/upload、/download、/delete）',
+      src:'src-login-filter', dur:'8分钟',
+      kps:['webfilter','filter','session','sendredirect','chain-dofilter'],
+      marks:[
+        { from:'@WebFilter', k:'webfilter' },
+        { from:'implements Filter', k:'filter' },
+        { from:'session.getAttribute("loginUser")', k:'session' },
+        { from:'sendRedirect', k:'sendredirect' },
+        { from:'chain.doFilter', k:'chain-dofilter' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'UploadServlet.java：⭐ 文件上传核心', file:'UploadServlet.java', fileNote:'（@WebServlet+@MultipartConfig，getPart+UUID重命名+白名单校验）',
+      src:'src-upload-servlet', dur:'25分钟',
+      kps:['webservlet','dopost','doget','multipart-config','getpart','submitted-filename','part-write','file-upload-security','session','servletcontext-file','sendredirect','forward'],
+      marks:[
+        { from:'@WebServlet("/upload")', k:'webservlet' },
+        { from:'@MultipartConfig', k:'multipart-config' },
+        { from:'maxFileSize', k:'multipart-config' },
+        { from:'protected void doPost', k:'dopost' },
+        { from:'req.setCharacterEncoding("UTF-8")', k:'dopost' },
+        { from:'session.getAttribute("loginUser")', k:'session' },
+        { from:'getServletContext().getAttribute("uploadPath")', k:'servletcontext-file' },
+        { from:'Part filePart = req.getPart("file")', k:'getpart' },
+        { from:'getSubmittedFileName()', k:'submitted-filename' },
+        { from:'ALLOWED_TYPES.contains(ext)', k:'file-upload-security' },
+        { from:'UUID.randomUUID().toString()', k:'file-upload-security' },
+        { from:'filePart.write(', k:'part-write' },
+        { from:'filePart.getContentType()', k:'getpart' },
+        { from:'resp.sendRedirect(req.getContextPath() + "/list"', k:'sendredirect' },
+        { from:'req.getRequestDispatcher("/upload.jsp").forward', k:'forward' },
+        { from:'protected void doGet', k:'doget' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'login.jsp：登录表单页面', file:'login.jsp', fileNote:'（webapp根目录，用户名密码输入）',
+      src:'src-login-jsp', dur:'8分钟',
+      kps:['tag-page','setattribute','getparam','dopost'],
+      marks:[
+        { from:'<%@ page contentType', k:'tag-page' },
+        { from:'request.getAttribute("errorMsg")', k:'setattribute' },
+        { from:'<form action="login" method="post">', k:'dopost' },
+        { from:'name="username"', k:'getparam' },
+        { from:'name="password"', k:'getparam' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'upload.jsp：文件上传表单', file:'upload.jsp', fileNote:'（enctype=multipart/form-data，必须有）',
+      src:'src-upload-jsp', dur:'10分钟',
+      kps:['tag-page','multipart-config','dopost','getpart','setattribute'],
+      marks:[
+        { from:'<%@ page contentType', k:'tag-page' },
+        { from:'enctype="multipart/form-data"', k:'multipart-config' },
+        { from:'method="post"', k:'dopost' },
+        { from:'action="upload"', k:'dopost' },
+        { from:'<input type="file" name="file"', k:'getpart' },
+        { from:'request.getAttribute("errorMsg")', k:'setattribute' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'ListServlet.java：文件列表查询', file:'ListServlet.java', fileNote:'（@WebServlet("/list")，从ServletContext取列表后转发到list.jsp）',
+      src:'src-list-servlet', dur:'10分钟',
+      kps:['webservlet','doget','servletcontext-file','setattribute','forward'],
+      marks:[
+        { from:'@WebServlet("/list")', k:'webservlet' },
+        { from:'protected void doGet', k:'doget' },
+        { from:'getServletContext().getAttribute("fileList")', k:'servletcontext-file' },
+        { from:'req.setAttribute("fileList"', k:'setattribute' },
+        { from:'req.getRequestDispatcher("/list.jsp").forward', k:'forward' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'list.jsp：文件列表展示', file:'list.jsp', fileNote:'（JSP脚本+EL表达式展示文件列表，下载/删除链接）',
+      src:'src-list-jsp', dur:'10分钟',
+      kps:['tag-page','setattribute','content-disposition','file-delete','sendredirect'],
+      marks:[
+        { from:'<%@ page contentType', k:'tag-page' },
+        { from:'<%@ page import', k:'tag-page' },
+        { from:'request.getAttribute("fileList")', k:'setattribute' },
+        { from:'href="upload.jsp"', k:'sendredirect' },
+        { from:'href="download?id=', k:'content-disposition' },
+        { from:'href="delete?id=', k:'file-delete' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'DownloadServlet.java：⭐ 文件下载', file:'DownloadServlet.java', fileNote:'（@WebServlet("/download")，OutputStream+响应头+中文名编码）',
+      src:'src-download-servlet', dur:'18分钟',
+      kps:['webservlet','doget','getparam','content-type','content-disposition','output-stream','servletcontext-file'],
+      marks:[
+        { from:'@WebServlet("/download")', k:'webservlet' },
+        { from:'protected void doGet', k:'doget' },
+        { from:'req.getParameter("id")', k:'getparam' },
+        { from:'getServletContext().getAttribute("fileList")', k:'servletcontext-file' },
+        { from:'resp.setContentType', k:'content-type' },
+        { from:'setHeader("Content-Disposition"', k:'content-disposition' },
+        { from:'URLEncoder.encode', k:'content-disposition' },
+        { from:'resp.getOutputStream()', k:'output-stream' },
+        { from:'new FileInputStream(file)', k:'output-stream' },
+        { from:'while ((len = fis.read(buffer))', k:'output-stream' }
+      ]
+    },
+
+    { type:'code', kind:'编写代码', title:'DeleteServlet.java：文件删除', file:'DeleteServlet.java', fileNote:'（@WebServlet("/delete")，按id删除物理文件+列表记录）',
+      src:'src-delete-servlet', dur:'8分钟',
+      kps:['webservlet','doget','getparam','servletcontext-file','file-delete','sendredirect'],
+      marks:[
+        { from:'@WebServlet("/delete")', k:'webservlet' },
+        { from:'protected void doGet', k:'doget' },
+        { from:'req.getParameter("id")', k:'getparam' },
+        { from:'getServletContext().getAttribute("fileList")', k:'servletcontext-file' },
+        { from:'file.delete()', k:'file-delete' },
+        { from:'it.remove()', k:'file-delete' },
+        { from:'resp.sendRedirect(req.getContextPath() + "/list"', k:'sendredirect' }
+      ]
+    },
+
+    { type:'info', kind:'项目验证', title:'🧪 效果验证与测试用例', tpl:'verify', sub:'启动Tomcat逐项验证上传/下载/删除/异常' },
+    { type:'info', kind:'行业标准', title:'📐 编码规范与8大高频坑', tpl:'std',    sub:'文件上传下载企业规范与易错点' },
+    { type:'info', kind:'课时小结', title:'📚 知识点总结与课后作业', tpl:'summary', sub:'知识点回顾+默写模板+课后作业+下节课预告' }
+  ]
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const state = { step:0, selKp:null };
+const srcCache = {};
+
+function $(id){return document.getElementById(id);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg, type){
+  const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (type||'ok');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>{t.className='toast';},2000);
+}
+
+function getSource(id){
+  if(srcCache[id]) return srcCache[id];
+  const el = document.getElementById(id);
+  let raw = el ? el.textContent : '';
+  // 去除首尾空行
+  raw = raw.replace(/\r/g,'').replace(/^\n+/,'').replace(/\n+$/,'');
+  const lines = raw.split('\n');
+  srcCache[id] = lines;
+  return lines;
+}
+
+function copyText(text, btn){
+  if(!TEACHER_MODE){ toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err'); return; }
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('✅ 代码已复制到剪贴板','ok');
+    if(btn){ const o=btn.textContent; btn.textContent='✅ 已复制'; setTimeout(()=>btn.textContent=o,1200);}
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('✅ 代码已复制','ok');
+  });
+}
+
+/* ============================================================
+   语法高亮（自研，白底GitHub Light风格）
+   ============================================================ */
+function hlJava(s, isDir){
+  const KW = ['abstract','assert','boolean','break','byte','case','catch','char','class','const','continue','default','do','double','else','enum','extends','final','finally','float','for','goto','if','implements','import','instanceof','int','interface','long','native','new','package','private','protected','public','return','short','static','strictfp','super','switch','synchronized','this','throw','throws','transient','try','void','volatile','while',
+             'true','false','null',
+             'String','Integer','Boolean','Double','Float','Long','Object','System','out','println','print','request','response','session','application','pageContext','config','out','page','exception'];
+  let out='',buf='',i=0,inStr=null;
+  const flush=()=>{if(buf){out+='<span class="tok-jspcode">'+esc(buf)+'</span>';buf='';}};
+  const flushKw=()=>{
+    if(!buf){return;}
+    if(/^\d/.test(buf)||/^0x[\da-f]+$/i.test(buf)){out+='<span class="tok-num">'+esc(buf)+'</span>';}
+    else if(KW.indexOf(buf)>=0){out+='<span class="tok-kw">'+esc(buf)+'</span>';}
+    else out+='<span class="tok-jspcode">'+esc(buf)+'</span>';
+    buf='';
+  };
+  while(i<s.length){
+    const c=s[i];
+    if(inStr){
+      buf+=c;
+      if(c===inStr&&s[i-1]!=='\\'){flush();inStr=null;}
+      i++;continue;
+    }
+    if(c==='"'||c==="'"){flushKw();buf+=c;inStr=c;i++;continue;}
+    if(c==='/'&&s[i+1]==='/'){flushKw();const e=s.indexOf('\n',i);out+='<span class="tok-cmt">'+esc(e<0?s.slice(i):s.slice(i,e))+'</span>';if(e<0)return out;i=e;continue;}
+    if(c==='/'&&s[i+1]==='*'){flushKw();const e=s.indexOf('*/',i+2);const end=e<0?s.length:e+2;out+='<span class="tok-cmt">'+esc(s.slice(i,end))+'</span>';i=end;continue;}
+    if(/[A-Za-z_$]/.test(c)){buf+=c;i++;continue;}
+    if(/\d/.test(c)&&(!buf||/[\d.]$/.test(buf))){buf+=c;i++;continue;}
+    if(/[\w.]/.test(c)){buf+=c;i++;continue;}
+    flushKw();
+    if(/\s/.test(c)){buf+=c;flush();i++;continue;}
+    out+='<span class="tok-punc">'+esc(c)+'</span>';i++;
+  }
+  if(inStr){out+='<span class="tok-str">'+esc(buf)+'</span>';}else{flushKw();}
+  return out;
+}
+function renderJsp(m){
+  const open=m.slice(0,3); let rest=m.slice(3,-2); if('@!='.indexOf(m[2])>=0){return '<span class="tok-dir">'+esc(open)+'</span>'+hlJava(rest,open==='<%@')+'<span class="tok-dir">%&gt;</span>';}
+  return '<span class="tok-jsp">'+esc(open)+'</span>'+hlJava(rest,false)+'<span class="tok-jsp">%&gt;</span>';
+}
+function renderTag(t){
+  const m=t.match(/^<\/?([a-zA-Z][\w:-]*)/);if(!m)return esc(t);
+  const rest=t.slice(m[0].length);
+  const re2=/("[^"]*"|'[^']*')|([a-zA-Z_:][\w:.-]*)(\s*=\s*)|(\/?>)|(\s+)|([^\s"'>=/]+)/g;
+  let out2='',last=0,mm;
+  while((mm=re2.exec(rest))){
+    out2+=esc(rest.slice(last,mm.index));
+    if(mm[1])out2+='<span class="tok-str">'+esc(mm[1])+'</span>';
+    else if(mm[2])out2+='<span class="tok-attr">'+esc(mm[2])+'</span><span class="tok-punc">'+esc(mm[3])+'</span>';
+    else if(mm[4])out2+='<span class="tok-punc">'+esc(mm[4])+'</span>';
+    else if(mm[5])out2+=mm[5];
+    else out2+=esc(mm[6]);
+    last=re2.lastIndex;
+  }
+  out2+=esc(rest.slice(last));
+  return '<span class="tok-tag">'+esc(m[0])+'</span>'+out2;
+}
+function tokenizeText(text){
+  let html='',buf='',i=0,pending=null;
+  const flush=()=>{if(buf){html+=esc(buf);buf='';}};
+  while(i<text.length){
+    const c=text[i];
+    if(c==='<'&&text.startsWith('<!--',i)){const e=text.indexOf('-->',i+4);const end=e>=0?e+3:text.length;flush();html+='<span class="tok-cmt">'+esc(text.slice(i,end))+'</span>';i=end;continue;}
+    if(c==='<'&&text.startsWith('<%',i)){
+      const e=text.indexOf('%>',i+2);
+      if(e<0){let open='<%',body=text.slice(i+2);if('@!='.indexOf(body[0])>=0){open='<%'+body[0];body=body.slice(1);}flush();const cls=(open==='<%@')?'tok-dir':'tok-jsp';html+='<span class="'+cls+'">'+esc(open)+'</span>'+hlJava(body,open==='<%@');pending={cls,dir:open==='<%@'};i=text.length;continue;}
+      flush();html+=renderJsp(text.slice(i,e+2));i=e+2;continue;
+    }
+    if(c==='$'&&text[i+1]==='{'){const e=text.indexOf('}',i+2);if(e>=0){flush();html+='<span class="tok-el">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    if(c==='<'&&(text[i+1]==='/'||/[A-Za-z]/.test(text[i+1]||''))){
+      let j=i+1,q=null;while(j<text.length){const ch=text[j];if(q){if(ch===q)q=null;}else if(ch==='"'||ch==="'"){q=ch;}else if(ch==='>'){break;}j++;}
+      if(j<text.length){flush();html+=renderTag(text.slice(i,j+1));i=j+1;continue;}
+    }
+    if(c==='"'||c==="'"){const e=text.indexOf(c,i+1);if(e>=0){flush();html+='<span class="tok-str">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    buf+=c;i++;
+  }
+  flush();return{html,pending};
+}
+function commentMask(lines){
+  const mask=new Array(lines.length).fill(false);let inC=false;
+  for(let i=0;i<lines.length;i++){const t=lines[i].trim();if(!inC){if(t.indexOf('<%--')===0){inC=true;mask[i]=true;if(t.indexOf('--%>',4)>=0)inC=false;}}else{mask[i]=true;if(t.slice(-4)==='--%>')inC=false;}}
+  return mask;
+}
+function highlightCode(lines){
+  const mask=commentMask(lines);const res=[];const st={open:false,cls:'tok-jsp',dir:false};
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(mask[i]){res.push('<span class="tok-cmt">'+esc(line)+'</span>');continue;}
+    let seg=line,html='';
+    if(st.open){
+      const e=seg.indexOf('%>');
+      if(e>=0){html+='<span class="'+st.cls+'">'+hlJava(seg.slice(0,e),st.dir)+'</span><span class="'+st.cls+'">%&gt;</span>';seg=seg.slice(e+2);st.open=false;}
+      else{html+='<span class="'+st.cls+'">'+hlJava(seg,st.dir)+'</span>';res.push(html||'&nbsp;');continue;}
+    }
+    const r=tokenizeText(seg);html+=r.html;if(r.pending){st.open=true;st.cls=r.pending.cls;st.dir=r.pending.dir;}
+    res.push(html||'&nbsp;');
+  }
+  return res;
+}
+
+/* ============================================================
+   标记解析
+   ============================================================ */
+function resolveMarks(lines, marks){
+  const out=[];
+  (marks||[]).forEach(m=>{
+    if(!m || !m.k) return;           // 缺k的标记直接跳过，避免渲染中断
+    let s=-1;for(let i=0;i<lines.length;i++){if(lines[i].indexOf(m.from)>=0){s=i;break;}}
+    if(s<0)return;let e=s;
+    if(m.to){for(let i=s;i<lines.length;i++){if(lines[i].indexOf(m.to)>=0){e=i;break;}}}
+    e+=(m.plus||0);if(e>lines.length-1)e=lines.length-1;
+    out.push({s,e,k:m.k});
+  });
+  return out;
+}
+
+/* ============================================================
+   步骤索引查找
+   ============================================================ */
+function kpStepIndex(kp){
+  const steps=COURSE.steps;
+  for(let i=0;i<steps.length;i++){if(steps[i].type==='code'&&(steps[i].kps||[]).indexOf(kp)>=0)return i;}
+  return -1;
+}
+function kpList(){
+  const seen=[],out=[];
+  COURSE.steps.forEach(s=>{(s.kps||[]).forEach(k=>{if(!COURSE.KPMETA[k])return;if(seen.indexOf(k)<0){seen.push(k);out.push(k);}});});
+  return out;
+}
+
+/* ============================================================
+   渲染步骤轨道
+   ============================================================ */
+function renderRail(){
+  const rail=$('rail');rail.innerHTML='';
+  COURSE.steps.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='stepchip'+(i===state.step?' active':'')+(i<state.step?' done':'');
+    const isCode=s.type==='code';
+    b.innerHTML='<span class="n">'+(i+1)+'</span>'+(isCode?s.file:s.title);
+    b.onclick=()=>{state.step=i;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});};
+    rail.appendChild(b);
+  });
+  const act=rail.querySelector('.active');if(act&&act.scrollIntoView)act.scrollIntoView({block:'nearest',inline:'center'});
+}
+
+/* ============================================================
+   知识点卡片
+   ============================================================ */
+function kpCard(kp){
+  const meta=COURSE.KPMETA[kp];if(!meta)return '';
+  const cat=COURSE.categories[meta.cat];
+  const tpl=$('kp-'+kp);const inner=tpl?tpl.innerHTML:'<p>（未找到该知识点内容）</p>';
+  // 处理相关知识点跳转
+  const wrap=document.createElement('div');wrap.innerHTML=inner;
+  wrap.querySelectorAll('.kplink').forEach(el=>{
+    el.onclick=()=>{const target=el.dataset.jump;const si=kpStepIndex(target);
+      if(si>=0){state.step=si;state.selKp=target;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);}};
+  });
+  return '<div class="kpcard"><div class="kpcard-head" style="background:'+cat.bg+'"><span class="ic">'+cat.icon+'</span><span class="tt">'+meta.title+'</span><span class="cat" style="color:'+cat.color+';background:#fff;border:1px solid '+cat.color+'33">'+cat.name+'</span></div><div class="kpcard-body">'+wrap.innerHTML+'</div></div>';
+}
+
+function renderKpPanel(){
+  const body=$('kpBody');const chips=$('kpChips');
+  const st=COURSE.steps[state.step];
+  const kps=(st.kps||[]).filter(k=>!!COURSE.KPMETA[k]);
+  chips.innerHTML=kps.map(k=>{
+    const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+    return '<button class="kchip'+(state.selKp===k?' on':'')+'" data-kp="'+k+'">'+cat.icon+' '+meta.title+'</button>';
+  }).join('');
+  chips.querySelectorAll('.kchip').forEach(b=>{b.onclick=()=>{state.selKp=b.dataset.kp;renderKpPanel();};});
+  const sel=state.selKp;
+  if(sel&&kps.indexOf(sel)>=0){
+    const idx=kps.indexOf(sel);
+    body.innerHTML=kpCard(sel);body.scrollTop=0;
+    $('kpPrev').disabled=false;$('kpNext').disabled=false;
+    $('kpPrev').dataset.idx=idx;$('kpNext').dataset.idx=idx;
+    document.querySelectorAll('.cl.clickable').forEach(el=>{el.classList.toggle('active',(el.dataset.k||'').split(' ').indexOf(sel)>=0);});
+  }else{
+    body.innerHTML='<div class="kp-empty"><span class="big">👈</span>点击左侧<b>带图标的代码行</b><br>这里就会显示对应的完整知识点<br><br><span style="color:#b8c2cf;font-size:12.5px;">也可以点上方标签直接查看</span></div>';
+    $('kpPrev').disabled=true;$('kpNext').disabled=true;
+    document.querySelectorAll('.cl.clickable').forEach(el=>el.classList.remove('active'));
+  }
+}
+
+/* ============================================================
+   渲染代码步骤
+   ============================================================ */
+function renderCodeStep(s,host){
+  const lines=getSource(s.src);const marks=resolveMarks(lines,s.marks);
+  const lineK=lines.map((_,i)=>marks.filter(m=>i>=m.s&&i<=m.e).map(m=>m.k));
+  const htmls=highlightCode(lines);
+  const catsInStep=[];(s.kps||[]).forEach(k=>{const m=COURSE.KPMETA[k];if(!m||!m.cat)return;const c=m.cat;if(catsInStep.indexOf(c)<0)catsInStep.push(c);});
+  const legend=catsInStep.map(c=>{const cat=COURSE.categories[c];return '<span class="lg" style="border-color:'+cat.color+'33"><b>'+cat.icon+'</b>'+cat.name+'</span>';}).join('')+'<span class="lg" style="border-color:#d9e0ea"><b>▎</b>左侧色条 = 该行含知识点</span>';
+
+  let codeHtml='';
+  htmls.forEach((h,i)=>{
+    // 过滤掉无效 k（KPMETA 中不存在的）
+    const ks=(lineK[i]||[]).filter(k=>!!COURSE.KPMETA[k]);
+    const hasK=ks.length>0;
+    const mainCat=hasK?COURSE.KPMETA[ks[0]].cat:'';
+    const cat=mainCat?COURSE.categories[mainCat]:null;
+    const icon=cat?cat.icon:'';
+    codeHtml+='<div class="cl'+(hasK?' clickable marked k-'+mainCat:'')+'"'+(hasK?' data-k="'+ks.join(' ')+'" data-line="'+(i+1)+'"':'')+'><span class="ic">'+icon+'</span><span class="ln">'+(i+1)+'</span><code class="src">'+h+'</code></div>';
+  });
+
+  const guideHtml=s.guide?('<div class="guide-box"><h4>🧭 本步操作指引</h4><ol>'+s.guide.map(g=>'<li>'+g+'</li>').join('')+'</ol></div>'):'';
+
+  host.innerHTML=
+    '<div class="card"><div class="step-head"><span class="step-kind code">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+(s.sub||'')+'</div></div><div class="meta"><span class="pill file">📄 '+s.file+'</span><span class="pill time">⏱ '+(s.dur||'')+'</span><span class="pill">🧩 '+((s.kps||[]).filter(k=>!!COURSE.KPMETA[k]).length)+' 个知识点</span></div></div></div>'+
+    '<div class="workbench"><div class="left-col">'+guideHtml+
+      '<div class="code-panel"><div class="code-head"><div class="filedot"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><div class="code-file">'+s.file+'<small>'+s.fileNote+'</small></div><div class="codeacts"><button class="mini-btn" id="btnCopy"'+(TEACHER_MODE?'':' disabled')+'>📋 复制代码</button><button class="mini-btn" id="btnClear">✖ 取消选中</button></div></div>'+
+      '<div class="legend">'+legend+'</div><div class="code-body" id="codeBody">'+codeHtml+'</div></div></div>'+
+      '<aside class="kp-panel"><div class="kp-head"><span class="t">📖 知识点解析</span><span class="hint">点左侧代码行 → 看完整讲解</span><div class="kp-nav"><button id="kpPrev" disabled>◀ 上一个</button><button id="kpNext" disabled>下一个 ▶</button></div></div><div class="kp-chips" id="kpChips"></div><div class="kp-body" id="kpBody"></div></aside></div>'+
+      navRow();
+
+  host.querySelectorAll('.cl.clickable').forEach(el=>{
+    el.onclick=()=>{const ks=(el.dataset.k||'').split(' ');state.selKp=ks[0];renderKpPanel();if(el.scrollIntoView)el.scrollIntoView({block:'nearest'});};
+  });
+  $('btnClear').onclick=()=>{state.selKp=null;renderKpPanel();};
+  $('btnCopy').onclick=(e)=>{copyText(lines.join('\n'),e.currentTarget);};
+  $('kpPrev').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=0;state.selKp=kps[(i-1+kps.length)%kps.length];renderKpPanel();};
+  $('kpNext').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=-1;state.selKp=kps[(i+1)%kps.length];renderKpPanel();};
+  bindNav();
+  renderKpPanel();
+}
+
+function navRow(){
+  const i=state.step,total=COURSE.steps.length;
+  return '<div class="navrow"><button id="navPrev"'+(i<=0?' disabled':'')+'>◀ 上一步</button><button id="navNext" class="primary"'+(i>=total-1?' disabled':'')+'>下一步 ▶</button></div>';
+}
+function bindNav(){
+  const pv=$('navPrev'),nx=$('navNext');
+  if(pv)pv.onclick=()=>{if(state.step>0){state.step--;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+  if(nx)nx.onclick=()=>{if(state.step<COURSE.steps.length-1){state.step++;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+}
+
+/* ============================================================
+   渲染信息步骤
+   ============================================================ */
+function renderInfoStep(s,host){
+  const tplId = s.tpl && s.tpl.startsWith('tpl-') ? s.tpl : 'tpl-'+s.tpl;
+  const tpl=$(tplId);const inner=tpl?tpl.innerHTML:'<p>内容缺失</p>';
+  host.innerHTML='<div class="card"><div class="step-head"><span class="step-kind '+(s.kind==='环境准备'?'env':s.kind==='行业标准'?'std':'')+'">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+(s.sub||'')+'</div></div></div><div class="info-section">'+inner+'</div></div>'+navRow();
+  bindNav();
+  if(s.sumGrid){
+    const grid=document.getElementById(s.sumGrid);
+    if(grid){
+      const wrap=grid.previousElementSibling;
+      if(wrap){const h=wrap.querySelector('h4');if(h)h.textContent='📚 第一次课 · 知识点全景（共 '+kpList().length+' 个，点击卡片可跳回对应代码位置）';}
+      grid.innerHTML=kpList().map(k=>{
+        const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+        return '<div class="kitem" data-kp="'+k+'"><span class="ic">'+cat.icon+'</span><div><div class="kt">'+meta.title+'</div><div class="kc">'+cat.name+' ｜ 位于步骤 '+(kpStepIndex(k)+1)+'</div></div></div>';
+      }).join('');
+      grid.querySelectorAll('.kitem').forEach(el=>{el.onclick=()=>{const kp=el.dataset.kp;const si=kpStepIndex(kp);if(si<0)return;state.step=si;state.selKp=kp;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);};});
+    }
+  }
+}
+
+/* ============================================================
+   主渲染
+   ============================================================ */
+function render(){
+  renderRail();
+  const stage=$('stage');
+  const s=COURSE.steps[state.step];
+  if(s.type==='code')renderCodeStep(s,stage);else renderInfoStep(s,stage);
+  // 更新教师模式显示
+  $('tmode').textContent=TEACHER_MODE?'✅ 教师模式：开启':'🛡️ 教师模式：关闭';
+  $('tmode').className='tmode'+(TEACHER_MODE?' on':'');
+  document.body.classList.toggle('student-mode',!TEACHER_MODE);
+}
+
+/* ============================================================
+   学生模式复制拦截
+   ============================================================ */
+document.addEventListener('contextmenu',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止右键菜单','warn');}});
+document.addEventListener('dragstart',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('copy',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err');}});
+document.addEventListener('cut',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('keydown',e=>{
+  if(TEACHER_MODE)return;
+  const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&(k==='c'||k==='a'||k==='s'||k==='p'||k==='u')){e.preventDefault();toast('🔒 学生模式下该快捷键已禁用','warn');}
+  if(k==='f12'||(e.ctrlKey&&e.shiftKey&&(k==='i'||k==='j'||k==='c'))){e.preventDefault();toast('🔒 学生模式下禁止打开开发者工具','warn');}
+});
+document.addEventListener('mouseup',()=>{if(!TEACHER_MODE)window.getSelection().removeAllRanges();});
+if(!TEACHER_MODE&&navigator.clipboard){
+  navigator.clipboard.writeText=()=>Promise.reject('student mode');
+}
+
+/* ============ 信息步骤模板 ============ */
+</script>
+
+<!-- ============ 信息步骤模板 ============ -->
+<script type="text/html" id="tpl-goal">
+<div style="padding:0 4px 16px;">
+<h2 style="margin:0 0 12px;color:#0969da;">📚 项目背景</h2>
+<p style="line-height:1.9;color:#24292f;margin:0 0 14px;">第一次课我们用<b>过滤器+监听器</b>搭建了书城后台的登录校验、编码统一、日志记录和在线人数统计基础框架。<b>本次课</b>我们在这个基础上实现"学生作业提交系统"——核心功能是<b>文件上传 + 文件列表展示 + 文件下载 + 文件删除</b>，完整覆盖 Servlet 3.0 原生 Part API 的使用。</p>
+
+<h2 style="margin:18px 0 12px;color:#0969da;">🎯 本次课要做出的效果</h2>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px;">
+  <div class="browser-mock">
+    <div class="browser-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="url-bar">http://localhost:8080/servlet-homework-file/login.jsp</span></div>
+    <div style="padding:18px;background:#fff;">
+      <h3 style="margin:0 0 10px;color:#24292f;">📝 登录页</h3>
+      <div style="border:1px solid #d0d7de;border-radius:6px;padding:12px;margin-bottom:8px;"><b>👤 用户名：</b><span style="color:#8b949e;">admin</span></div>
+      <div style="border:1px solid #d0d7de;border-radius:6px;padding:12px;margin-bottom:8px;"><b>🔒 密&nbsp;&nbsp;&nbsp;码：</b><span style="color:#8b949e;">••••••</span></div>
+      <div style="background:#0969da;color:#fff;text-align:center;padding:8px;border-radius:6px;font-weight:600;">登 录</div>
+      <div style="text-align:center;color:#8b949e;font-size:12px;margin-top:8px;">（过滤器校验：未登录无法访问其他页面）</div>
+    </div>
+  </div>
+  <div class="browser-mock">
+    <div class="browser-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="url-bar">http://localhost:8080/servlet-homework-file/upload</span></div>
+    <div style="padding:18px;background:#fff;">
+      <h3 style="margin:0 0 10px;color:#24292f;">📤 文件上传页</h3>
+      <div style="border:2px dashed #0969da;border-radius:6px;padding:18px;text-align:center;background:#f6f8fa;margin-bottom:8px;">
+        <div style="font-size:32px;">📁</div>
+        <div style="color:#57606a;margin-top:6px;">点击或拖拽文件到此处上传</div>
+        <div style="color:#8b949e;font-size:12px;margin-top:4px;">支持 docx/pdf/zip/jpg/png，单个≤10MB</div>
+      </div>
+      <div style="background:#2da44e;color:#fff;text-align:center;padding:8px;border-radius:6px;font-weight:600;">提交作业</div>
+    </div>
+  </div>
+  <div class="browser-mock">
+    <div class="browser-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="url-bar">http://localhost:8080/servlet-homework-file/list</span></div>
+    <div style="padding:14px;background:#fff;">
+      <h3 style="margin:0 0 10px;color:#24292f;">📋 我的作业列表</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="background:#f6f8fa;"><th style="padding:6px;border:1px solid #d0d7de;">文件名</th><th style="padding:6px;border:1px solid #d0d7de;">大小</th><th style="padding:6px;border:1px solid #d0d7de;">上传时间</th><th style="padding:6px;border:1px solid #d0d7de;">操作</th></tr>
+        <tr><td style="padding:6px;border:1px solid #d0d7de;">📄 第一次作业.docx</td><td style="padding:6px;border:1px solid #d0d7de;">256KB</td><td style="padding:6px;border:1px solid #d0d7de;">10-26 14:30</td><td style="padding:6px;border:1px solid #d0d7de;"><span style="color:#0969da;">⬇下载</span> <span style="color:#cf222e;">🗑删除</span></td></tr>
+        <tr><td style="padding:6px;border:1px solid #d0d7de;">🖼️ 实验截图.png</td><td style="padding:6px;border:1px solid #d0d7de;">1.2MB</td><td style="padding:6px;border:1px solid #d0d7de;">10-26 15:10</td><td style="padding:6px;border:1px solid #d0d7de;"><span style="color:#0969da;">⬇下载</span> <span style="color:#cf222e;">🗑删除</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="browser-mock">
+    <div class="browser-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="url-bar">http://localhost:8080/servlet-homework-file/download?fileName=xxx.docx</span></div>
+    <div style="padding:24px;background:#fff;text-align:center;">
+      <div style="font-size:48px;">⬇️</div>
+      <div style="margin-top:10px;color:#24292f;font-weight:600;">浏览器弹出下载框</div>
+      <div style="color:#57606a;font-size:13px;margin-top:6px;">Content-Disposition: attachment<br/>文件名自动填充，中文不乱码</div>
+    </div>
+  </div>
+</div>
+
+<h2 style="margin:18px 0 12px;color:#0969da;">🧠 本次课核心知识点</h2>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+  <div style="padding:12px;border-radius:8px;border-left:4px solid #0969da;background:#ddf4ff;"><b style="color:#0969da;">📘 Servlet 3.0 Part API</b><div style="color:#57606a;font-size:13px;margin-top:4px;">@MultipartConfig、request.getPart、write</div></div>
+  <div style="padding:12px;border-radius:8px;border-left:4px solid #8250df;background:#fbefff;"><b style="color:#8250df;">📦 响应头控制</b><div style="color:#57606a;font-size:13px;margin-top:4px;">Content-Type、Content-Disposition</div></div>
+  <div style="padding:12px;border-radius:8px;border-left:4px solid #1a7f37;background:#dafbe1;"><b style="color:#1a7f37;">🔄 文件IO</b><div style="color:#57606a;font-size:13px;margin-top:4px;">OutputStream流输出、缓冲区复制</div></div>
+  <div style="padding:12px;border-radius:8px;border-left:4px solid #bc4c00;background:#fff1e5;"><b style="color:#bc4c00;">📡 上传安全</b><div style="color:#57606a;font-size:13px;margin-top:4px;">类型白名单、大小限制、路径防穿越</div></div>
+  <div style="padding:12px;border-radius:8px;border-left:4px solid #bf3989;background:#ffeff7;"><b style="color:#bf3989;">🏷️ 文件下载</b><div style="color:#57606a;font-size:13px;margin-top:4px;">URLEncoder中文文件名、MIME识别</div></div>
+  <div style="padding:12px;border-radius:8px;border-left:4px solid #cf222e;background:#ffebe9;"><b style="color:#cf222e;">🔒 监听器初始化</b><div style="color:#57606a;font-size:13px;margin-top:4px;">启动自动创建上传目录</div></div>
+</div>
+
+<h2 style="margin:18px 0 8px;color:#0969da;">⏱️ 课时安排（4×40=160分钟）</h2>
+<table style="width:100%;border-collapse:collapse;font-size:14px;">
+<tr style="background:#f6f8fa;"><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">环节</th><th style="padding:8px;border:1px solid #d0d7de;width:100px;">时长</th><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">说明</th></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">环境准备 & 项目结构</td><td style="padding:8px;border:1px solid #d0d7de;">12分钟</td><td style="padding:8px;border:1px solid #d0d7de;">Maven依赖、web.xml配置、目录规划</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">登录 & 基础Filter复用</td><td style="padding:8px;border:1px solid #d0d7de;">25分钟</td><td style="padding:8px;border:1px solid #d0d7de;">拷贝第一次课的Encoding/LoginFilter</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">文件上传核心</td><td style="padding:8px;border:1px solid #d0d7de;">45分钟</td><td style="padding:8px;border:1px solid #d0d7de;">@MultipartConfig、getPart、文件名处理、保存</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">文件列表 & 上传表单JSP</td><td style="padding:8px;border:1px solid #d0d7de;">20分钟</td><td style="padding:8px;border:1px solid #d0d7de;">JSTL展示文件列表、form enctype</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">文件下载</td><td style="padding:8px;border:1px solid #d0d7de;">20分钟</td><td style="padding:8px;border:1px solid #d0d7de;">OutputStream、响应头、中文文件名</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">文件删除 & 安全校验</td><td style="padding:8px;border:1px solid #d0d7de;">13分钟</td><td style="padding:8px;border:1px solid #d0d7de;">路径穿越防御、权限校验</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">测试验证 & 常见坑讲解</td><td style="padding:8px;border:1px solid #d0d7de;">15分钟</td><td style="padding:8px;border:1px solid #d0d7de;">大文件/乱码/越权/重复提交等</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">学生实操</td><td style="padding:8px;border:1px solid #d0d7de;">10分钟</td><td style="padding:8px;border:1px solid #d0d7de;">独立完成上传下载功能</td></tr>
+</table>
+</div>
+</script>
+
+<script type="text/html" id="tpl-env">
+<div style="padding:4px 4px 16px;">
+<h2 style="margin:0 0 12px;color:#0969da;">🛠️ 开发环境（与第一次课完全一致）</h2>
+<table style="width:100%;border-collapse:collapse;margin-bottom:18px;font-size:14px;">
+<tr style="background:#f6f8fa;"><th style="padding:10px;border:1px solid #d0d7de;text-align:left;width:180px;">组件</th><th style="padding:10px;border:1px solid #d0d7de;text-align:left;">版本</th><th style="padding:10px;border:1px solid #d0d7de;text-align:left;">说明</th></tr>
+<tr><td style="padding:10px;border:1px solid #d0d7de;"><b>JDK</b></td><td style="padding:10px;border:1px solid #d0d7de;">OpenJDK 17 LTS</td><td style="padding:10px;border:1px solid #d0d7de;">LTS长期支持版本，Tomcat 10.1 要求JDK 11+</td></tr>
+<tr><td style="padding:10px;border:1px solid #d0d7de;"><b>IDEA</b></td><td style="padding:10px;border:1px solid #d0d7de;">IntelliJ IDEA 2024.1 Ultimate</td><td style="padding:10px;border:1px solid #d0d7de;">旗舰版支持Tomcat一键启动/调试，社区版需Smart Tomcat插件</td></tr>
+<tr><td style="padding:10px;border:1px solid #d0d7de;"><b>Tomcat</b></td><td style="padding:10px;border:1px solid #d0d7de;">Apache Tomcat 10.1.59</td><td style="padding:10px;border:1px solid #d0d7de;">⭐ 使用 <b>jakarta.servlet.*</b> 包名（不支持javax）</td></tr>
+<tr><td style="padding:10px;border:1px solid #d0d7de;"><b>Maven</b></td><td style="padding:10px;border:1px solid #d0d7de;">Maven 3.9.x（IDEA内置）</td><td style="padding:10px;border:1px solid #d0d7de;">构建+依赖管理；文件上传<b>无需额外commons-fileupload包</b>（Servlet 3.0原生支持）</td></tr>
+</table>
+
+<h2 style="margin:18px 0 12px;color:#0969da;">📦 pom.xml 依赖（4个Jakarta标准依赖，与第一次课完全相同）</h2>
+<div style="background:#f6f8fa;border-left:4px solid #0969da;padding:14px 18px;border-radius:6px;font-family:'JetBrains Mono',Consolas,monospace;font-size:13px;line-height:1.8;">
+<div style="color:#6e7781;margin-bottom:6px;"><!-- ① Servlet API 6.0：provided 表示Tomcat已自带，部署时不打包 --&gt;</div>
+<div><b style="color:#0969da;">jakarta.servlet:jakarta.servlet-api:6.0.0</b> &nbsp;<code style="background:#fff8c5;padding:1px 6px;border-radius:3px;">&lt;scope&gt;provided&lt;/scope&gt;</code></div>
+<div style="color:#6e7781;margin-top:10px;margin-bottom:6px;"><!-- ② JSP API 3.1：编译JSP需要，Tomcat自带 --&gt;</div>
+<div><b style="color:#0969da;">jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1</b> &nbsp;<code style="background:#fff8c5;padding:1px 6px;border-radius:3px;">&lt;scope&gt;provided&lt;/scope&gt;</code></div>
+<div style="color:#6e7781;margin-top:10px;margin-bottom:6px;"><!-- ③ JSTL 标签库API --&gt;</div>
+<div><b style="color:#0969da;">jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.0</b></div>
+<div style="color:#6e7781;margin-top:10px;margin-bottom:6px;"><!-- ④ JSTL 实现（GlassFish提供） --&gt;</div>
+<div><b style="color:#0969da;">org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1</b></div>
+</div>
+
+<div class="kp-warn" style="margin-top:14px;"><b>⚠️ javax → jakarta 包名变更提醒：</b>Tomcat 10+ 把包名从 <code>javax.servlet.*</code> 改成了 <code>jakarta.servlet.*</code>。如果发现"类找不到"，90%是依赖/import用了javax包！所有 import、taglib uri 都要改为 jakarta 版本。</div>
+
+<h2 style="margin:18px 0 10px;color:#0969da;">🔧 IDEA 2024.1 新建Maven Web项目流程</h2>
+<ol style="line-height:2.0;color:#24292f;padding-left:22px;">
+  <li>File → New → Project → 选择 <b>Maven Archetype</b>（不要选Java Enterprise）</li>
+  <li>Name: <code>servlet-homework-file</code>，GroupId: <code>com.example</code></li>
+  <li>Archetype 选 <code>org.apache.maven.archetypes:maven-archetype-webapp</code>（注意看清楚是maven-archetype-webapp）</li>
+  <li>JDK 选 <b>17</b>，Create 完成项目创建</li>
+  <li>把 pom.xml 依赖替换为本次课代码里的版本（带jakarta前缀）</li>
+  <li>main 目录下新建 <code>java</code> 目录（放源码）和 <code>resources</code> 目录</li>
+  <li>File → Project Structure → Facets → Web 确认部署描述符 web.xml 路径</li>
+  <li>Run → Edit Configurations → + → Tomcat Server → Local → 选择 Tomcat 10.1.59 安装目录</li>
+  <li>Deployment 标签 → + → Artifact → 选 <code>servlet-homework-file:war exploded</code>，Application context 改为 <code>/servlet-homework-file</code></li>
+</ol>
+</div>
+</script>
+
+<script type="text/html" id="tpl-struct">
+<div style="padding:4px 4px 16px;">
+<h2 style="margin:0 0 12px;color:#0969da;">📁 标准Maven Web项目结构</h2>
+<p style="line-height:1.8;color:#57606a;margin:0 0 14px;">按<b>职责分包</b>：filter/listener/controller/entity/service 各一个包，JSP放 webapp 根或 WEB-INF（保护起来）。文件上传下载不需要额外第三方包。</p>
+
+<div class="tree" style="background:#f6f8fa;border-radius:8px;padding:16px 20px;font-family:'JetBrains Mono',Consolas,monospace;font-size:13px;line-height:1.8;">
+<div><span style="color:#bc4c00;">servlet-homework-file/</span></div>
+<div>├── <span style="color:#bc4c00;">pom.xml</span> &nbsp;<span style="color:#8b949e;">← Maven依赖配置</span></div>
+<div>└── <span style="color:#bc4c00;">src/</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;└── <span style="color:#bc4c00;">main/</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span style="color:#bc4c00;">java/com/example/homework/</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span style="color:#bc4c00;">entity/</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <b>FileMeta.java</b> &nbsp;<span style="color:#8b949e;">← 文件元数据实体类</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span style="color:#bc4c00;">filter/</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <b>EncodingFilter.java</b> &nbsp;<span style="color:#8b949e;">← 统一编码过滤器（复用第一次课）</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <b>LoginFilter.java</b> &nbsp;<span style="color:#8b949e;">← 登录校验过滤器（复用+适配文件页）</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span style="color:#bc4c00;">listener/</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <b>UploadDirInitListener.java</b> &nbsp;<span style="color:#8b949e;">← 启动时自动创建上传目录</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <b>LoginServlet.java</b> &nbsp;<span style="color:#8b949e;">← 登录处理</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <b>UploadServlet.java</b> &nbsp;<span style="color:#cf222e;">⭐ 文件上传（@MultipartConfig）</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <b>ListServlet.java</b> &nbsp;<span style="color:#8b949e;">← 文件列表查询</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <b>DownloadServlet.java</b> &nbsp;<span style="color:#cf222e;">⭐ 文件下载（OutputStream）</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <b>DeleteServlet.java</b> &nbsp;<span style="color:#8b949e;">← 删除文件</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span style="color:#bc4c00;">webapp/</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span style="color:#bc4c00;">WEB-INF/</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <b>web.xml</b> &nbsp;<span style="color:#8b949e;">← (可省略) 用注解替代</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <b>login.jsp</b> &nbsp;<span style="color:#8b949e;">← 登录页</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <b>upload.jsp</b> &nbsp;<span style="color:#cf222e;">⭐ 文件上传表单（enctype=multipart/form-data）</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <b>list.jsp</b> &nbsp;<span style="color:#cf222e;">⭐ 文件列表展示（JSTL forEach）</span></div>
+<div style="margin-top:8px;color:#8b949e;">（上传目录由监听器启动时自动在 target/xxx/upload 下创建）</div>
+</div>
+
+<h2 style="margin:20px 0 10px;color:#0969da;">📌 分包规范</h2>
+<table style="width:100%;border-collapse:collapse;font-size:14px;">
+<tr style="background:#f6f8fa;"><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">包名</th><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">放什么</th><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">命名约定</th></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;"><code>entity</code></td><td style="padding:8px;border:1px solid #d0d7de;">实体类（POJO/DTO）</td><td style="padding:8px;border:1px solid #d0d7de;">Xxx.java（FileMeta、User）</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;"><code>filter</code></td><td style="padding:8px;border:1px solid #d0d7de;">过滤器</td><td style="padding:8px;border:1px solid #d0d7de;">XxxFilter（LoginFilter、EncodingFilter）</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;"><code>listener</code></td><td style="padding:8px;border:1px solid #d0d7de;">监听器</td><td style="padding:8px;border:1px solid #d0d7de;">XxxListener（UploadDirInitListener）</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;"><code>controller/servlet</code></td><td style="padding:8px;border:1px solid #d0d7de;">Servlet</td><td style="padding:8px;border:1px solid #d0d7de;">XxxServlet（UploadServlet、DownloadServlet）</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;"><code>service</code></td><td style="padding:8px;border:1px solid #d0d7de;">业务逻辑（教学可省略）</td><td style="padding:8px;border:1px solid #d0d7de;">XxxService（FileService）</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;"><code>dao</code></td><td style="padding:8px;border:1px solid #d0d7de;">数据访问（下次课JDBC后用）</td><td style="padding:8px;border:1px solid #d0d7de;">XxxDao（FileDao）</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;"><code>util</code></td><td style="padding:8px;border:1px solid #d0d7de;">工具类</td><td style="padding:8px;border:1px solid #d0d7de;">XxxUtil（FileNameUtil、DateUtil）</td></tr>
+</table>
+<div class="kp-warn" style="margin-top:12px;"><b>⚠️ Servlet注解扫描要求：</b>所有Servlet/Filter/Listener类必须放在<b>有包名</b>的包下，不能放 default package（即直接在java目录下），否则Tomcat扫描不到注解！</div>
+</div>
+</script>
+
+<script type="text/html" id="tpl-verify">
+<div style="padding:4px 4px 16px;">
+<h2 style="margin:0 0 12px;color:#0969da;">🧪 启动Tomcat后按以下步骤逐项验证</h2>
+
+<h3 style="margin:18px 0 10px;color:#1a7f37;">① 基础流程验证</h3>
+<table style="width:100%;border-collapse:collapse;font-size:14px;">
+<tr style="background:#f6f8fa;"><th style="padding:8px;border:1px solid #d0d7de;width:40px;">#</th><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">操作</th><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">预期结果</th><th style="padding:8px;border:1px solid #d0d7de;width:120px;">不通过排查</th></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;text-align:center;">1</td><td style="padding:8px;border:1px solid #d0d7de;">访问 http://localhost:8080/servlet-homework-file/upload</td><td style="padding:8px;border:1px solid #d0d7de;">被LoginFilter拦截，跳转到login.jsp</td><td style="padding:8px;border:1px solid #d0d7de;color:#cf222e;">@WebFilter urlPatterns</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;text-align:center;">2</td><td style="padding:8px;border:1px solid #d0d7de;">账号 admin/123456 登录</td><td style="padding:8px;border:1px solid #d0d7de;">登录成功进入upload.jsp上传表单</td><td style="padding:8px;border:1px solid #d0d7de;color:#cf222e;">doPost重定向</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;text-align:center;">3</td><td style="padding:8px;border:1px solid #d0d7de;">选一个docx文件上传</td><td style="padding:8px;border:1px solid #d0d7de;">跳转到list.jsp，列表显示刚上传的文件</td><td style="padding:8px;border:1px solid #d0d7de;color:#cf222e;">@MultipartConfig</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;text-align:center;">4</td><td style="padding:8px;border:1px solid #d0d7de;">点"下载"链接</td><td style="padding:8px;border:1px solid #d0d7de;">浏览器弹出下载框，文件名正确，中文不乱码</td><td style="padding:8px;border:1px solid #d0d7de;color:#cf222e;">Content-Disposition编码</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;text-align:center;">5</td><td style="padding:8px;border:1px solid #d0d7de;">点"删除"链接</td><td style="padding:8px;border:1px solid #d0d7de;">文件从列表中消失，服务器磁盘文件被删</td><td style="padding:8px;border:1px solid #d0d7de;color:#cf222e;">路径校验逻辑</td></tr>
+</table>
+
+<h3 style="margin:20px 0 10px;color:#bc4c00;">② 异常/边界验证</h3>
+<table style="width:100%;border-collapse:collapse;font-size:14px;">
+<tr style="background:#f6f8fa;"><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">测试场景</th><th style="padding:8px;border:1px solid #d0d7de;text-align:left;">预期结果</th></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">不选文件直接点提交</td><td style="padding:8px;border:1px solid #d0d7de;">提示"请选择文件"，不报错</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">上传.jsp/.exe可执行文件</td><td style="padding:8px;border:1px solid #d0d7de;">提示"文件类型不允许"</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">上传超过10MB文件</td><td style="padding:8px;border:1px solid #d0d7de;">抛出IllegalStateException，浏览器500（maxFileSize控制）</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">上传中文文件名（如"作业.docx"）</td><td style="padding:8px;border:1px solid #d0d7de;">下载时文件名仍显示中文"作业.docx"</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">直接访问 /download?fileName=../../../../etc/passwd</td><td style="padding:8px;border:1px solid #d0d7de;">返回403/404，不能下载越权文件</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">关闭浏览器重开再访问</td><td style="padding:8px;border:1px solid #d0d7de;">回到登录页（session丢失）</td></tr>
+<tr><td style="padding:8px;border:1px solid #d0d7de;">上传后按F5刷新列表</td><td style="padding:8px;border:1px solid #d0d7de;">不重复上传（PRG模式生效）</td></tr>
+</table>
+
+<h3 style="margin:20px 0 10px;color:#8250df;">③ 控制台观察点</h3>
+<ul style="line-height:1.9;color:#24292f;padding-left:22px;">
+  <li>启动Tomcat时控制台应输出<b>"上传目录已创建：xxx"</b>（UploadDirInitListener执行）；</li>
+  <li>EncodingFilter/LoginFilter的 @WebFilter 初始化成功无报错；</li>
+  <li>上传成功后看 target/servlet-homework-file/upload/ 目录下多了一个UUID命名的文件；</li>
+  <li>下载时IDEA控制台无异常栈，下载的文件能正常打开（大小正确，不损坏）。</li>
+</ul>
+</div>
+</script>
+
+<script type="text/html" id="tpl-std">
+<div style="padding:4px 4px 16px;">
+<h2 style="margin:0 0 12px;color:#cf222e;">📐 编码规范与8大高频坑</h2>
+
+<h3 style="margin:16px 0 8px;color:#cf222e;">❌ 坑1：漏写 @MultipartConfig 导致 getPart() 返回 null</h3>
+<div class="kp-warn">@WebServlet 和 @MultipartConfig <b>两个注解必须同时写</b>，缺一个都不行。缺少@MultipartConfig时，getPart()返回null，直接调用filePart.getSize() 抛 NullPointerException，学生常以为是表单写错。</div>
+
+<h3 style="margin:16px 0 8px;color:#cf222e;">❌ 坑2：表单没写 enctype="multipart/form-data"</h3>
+<div class="kp-warn"><code>&lt;form action="upload" method="post"&gt;</code> 这样写默认是 <code>application/x-www-form-urlencoded</code>，<b>不能传文件</b>！必须写成 <code>&lt;form action="upload" method="post" enctype="multipart/form-data"&gt;</code>。</div>
+
+<h3 style="margin:16px 0 8px;color:#cf222e;">❌ 坑3：文件大小单位写成字节而不是MB</h3>
+<div class="kp-warn"><code>maxFileSize=10</code> 是10字节，<b>不是10MB</b>！正确写法：<code>maxFileSize = 10 * 1024 * 1024</code>（10MB = 10×1024KB×1024B）。</div>
+
+<h3 style="margin:16px 0 8px;color:#cf222e;">❌ 坑4：getSubmittedFileName() 的 IE 完整路径与中文乱码</h3>
+<div class="kp-warn">IE会传"C:\\Users\\xx\\文件.docx"完整路径，必须按\\和/分割取最后一段；中文文件名在部分Tomcat版本下乱码，需要 <code>new String(name.getBytes("ISO-8859-1"),"UTF-8")</code> 转码。</div>
+
+<h3 style="margin:16px 0 8px;color:#cf222e;">❌ 坑5：文件同名覆盖</h3>
+<div class="kp-warn">两个学生都交"作业.docx"，后者会覆盖前者！必须<b>用UUID重命名</b>保存，原始文件名存在元数据里展示给用户看。</div>
+
+<h3 style="margin:16px 0 8px;color:#cf222e;">❌ 坑6：下载时中文文件名乱码/变成下划线</h3>
+<div class="kp-warn">文件名必须 <code>URLEncoder.encode(name,"UTF-8").replace("+","%20")</code>，并同时提供 <code>filename</code> 和 <code>filename*=UTF-8''</code> 双字段兼容各浏览器。</div>
+
+<h3 style="margin:16px 0 8px;color:#cf222e;">❌ 坑7：OutputStream 和 getWriter() 同时调用</h3>
+<div class="kp-warn">同一个请求中，不能既调用 response.getWriter()（输出字符）又调用 response.getOutputStream()（输出字节）。下载文件用 getOutputStream()，不要再 out.print()。</div>
+
+<h3 style="margin:16px 0 8px;color:#cf222e;">❌ 坑8：路径穿越漏洞</h3>
+<div class="kp-warn">如果直接用 <code>new File(uploadDir, request.getParameter("fileName"))</code> 不加校验，用户传 <code>fileName=../../WEB-INF/web.xml</code> 就能下载项目敏感文件！必须校验规范化后的路径以 uploadDir 开头。</div>
+
+<h3 style="margin:22px 0 8px;color:#1a7f37;">✅ 企业级最佳实践</h3>
+<ol style="line-height:2.0;color:#24292f;padding-left:22px;">
+  <li><b>类型白名单而非黑名单</b>：只允许明确的安全扩展名，不要"排除exe/jsp"——容易漏；</li>
+  <li><b>文件存到Web应用外</b>：不要存 getRealPath("/upload")（重新部署会清空），应存 D:/upload 或对象存储（OSS/MinIO）；</li>
+  <li><b>不要把UUID映射信息存ServletContext</b>：重启丢失！生产环境存入数据库（下节课JDBC）；</li>
+  <li><b>下载接口权限双重校验</b>：先判断session登录，再校验文件是否属于当前用户，不能仅凭URL参数；</li>
+  <li><b>大文件用分片上传</b>：超过100MB文件建议分片+断点续传（WebUploader、PlUpload组件），本堂课讲基础原理；</li>
+  <li><b>异常处理规范</b>：IOException/IllegalStateException 统一try-catch，给出友好提示，不能让用户看到500白屏异常栈。</li>
+</ol>
+</div>
+</script>
+
+<script type="text/html" id="tpl-summary">
+<div style="padding:4px 4px 16px;">
+<h2 style="margin:0 0 14px;color:#0969da;">📚 本次课知识点回顾</h2>
+
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+<div style="padding:14px;border-radius:8px;background:#f6f8fa;border-left:4px solid #0969da;">
+<h4 style="margin:0 0 8px;color:#0969da;">📘 注解与接口</h4>
+<ul style="margin:0;padding-left:18px;line-height:1.9;color:#24292f;font-size:13px;">
+  <li><b>@MultipartConfig</b>：开启文件上传解析能力</li>
+  <li><b>@WebListener</b>：注册监听器</li>
+  <li><b>Part</b> 接口：getSubmittedFileName/getSize/write/getInputStream</li>
+  <li><b>File</b> 类：mkdirs/exists/delete/length/lastModified</li>
+</ul>
+</div>
+<div style="padding:14px;border-radius:8px;background:#f6f8fa;border-left:4px solid #8250df;">
+<h4 style="margin:0 0 8px;color:#8250df;">📦 响应头</h4>
+<ul style="margin:0;padding-left:18px;line-height:1.9;color:#24292f;font-size:13px;">
+  <li><b>Content-Type</b>：MIME类型，告诉浏览器文件类型</li>
+  <li><b>Content-Disposition</b>：attachment/inline，下载或打开</li>
+  <li><b>Content-Length</b>：文件长度，让下载进度条准确</li>
+  <li><b>URLEncoder.encode</b>：中文文件名编码</li>
+</ul>
+</div>
+<div style="padding:14px;border-radius:8px;background:#f6f8fa;border-left:4px solid #1a7f37;">
+<h4 style="margin:0 0 8px;color:#1a7f37;">🔄 IO 操作</h4>
+<ul style="margin:0;padding-left:18px;line-height:1.9;color:#24292f;font-size:13px;">
+  <li><b>getOutputStream()</b>：字节输出流（下载文件用）</li>
+  <li><b>FileInputStream</b>：文件输入流</li>
+  <li><b>缓冲区8KB循环读写</b>：经典IO模板</li>
+  <li><b>try-with-resources</b>：自动关流（JDK 7+）</li>
+</ul>
+</div>
+<div style="padding:14px;border-radius:8px;background:#f6f8fa;border-left:4px solid #cf222e;">
+<h4 style="margin:0 0 8px;color:#cf222e;">🔒 安全要点</h4>
+<ul style="margin:0;padding-left:18px;line-height:1.9;color:#24292f;font-size:13px;">
+  <li><b>扩展名白名单</b>：只允许安全类型</li>
+  <li><b>UUID重命名</b>：防覆盖/防注入</li>
+  <li><b>路径规范化校验</b>：防穿越（canonicalPath）</li>
+  <li><b>用户目录隔离</b>：防越权下载/删除</li>
+  <li><b>PRG模式</b>：防刷新重复提交</li>
+</ul>
+</div>
+</div>
+
+<h2 style="margin:24px 0 10px;color:#0969da;">🧠 核心代码模板（要求会默写）</h2>
+<div style="background:#f6f8fa;border-radius:8px;padding:14px 18px;font-family:'JetBrains Mono',Consolas,monospace;font-size:12px;line-height:1.7;color:#24292f;">
+<div><b style="color:#cf222e;">// ① 上传核心3行</b></div>
+<div>Part part = request.getPart("file");</div>
+<div>String name = UUID.randomUUID() + ext;</div>
+<div>part.write(dir + File.separator + name);</div>
+<div style="margin-top:8px;"><b style="color:#cf222e;">// ② 下载核心4行</b></div>
+<div>response.setContentType(mime);</div>
+<div>response.setHeader("Content-Disposition", "attachment; filename="+URLEncoder.encode(fname,"UTF-8"));</div>
+<div>try(InputStream in=new FileInputStream(file); OutputStream out=response.getOutputStream()){</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;byte[] buf=new byte[8192]; int len;</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;while((len=in.read(buf))!=-1) out.write(buf,0,len);</div>
+<div>}</div>
+<div style="margin-top:8px;"><b style="color:#cf222e;">// ③ 路径防穿越</b></div>
+<div>File target = new File(userDir, fileName).getCanonicalFile();</div>
+<div>if(!target.getPath().startsWith(userDir.getCanonicalPath())){ response.sendError(403); return; }</div>
+</div>
+
+<h2 style="margin:24px 0 10px;color:#0969da;">📝 课后作业</h2>
+<ol style="line-height:1.9;color:#24292f;padding-left:22px;">
+  <li><b>基础题</b>：独立完成今天的作业提交系统（不看代码，从零写一遍），要求登录→上传→列表→下载→删除全流程通；</li>
+  <li><b>进阶题</b>：增加"多文件上传"功能（一个表单可以同时传1~3个文件，提示：用 getParts() 遍历）；</li>
+  <li><b>挑战题</b>：实现<b>图片预览</b>：上传jpg/png后列表显示缩略图，点击放大（提示：img标签src指/download?fileName=xxx）；</li>
+  <li><b>思考题</b>：如果用synchronizedList存fileList，重启服务器后数据会丢失，企业里应该怎么解决？（预习下节课JDBC）</li>
+</ol>
+
+<h2 style="margin:24px 0 10px;color:#bf3989;">🔮 下节课预告</h2>
+<div style="padding:14px 18px;background:#ffeff7;border-radius:8px;border-left:4px solid #bf3989;color:#24292f;line-height:1.8;">
+<b>第3次课：JDBC + 数据库连接池</b> —— 把文件元信息存入MySQL数据库，实现真正的数据持久化；引入 Druid 连接池解决数据库连接复用问题；改造 FileMeta 的增删改查为DAO模式。
+</div>
+</div>
+</script>
+
+<!-- ============ 源码容器 ============ -->
+<script type="text/plain" id="src-pom">
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- XML声明：指定XML版本与编码，Maven pom.xml必须以这行开头 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- project根标签：Maven POM模型根元素，所有Maven项目必须这样写 -->
+    <modelVersion>4.0.0</modelVersion>
+    <!-- modelVersion：POM模型版本，固定为4.0.0 -->
+
+    <groupId>com.example</groupId>
+    <!-- groupId：组织标识，域名倒写，如com.example -->
+    <artifactId>servlet-homework-file</artifactId>
+    <!-- artifactId：项目名，第二次课项目叫 servlet-homework-file（作业提交系统-文件上传下载） -->
+    <version>1.0-SNAPSHOT</version>
+    <!-- version：版本号，SNAPSHOT表示开发快照版 -->
+    <packaging>war</packaging>
+    <!-- packaging：打包方式为war，部署到Tomcat必须用war -->
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <!-- maven.compiler.source：Java源码版本JDK 17 -->
+        <maven.compiler.target>17</maven.compiler.target>
+        <!-- maven.compiler.target：编译字节码版本 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- sourceEncoding：源码文件统一UTF-8编码，避免中文乱码 -->
+    </properties>
+
+    <!-- 4个Jakarta标准依赖（与第一次课完全一致，文件上传用Servlet原生Part API，无需引入额外包） -->
+    <dependencies>
+
+        <!-- ① Servlet 6.0 API（Tomcat自带，provided不打包） -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <!-- jakarta.servlet-api：提供HttpServletRequest/Response/Part等核心类 -->
+            <scope>provided</scope>
+            <!-- scope=provided：运行时由Tomcat提供，不打包进war -->
+        </dependency>
+
+        <!-- ② JSP 3.1 API（Tomcat自带） -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
+            <version>3.1.1</version>
+            <!-- jakarta.servlet.jsp-api：JSP API，PageContext/JspWriter等 -->
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ③ JSTL 3.0 API（标签定义） -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.0</version>
+            <!-- JSTL API：c:if/c:forEach等标签的接口定义 -->
+        </dependency>
+
+        <!-- ④ JSTL 3.0 实现（GlassFish） -->
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+            <version>3.0.1</version>
+            <!-- JSTL实现：Tomcat不自带，必须打包 -->
+        </dependency>
+
+    </dependencies>
+
+</project>
+</script>
+
+<script type="text/plain" id="src-file-meta">
+package com.example.homework.entity;
+// package：实体类放在entity子包（JavaBean/POJO）
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+/**
+ * 文件元数据实体类（FileMeta = File Metadata）
+ * 用于封装上传文件的名称、大小、类型、上传时间、真实存储路径等信息
+ * 遵守JavaBean规范：public无参构造、private字段、public getter/setter、实现Serializable
+ */
+public class FileMeta {
+    // 字段全部private封装，对外通过getter/setter访问（JavaBean封装思想）
+
+    private String id;           // 文件唯一ID（UUID，用于下载/删除时定位，避免路径遍历攻击）
+    private String originalName; // 原始文件名（用户上传时的文件名，显示给用户看）
+    private String savedName;    // 服务器存储名（UUID+扩展名，避免重名覆盖）
+    private Long size;           // 文件大小（单位：字节）
+    private String contentType;  // MIME类型（如image/jpeg、application/pdf）
+    private String uploadTime;   // 上传时间（格式化字符串，yyyy-MM-dd HH:mm:ss）
+    private String uploader;     // 上传者用户名（关联登录用户）
+    private String savePath;     // 服务器存储绝对路径（内部使用，不返回给前端防泄露）
+
+    public FileMeta() {
+        // public无参构造：JavaBean规范要求，反射/JSP EL/框架都需要无参构造创建实例
+    }
+
+    // ====== 自定义便捷构造 ======
+    public FileMeta(String id, String originalName, String savedName,
+                    Long size, String contentType, String uploader, String savePath) {
+        this.id = id;
+        this.originalName = originalName;
+        this.savedName = savedName;
+        this.size = size;
+        this.contentType = contentType;
+        this.uploader = uploader;
+        this.savePath = savePath;
+        this.uploadTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        // 上传时间默认当前时间
+    }
+
+    /**
+     * 友好显示文件大小（把字节数换算为B/KB/MB/GB）
+     * @return 如 "1.23 MB"
+     */
+    public String getSizeText() {
+        if (size == null) return "0 B";
+        if (size < 1024) return size + " B";
+        if (size < 1024 * 1024) return String.format("%.2f KB", size / 1024.0);
+        if (size < 1024 * 1024 * 1024) return String.format("%.2f MB", size / (1024.0 * 1024));
+        return String.format("%.2f GB", size / (1024.0 * 1024 * 1024));
+    }
+
+    // ====== getter/setter ======
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getOriginalName() { return originalName; }
+    public void setOriginalName(String originalName) { this.originalName = originalName; }
+    public String getSavedName() { return savedName; }
+    public void setSavedName(String savedName) { this.savedName = savedName; }
+    public Long getSize() { return size; }
+    public void setSize(Long size) { this.size = size; }
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
+    public String getUploadTime() { return uploadTime; }
+    public void setUploadTime(String uploadTime) { this.uploadTime = uploadTime; }
+    public String getUploader() { return uploader; }
+    public void setUploader(String uploader) { this.uploader = uploader; }
+    public String getSavePath() { return savePath; }
+    public void setSavePath(String savePath) { this.savePath = savePath; }
+}
+</script>
+
+<script type="text/plain" id="src-dir-listener">
+package com.example.homework.listener;
+// package：监听器放listener子包
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.annotation.WebListener;
+
+import java.io.File;
+
+/**
+ * 上传目录初始化监听器：服务器启动时自动检查/创建文件上传目录
+ * 避免程序运行时因目录不存在导致FileNotFoundException
+ */
+@WebListener
+// @WebListener：Tomcat启动自动注册，contextInitialized在应用初始化完成后调用
+public class UploadDirInitListener implements ServletContextListener {
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        // contextInitialized：Web应用启动完成时执行一次（部署/启动Tomcat后）
+        ServletContext application = sce.getServletContext();
+
+        // 知识点：getRealPath 获取Web应用内目录的磁盘真实路径
+        // 上传目录放在 webapp/WEB-INF/upload 下（WEB-INF保护，浏览器无法直接访问下载，必须通过Servlet下载）
+        String uploadPath = application.getRealPath("/WEB-INF/upload");
+        // getRealPath("/")：获取Web应用根目录在服务器硬盘上的绝对路径
+        // 如：D:/tomcat/webapps/servlet-homework-file/  (Windows) 或 /usr/local/tomcat/webapps/... (Linux)
+
+        File uploadDir = new File(uploadPath);
+        if (!uploadDir.exists()) {
+            boolean created = uploadDir.mkdirs();
+            // mkdirs：递归创建多级目录（父目录不存在时自动创建）；mkdir只能创建一级
+            System.out.println("[UploadDirInitListener] 上传目录不存在，已创建：" + uploadPath + " 结果：" + created);
+        } else {
+            System.out.println("[UploadDirInitListener] 上传目录已存在：" + uploadPath);
+        }
+
+        // 把上传目录的真实路径存入ServletContext全局域，所有Servlet共享使用
+        application.setAttribute("uploadPath", uploadPath);
+        // 后续Servlet通过 getServletContext().getAttribute("uploadPath") 获取路径
+        // 避免每个Servlet都写 getRealPath，统一管理
+
+        System.out.println("========================================");
+        System.out.println("[UploadDirInitListener] 作业提交系统启动，上传目录：" + uploadPath);
+        System.out.println("========================================");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        // 应用关闭时清理（可选）
+        System.out.println("[UploadDirInitListener] 作业提交系统关闭");
+    }
+}
+</script>
+
+<script type="text/plain" id="src-login-servlet">
+package com.example.homework;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+
+/**
+ * 登录处理Servlet（简化版，同第一次课）
+ */
+@WebServlet("/login")
+public class LoginServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        String username = req.getParameter("username");
+        String password = req.getParameter("password");
+
+        if ("student".equals(username) && "123456".equals(password)) {
+            HttpSession session = req.getSession();
+            session.setAttribute("loginUser", username);
+            resp.sendRedirect(req.getContextPath() + "/list");
+            // 登录成功直接跳文件列表页
+        } else {
+            req.setAttribute("errorMsg", "用户名或密码错误（学生账号：student/123456）");
+            req.getRequestDispatcher("/login.jsp").forward(req, resp);
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        resp.sendRedirect(req.getContextPath() + "/login.jsp");
+    }
+}
+</script>
+
+<script type="text/plain" id="src-encoding-filter">
+package com.example.homework.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+import java.io.IOException;
+
+/**
+ * 统一编码过滤器：全局设置请求/响应UTF-8编码
+ */
+@WebFilter(filterName = "encodingFilter", urlPatterns = "/*")
+public class EncodingFilter implements Filter {
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        System.out.println("[EncodingFilter] 文件项目-编码过滤器初始化");
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+        chain.doFilter(request, response);
+    }
+
+    @Override
+    public void destroy() {}
+}
+</script>
+
+<script type="text/plain" id="src-login-filter">
+package com.example.homework.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+
+/**
+ * 登录校验过滤器（复用第一次课写法）：拦截上传、列表、下载、删除等操作
+ * 未登录一律重定向回登录页
+ */
+@WebFilter(filterName = "loginFilter", urlPatterns = {"/upload", "/list", "/download", "/delete"})
+// urlPatterns只拦截需要登录的Servlet路径，放行登录页/login和静态资源
+public class LoginFilter implements Filter {
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        System.out.println("[LoginFilter] 文件项目-登录校验过滤器初始化");
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse resp = (HttpServletResponse) response;
+        req.setCharacterEncoding("UTF-8");
+
+        HttpSession session = req.getSession();
+        Object loginUser = session.getAttribute("loginUser");
+        if (loginUser != null) {
+            chain.doFilter(request, response);
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/login.jsp");
+        }
+    }
+
+    @Override
+    public void destroy() {}
+}
+</script>
+
+<script type="text/plain" id="src-upload-servlet">
+package com.example.homework;
+// package：Servlet放根包，按模块分组；filter/listener/entity分子包
+
+import com.example.homework.entity.FileMeta;
+// FileMeta：文件元数据实体类，封装文件信息
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
+// @MultipartConfig：Servlet 3.0+ 文件上传必备注解，标记Servlet支持multipart/form-data请求
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
+// Part：Servlet 3.0+ 提供的文件上传对象，对应表单中一个<input type="file">的文件
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
+/**
+ * 文件上传Servlet：处理multipart/form-data上传请求
+ * URL: /upload （表单action=upload  method=post enctype=multipart/form-data）
+ */
+@WebServlet("/upload")
+// @WebServlet("/upload")：映射到/upload路径
+@MultipartConfig(
+        // @MultipartConfig：开启文件上传支持，可配置大小限制与临时目录
+        location = "",                // location：文件写入临时目录（空表示使用系统默认临时目录）
+        maxFileSize = 10 * 1024 * 1024,   // maxFileSize：单个文件最大10MB（10*1024*1024字节）
+        maxRequestSize = 20 * 1024 * 1024, // maxRequestSize：整个请求最大20MB（含多个文件+普通参数）
+        fileSizeThreshold = 1024 * 1024    // fileSizeThreshold：超过1MB先写入临时文件（否则内存缓冲）
+)
+public class UploadServlet extends HttpServlet {
+
+    // 允许上传的文件类型（白名单，防恶意脚本上传）
+    private static final Set<String> ALLOWED_TYPES = new HashSet<>(Arrays.asList(
+            ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx",
+            ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".zip", ".rar", ".java"
+    ));
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        // doPost：文件上传表单必须用POST（GET没有请求体，无法传文件）
+
+        req.setCharacterEncoding("UTF-8");
+        HttpSession session = req.getSession();
+        String uploader = (String) session.getAttribute("loginUser");
+        if (uploader == null) {
+            resp.sendRedirect(req.getContextPath() + "/login.jsp");
+            return;
+        }
+
+        // 获取上传目录（Listener已初始化并存入ServletContext）
+        String uploadPath = (String) getServletContext().getAttribute("uploadPath");
+        File uploadDir = new File(uploadPath);
+        if (!uploadDir.exists()) uploadDir.mkdirs();
+
+        // 知识点：request.getPart 获取上传的文件Part对象
+        Part filePart = req.getPart("file");
+        // getPart(String name)：根据表单中<input type="file" name="file">获取对应文件
+        // 如果表单有多个文件控件，用 getParts() 获取Collection<Part>
+
+        if (filePart == null || filePart.getSize() == 0) {
+            // 没有选择文件就提交
+            req.setAttribute("errorMsg", "请选择要上传的文件！");
+            req.getRequestDispatcher("/upload.jsp").forward(req, resp);
+            return;
+        }
+
+        // 知识点：part.getSubmittedFileName() 获取原始文件名
+        String originalName = filePart.getSubmittedFileName();
+        // getSubmittedFileName()：获取用户上传时的原始文件名（含扩展名），不同浏览器结果可能不同（IE可能带全路径）
+
+        // IE浏览器会传C:\Users\xx\Desktop\xxx.jpg，截取最后一段
+        if (originalName != null && originalName.contains(File.separator)) {
+            originalName = originalName.substring(originalName.lastIndexOf(File.separator) + 1);
+        }
+
+        // 知识点：扩展名白名单校验
+        String ext = "";
+        int dotIdx = originalName.lastIndexOf('.');
+        if (dotIdx > 0) {
+            ext = originalName.substring(dotIdx).toLowerCase(); // 扩展名统一小写比较
+        }
+        if (!ALLOWED_TYPES.contains(ext)) {
+            req.setAttribute("errorMsg", "文件类型不允许！仅支持：" + ALLOWED_TYPES);
+            req.getRequestDispatcher("/upload.jsp").forward(req, resp);
+            return;
+        }
+
+        // 知识点：part.getSize() 获取文件大小
+        long size = filePart.getSize();
+        if (size > 10 * 1024 * 1024) {
+            req.setAttribute("errorMsg", "文件超过10MB限制！");
+            req.getRequestDispatcher("/upload.jsp").forward(req, resp);
+            return;
+        }
+
+        // 知识点：UUID重命名，防止重名覆盖与文件名乱码/路径注入
+        String savedName = UUID.randomUUID().toString() + ext;
+        // UUID.randomUUID()：生成全球唯一32位ID（如"550e8400-e29b-41d4-a716-446655440000"），确保文件名永不重复
+        // 加上原始扩展名保存，避免不同类型文件混淆
+
+        // 知识点：part.write() 保存文件到服务器
+        filePart.write(uploadPath + File.separator + savedName);
+        // write(String fileName)：把文件内容写入location+fileName路径；直接操作磁盘，简洁高效
+        // 也可以用 filePart.getInputStream() 自己用IO流拷贝，更灵活
+
+        // 知识点：part.getContentType() 获取MIME类型
+        String contentType = filePart.getContentType();
+        // getContentType()：获取文件MIME类型（如image/png、application/pdf），用于下载时设置响应头
+
+        // 构造文件元数据对象并存入ServletContext域（简化演示用全局List，实际项目用数据库）
+        FileMeta meta = new FileMeta(
+                UUID.randomUUID().toString(),   // 文件记录ID
+                originalName,                   // 原始文件名
+                savedName,                      // 服务器存的UUID名
+                size,                           // 文件大小
+                contentType,                    // MIME类型
+                uploader,                       // 上传者
+                uploadPath + File.separator + savedName  // 完整存储路径
+        );
+
+        // 从ServletContext取出文件列表（不存在则创建）
+        List<FileMeta> fileList = (List<FileMeta>) getServletContext().getAttribute("fileList");
+        if (fileList == null) {
+            fileList = Collections.synchronizedList(new ArrayList<>());
+            // synchronizedList：线程安全的List，多用户并发上传不会并发修改异常
+            getServletContext().setAttribute("fileList", fileList);
+        }
+        fileList.add(0, meta);  // 最新上传放最前面
+
+        // 知识点：上传完用重定向避免刷新重复提交（PRG模式）
+        resp.sendRedirect(req.getContextPath() + "/list");
+        // sendRedirect：跳转到文件列表页（GET请求），刷新列表不会重复上传
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        // GET访问/upload直接跳转到上传表单页
+        req.getRequestDispatcher("/upload.jsp").forward(req, resp);
+    }
+}
+</script>
+
+<script type="text/plain" id="src-login-jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%-- page指令：设置响应类型与编码，必须放JSP最开头 --%>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>作业提交系统 - 登录</title>
+    <style>
+        body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:linear-gradient(135deg,#11998e,#38ef7d);height:100vh;display:flex;align-items:center;justify-content:center;}
+        .login-box{background:white;padding:40px 50px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2);width:360px;}
+        .login-box h2{margin:0 0 25px;text-align:center;color:#333;}
+        .form-item{margin-bottom:18px;}
+        .form-item label{display:block;font-size:13px;color:#555;margin-bottom:6px;}
+        .form-item input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;}
+        .btn{width:100%;padding:11px;background:linear-gradient(135deg,#11998e,#38ef7d);color:white;border:none;border-radius:6px;font-size:15px;cursor:pointer;}
+        .error{color:#e74c3c;text-align:center;font-size:13px;margin-bottom:15px;padding:8px;background:#fdecea;border-radius:4px;}
+        .tip{text-align:center;margin-top:15px;font-size:12px;color:#999;}
+    </style>
+</head>
+<body>
+<div class="login-box">
+    <h2>📝 在线作业提交系统</h2>
+    <% String errorMsg = (String) request.getAttribute("errorMsg");
+       if (errorMsg != null) { %>
+    <div class="error"><%= errorMsg %></div>
+    <% } %>
+    <%-- form表单 method=post action=login：提交到LoginServlet --%>
+    <form action="login" method="post">
+        <div class="form-item">
+            <label>学生账号</label>
+            <input type="text" name="username" placeholder="请输入账号（student）" required>
+        </div>
+        <div class="form-item">
+            <label>密码</label>
+            <input type="password" name="password" placeholder="请输入密码（123456）" required>
+        </div>
+        <button class="btn" type="submit">登 录</button>
+    </form>
+    <div class="tip">学生账号：student / 123456</div>
+</div>
+</body>
+</html>
+</script>
+
+<script type="text/plain" id="src-upload-jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.example.homework.entity.FileMeta" %>
+<%@ page import="java.util.List" %>
+<%-- page指令import：导入Java类，用于脚本片段中使用 --%>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>作业提交系统 - 上传作业</title>
+    <style>
+        body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f7fa;}
+        .header{background:#0f9d58;color:white;padding:15px 30px;display:flex;align-items:center;}
+        .header h2{margin:0;flex:1;}
+        .header a{color:#fff;text-decoration:none;padding:5px 12px;border:1px solid #fff;border-radius:4px;font-size:13px;margin-left:10px;}
+        .container{max-width:800px;margin:30px auto;padding:0 20px;}
+        .upload-card{background:white;padding:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+        .upload-card h3{margin-top:0;color:#2c3e50;}
+        .upload-area{border:2px dashed #0f9d58;padding:40px;text-align:center;border-radius:8px;background:#f1f8f4;}
+        .upload-area input[type=file]{font-size:14px;margin-bottom:15px;}
+        .btn{padding:10px 25px;background:#0f9d58;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer;}
+        .btn:hover{opacity:0.9;}
+        .tip{margin-top:20px;padding:15px;background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;font-size:13px;color:#856404;}
+        .error{color:#e74c3c;padding:10px;background:#fdecea;border-radius:4px;margin-bottom:15px;}
+        .nav-links{margin-top:20px;text-align:center;}
+        .nav-links a{color:#0f9d58;text-decoration:none;margin:0 15px;}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>📝 在线作业提交系统</h2>
+    <span>👤 ${loginUser}</span>
+    <a href="list">📄 已交作业列表</a>
+    <a href="logout">退出</a>
+</div>
+
+<div class="container">
+    <div class="upload-card">
+        <h3>📤 上传作业文件</h3>
+
+        <% String errorMsg = (String) request.getAttribute("errorMsg");
+           if (errorMsg != null) { %>
+        <div class="error"><%= errorMsg %></div>
+        <% } %>
+
+        <%--
+          知识点：form表单文件上传必须满足三个条件：
+          1. method="post"（GET没有请求体不能传文件）
+          2. enctype="multipart/form-data"（默认application/x-www-form-urlencoded只能传文本，multipart支持二进制文件）
+          3. <input type="file" name="xxx"> 提供文件选择控件
+        --%>
+        <form action="upload" method="post" enctype="multipart/form-data">
+        <%-- enctype="multipart/form-data"：表单编码类型设为多部件表单数据，支持文件上传 --%>
+            <div class="upload-area">
+                <p style="font-size:24px;">📁</p>
+                <p style="color:#666;">点击下方按钮选择要上传的作业文件</p>
+                <input type="file" name="file" required>
+                <%-- type="file"：文件选择控件；name="file"必须与Part getPart("file")一致 --%>
+                <br>
+                <button class="btn" type="submit">🚀 提交作业</button>
+            </div>
+        </form>
+
+        <div class="tip">
+            <b>⚠️ 上传规则：</b>
+            <ul style="margin:8px 0 0 20px;padding:0;">
+                <li>支持的文件类型：jpg/png/gif/pdf/doc/docx/xls/xlsx/ppt/pptx/txt/zip/rar/java</li>
+                <li>单个文件大小不超过 <b>10MB</b>；整次请求不超过20MB</li>
+                <li>文件名支持中文，服务器自动以UUID重命名保存（避免重名覆盖）</li>
+                <li>文件保存到服务器 WEB-INF/upload 目录（禁止直接URL访问，必须通过下载接口）</li>
+            </ul>
+        </div>
+
+        <div class="nav-links">
+            <a href="list">📄 查看已提交作业列表</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+</script>
+
+<script type="text/plain" id="src-list-servlet">
+package com.example.homework;
+
+import com.example.homework.entity.FileMeta;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * 文件列表Servlet：查询所有上传文件，转发到列表页展示
+ * URL: /list
+ */
+@WebServlet("/list")
+public class ListServlet extends HttpServlet {
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        // doGet：列表展示使用GET
+
+        // 从ServletContext取出所有上传文件记录
+        List<FileMeta> fileList = (List<FileMeta>) getServletContext().getAttribute("fileList");
+        req.setAttribute("fileList", fileList);
+        // setAttribute：把文件列表放到request域，转发给list.jsp渲染
+        // JSP中用 ${fileList} 配合JSTL forEach遍历展示
+
+        req.getRequestDispatcher("/list.jsp").forward(req, resp);
+        // forward：服务器内部转发到list.jsp（列表页放webapp根目录，浏览器可访问列表，但下载必须走DownloadServlet）
+    }
+}
+</script>
+
+<script type="text/plain" id="src-list-jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.example.homework.entity.FileMeta" %>
+<%@ page import="java.util.List" %>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>作业提交系统 - 作业列表</title>
+    <style>
+        body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f7fa;}
+        .header{background:#0f9d58;color:white;padding:15px 30px;display:flex;align-items:center;}
+        .header h2{margin:0;flex:1;}
+        .header a{color:#fff;text-decoration:none;padding:5px 12px;border:1px solid #fff;border-radius:4px;font-size:13px;margin-left:10px;}
+        .container{max-width:950px;margin:30px auto;padding:0 20px;}
+        .card{background:white;padding:25px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+        .card h3{margin-top:0;color:#2c3e50;display:flex;justify-content:space-between;align-items:center;}
+        .card h3 a{font-size:13px;padding:6px 14px;background:#0f9d58;color:white;text-decoration:none;border-radius:4px;}
+        table{width:100%;border-collapse:collapse;margin-top:15px;}
+        th{background:#f1f8f4;color:#2c3e50;padding:12px;text-align:left;font-size:13px;border-bottom:2px solid #0f9d58;}
+        td{padding:12px;border-bottom:1px solid #eee;font-size:13px;}
+        tr:hover{background:#fafafa;}
+        .file-icon{font-size:20px;margin-right:8px;}
+        .empty{text-align:center;padding:40px;color:#999;}
+        .btn-op{padding:4px 10px;margin:0 2px;border:none;border-radius:4px;cursor:pointer;font-size:12px;text-decoration:none;display:inline-block;}
+        .btn-dl{background:#3498db;color:#fff;}
+        .btn-dl:hover{background:#2980b9;}
+        .btn-del{background:#e74c3c;color:#fff;}
+        .btn-del:hover{background:#c0392b;}
+        .tip{margin-top:20px;padding:12px;background:#e8f5e9;border-left:4px solid #4caf50;border-radius:4px;font-size:13px;color:#2e7d32;}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>📝 在线作业提交系统</h2>
+    <span>👤 ${loginUser}</span>
+    <a href="upload.jsp">📤 上传新作业</a>
+    <a href="logout">退出</a>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h3>
+            <span>📄 已提交作业列表（共 ${fileList.size()} 份）</span>
+            <a href="upload.jsp">+ 上传新作业</a>
+        </h3>
+
+        <%
+            List<FileMeta> list = (List<FileMeta>) request.getAttribute("fileList");
+            if (list == null || list.isEmpty()) {
+        %>
+        <div class="empty">
+            <p style="font-size:40px;">📭</p>
+            <p>暂无作业记录，请先提交你的第一份作业</p>
+        </div>
+        <% } else { %>
+        <table>
+            <tr>
+                <th style="width:5%;">#</th>
+                <th style="width:35%;">文件名</th>
+                <th style="width:10%;">大小</th>
+                <th style="width:20%;">上传时间</th>
+                <th style="width:15%;">上传者</th>
+                <th style="width:15%;text-align:center;">操作</th>
+            </tr>
+            <% for (int i = 0; i < list.size(); i++) {
+                FileMeta f = list.get(i);
+                String ext = f.getOriginalName().contains(".") ?
+                    f.getOriginalName().substring(f.getOriginalName().lastIndexOf('.')+1).toLowerCase() : "";
+                String icon = "📄";
+                if ("jpg".equals(ext)||"png".equals(ext)||"gif".equals(ext)) icon = "🖼️";
+                else if ("pdf".equals(ext)) icon = "📕";
+                else if ("doc".equals(ext)||"docx".equals(ext)) icon = "📘";
+                else if ("xls".equals(ext)||"xlsx".equals(ext)) icon = "📗";
+                else if ("ppt".equals(ext)||"pptx".equals(ext)) icon = "📙";
+                else if ("zip".equals(ext)||"rar".equals(ext)) icon = "🗜️";
+                else if ("java".equals(ext)) icon = "☕";
+            %>
+            <tr>
+                <td><%= i+1 %></td>
+                <td><span class="file-icon"><%= icon %></span><%= f.getOriginalName() %></td>
+                <td><%= f.getSizeText() %></td>
+                <td><%= f.getUploadTime() %></td>
+                <td><%= f.getUploader() %></td>
+                <td style="text-align:center;">
+                    <a class="btn-op btn-dl" href="download?id=<%= f.getId() %>">⬇ 下载</a>
+                    <a class="btn-op btn-del" href="delete?id=<%= f.getId() %>" onclick="return confirm('确认删除该作业？')">🗑 删除</a>
+                </td>
+            </tr>
+            <% } %>
+        </table>
+        <% } %>
+
+        <div class="tip">
+            💡 所有作业文件保存在服务器 WEB-INF/upload 目录，无法通过浏览器直接访问URL下载，必须通过下载接口读取流输出（更安全，避免文件盗链）。
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+</script>
+
+<script type="text/plain" id="src-download-servlet">
+package com.example.homework;
+
+import com.example.homework.entity.FileMeta;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+// ServletOutputStream：响应字节输出流，用于把文件二进制内容写给客户端
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
+// URLEncoder：对中文文件名做URL编码，否则Content-Disposition头中中文乱码
+import java.util.List;
+
+/**
+ * 文件下载Servlet：根据文件ID读取文件，通过响应流写回客户端
+ * URL: /download?id=xxx
+ */
+@WebServlet("/download")
+public class DownloadServlet extends HttpServlet {
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        // 文件下载一律用GET（浏览器直接点链接/地址栏访问）
+
+        String id = req.getParameter("id");
+        // 根据ID查文件（不是直接用文件名！防止路径遍历攻击，用户传入../xxx可跳目录下载任意文件）
+
+        List<FileMeta> fileList = (List<FileMeta>) getServletContext().getAttribute("fileList");
+        FileMeta target = null;
+        if (fileList != null) {
+            for (FileMeta meta : fileList) {
+                if (meta.getId().equals(id)) {
+                    target = meta;
+                    break;
+                }
+            }
+        }
+
+        if (target == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "文件不存在或已被删除");
+            return;
+        }
+
+        File file = new File(target.getSavePath());
+        if (!file.exists() || !file.isFile()) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "文件已从服务器删除");
+            return;
+        }
+
+        // ======== 知识点：设置响应头告诉浏览器这是文件下载 ========
+        // 知识点：Content-Type 响应头设置
+        resp.setContentType(target.getContentType() != null ? target.getContentType() : "application/octet-stream");
+        // application/octet-stream：通用二进制流，浏览器不知道是什么类型就会弹出下载框
+        // 如果是image/png浏览器可能直接显示，想强制下载用application/octet-stream
+
+        // 知识点：Content-Disposition 响应头（最关键）
+        // attachment;filename=xxx：告诉浏览器以附件方式下载，并指定下载对话框的文件名
+        String encodedName = URLEncoder.encode(target.getOriginalName(), "UTF-8").replace("+", "%20");
+        // URLEncoder.encode：对中文文件名URL编码；空格替换为%20（RFC规范）
+        resp.setHeader("Content-Disposition",
+                "attachment; filename=\"" + encodedName + "\"; filename*=UTF-8''" + encodedName);
+        // filename 用于兼容老浏览器；filename*=UTF-8'' 是RFC 5987标准，支持非ASCII文件名（现代浏览器优先）
+
+        // 知识点：Content-Length 响应头告诉浏览器文件大小（便于显示下载进度）
+        resp.setContentLengthLong(file.length());
+
+        // ======== 以流方式把文件内容写到响应体 ========
+        // 知识点：response.getOutputStream() 获取字节输出流（写二进制文件必须用字节流，不能用字符流getWriter）
+        try (FileInputStream fis = new FileInputStream(file);
+             ServletOutputStream os = resp.getOutputStream()) {
+            // try-with-resources：自动关闭流（Java 7+），无需手动finally close
+
+            byte[] buffer = new byte[8192];
+            // 8KB缓冲区：每次读8KB写8KB，避免一次读大文件内存溢出
+            int len;
+            while ((len = fis.read(buffer)) != -1) {
+                os.write(buffer, 0, len);
+                // read(buffer)：读最多buffer.length字节到buffer，返回实际读取字节数；-1表示读完
+                // write(buffer, 0, len)：写入实际读取的len字节（最后一次可能不足8KB）
+            }
+            os.flush();
+            // flush：把缓冲区内容强制刷给客户端
+        }
+        // try-with-resources自动关闭fis和os，无需手动close
+
+        // 注意：文件下载后不要再调用 forward/sendRedirect，响应已经写回
+    }
+}
+</script>
+
+<script type="text/plain" id="src-delete-servlet">
+package com.example.homework;
+
+import com.example.homework.entity.FileMeta;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * 删除文件Servlet：根据id删除服务器文件和列表记录
+ * URL: /delete?id=xxx
+ */
+@WebServlet("/delete")
+public class DeleteServlet extends HttpServlet {
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String id = req.getParameter("id");
+
+        List<FileMeta> fileList = (List<FileMeta>) getServletContext().getAttribute("fileList");
+        if (fileList != null) {
+            Iterator<FileMeta> it = fileList.iterator();
+            while (it.hasNext()) {
+                FileMeta meta = it.next();
+                if (meta.getId().equals(id)) {
+                    // 删除服务器物理文件
+                    File file = new File(meta.getSavePath());
+                    if (file.exists()) file.delete();
+                    // 从列表中移除记录
+                    it.remove();
+                    break;
+                }
+            }
+        }
+        // 删除后重定向回列表
+        resp.sendRedirect(req.getContextPath() + "/list");
+    }
+}
+</script>
+
+<!-- ============ 知识点模板 ============ -->
+<script type="text/html" id="kp-chain-dofilter">
+<script type="text/html" id="kp-chain-dofilter">
+<div class="kp-def"><b>FilterChain.doFilter(ServletRequest req, ServletResponse resp)</b> 是过滤器链的<b>放行指令</b>，作用是把请求交给<b>链上的下一个过滤器</b>，所有过滤器都放行后最终到达目标Servlet。它是Filter机制里最核心的一行代码。</div>
+
+<h4 style="margin:12px 0 8px;">过滤器链执行顺序</h4>
+<table>
+<tr><th>执行顺序</th><th>触发位置</th><th>典型用途</th></tr>
+<tr><td>① 过滤器1 前置</td><td>chain.doFilter 之前</td><td>编码设置、日志开始时间</td></tr>
+<tr><td>② 过滤器2 前置</td><td>chain.doFilter 之前</td><td>登录校验、权限判断</td></tr>
+<tr><td>③ ……</td><td>……</td><td>……</td></tr>
+<tr><td>④ Servlet 执行</td><td>最后一个Filter的chain.doFilter</td><td>业务逻辑</td></tr>
+<tr><td>⑤ 过滤器2 后置</td><td>chain.doFilter 之后</td><td>响应压缩、日志记耗时</td></tr>
+<tr><td>⑥ 过滤器1 后置</td><td>chain.doFilter 之后</td><td>全局响应头处理</td></tr>
+</table>
+
+<h4 style="margin:14px 0 8px;">🔑 要点</h4>
+<ul>
+  <li><b>"放行"不等于返回</b>：chain.doFilter 是<b>方法调用</b>不是 return，调用后会"进入下一层"，等下层全部执行完后<b>再回到本行继续执行下面的代码</b>——这就是后置处理能工作的原因；</li>
+  <li><b>参数必须传 req 和 resp</b>（传原对象，不能 new 新对象，除非使用包装器模式做 XSS/SQL 注入过滤）；</li>
+  <li>如果前置处理中已经发现不合法（未登录、IP被封），<b>不要调用 chain.doFilter</b>，直接用 response.sendRedirect 或写错误信息返回即可——这是"拦截"的本质。</li>
+</ul>
+
+<h4 style="margin:14px 0 8px;">💡 记录请求耗时的经典写法（前后都用）</h4>
+<pre class="code"><code>public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
+        throws IOException, ServletException {
+    long start = System.currentTimeMillis();       // 前置
+    try {
+        chain.doFilter(req, resp);                 // 放行
+    } finally {
+        long cost = System.currentTimeMillis() - start; // 后置（即使异常也要记）
+        System.out.println("请求耗时：" + cost + "ms");
+    }
+}</code></pre>
+
+<div class="kp-warn"><b>⚠️ 易错点：</b>
+<ul style="margin:4px 0 0 16px;">
+  <li><b>不放行 + 不写响应 = 白屏</b>：浏览器一直等服务器返回直到超时；</li>
+  <li>在 chain.doFilter 之后再用 response 做 forward/sendRedirect 会抛 <code>IllegalStateException: 响应已提交</code>；</li>
+  <li>chain.doFilter 后修改响应头可能无效（因为输出流已经写出），要加响应头必须写在前置。</li>
+</ul>
+</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-content-disposition">
+<script type="text/html" id="kp-content-disposition">
+<div class="kp-def"><b>Content-Disposition</b> 是HTTP响应头，告诉浏览器"把响应内容当作文件下载还是直接显示"，同时指定<b>下载时保存的文件名</b>。</div>
+<h4 style="margin:12px 0 8px;">两种形式</h4>
+<table>
+<tr><th>值</th><th>浏览器行为</th></tr>
+<tr><td><code>Content-Disposition: inline; filename="xxx.pdf"</code></td><td>尝试在浏览器内直接打开（图片/PDF）</td></tr>
+<tr><td><code>Content-Disposition: attachment; filename="xxx.pdf"</code></td><td>弹出下载框，另存为 xxx.pdf</td></tr>
+</table>
+<pre class="code"><code>// 下载标准写法（中文文件名必须URL编码，否则各浏览器乱码）
+String encName = URLEncoder.encode(fileName, "UTF-8").replace("+", "%20");
+response.setHeader("Content-Disposition",
+    "attachment; filename=\"" + encName + "\"; filename*=UTF-8''" + encName);
+// filename*=UTF-8'' 是 RFC 5987 标准写法，现代浏览器优先用它识别中文文件名</code></pre>
+<div class="kp-warn"><b>⚠️ 中文文件名必须编码：</b>URLEncoder.encode + 替换+为%20，并提供 filename* 双字段兼容IE/Chrome/Firefox。只写filename而不编码，下载下来的文件名会是乱码或下划线。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-content-type">
+<script type="text/html" id="kp-content-type">
+<div class="kp-def"><b>response.setContentType(String type)</b> 设置响应的<b>MIME类型</b>，告诉浏览器"我返回的是什么类型的数据"。文件下载场景必须设置正确的MIME，否则浏览器可能把文件当网页/图片直接打开，或显示乱码。</div>
+<h4 style="margin:12px 0 8px;">常见MIME类型</h4>
+<table>
+<tr><th>文件类型</th><th>MIME字符串</th></tr>
+<tr><td>HTML网页</td><td><code>text/html;charset=UTF-8</code></td></tr>
+<tr><td>普通文本</td><td><code>text/plain;charset=UTF-8</code></td></tr>
+<tr><td>JSON数据</td><td><code>application/json;charset=UTF-8</code></td></tr>
+<tr><td>PDF文件</td><td><code>application/pdf</code></td></tr>
+<tr><td>Word(.docx)</td><td><code>application/vnd.openxmlformats-officedocument.wordprocessingml.document</code></td></tr>
+<tr><td>图片JPG</td><td><code>image/jpeg</code></td></tr>
+<tr><td>二进制/未知类型</td><td><code>application/octet-stream</code>（下载的通用选择）</td></tr>
+</table>
+<pre class="code"><code>// 下载时的万能设置：告诉浏览器这是二进制流，下载而不是打开
+response.setContentType("application/octet-stream;charset=UTF-8");
+// 让Tomcat根据扩展名自动识别MIME
+String mime = getServletContext().getMimeType(fileName);
+if (mime == null) mime = "application/octet-stream";
+response.setContentType(mime);</code></pre>
+<div class="kp-warn"><b>⚠️ ContentType 必须在 getOutputStream()/getWriter() 之前调用</b>，否则设置无效（响应已提交）。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-doget">
+<script type="text/html" id="kp-doget">
+<div class="kp-def"><b>doGet</b> 在文件上传下载场景中用于：<b>文件列表展示、文件下载、删除</b>（删除建议用POST，但教学中GET更简单）。文件上传下载项目中 doGet 的职责是"读操作"，doPost 的职责是"写操作"，二者分离符合 RESTful 设计思想。</div>
+<h4 style="margin:12px 0 8px;">本项目中 doGet / doPost 分工</h4>
+<table>
+<tr><th>Servlet</th><th>doGet</th><th>doPost</th></tr>
+<tr><td>LoginServlet</td><td>显示登录表单页（forward到login.jsp）</td><td>处理登录校验</td></tr>
+<tr><td>UploadServlet</td><td>显示上传表单页（forward到upload.jsp）</td><td>处理文件上传</td></tr>
+<tr><td>ListServlet</td><td>查询文件列表并展示</td><td>—（不用）</td></tr>
+<tr><td>DownloadServlet</td><td>处理文件下载（写二进制流）</td><td>—（不用）</td></tr>
+<tr><td>DeleteServlet</td><td>删除文件（教学简化）</td><td>—（生产建议用POST）</td></tr>
+</table>
+<pre class="code"><code>// 下载用GET（链接直接点）
+@WebServlet("/download")
+public class DownloadServlet extends HttpServlet {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) ... {
+        String fileName = req.getParameter("fileName");
+        // 校验session → 构造路径 → 写流输出
+    }
+}
+// 列表展示用GET
+@WebServlet("/list")
+public class ListServlet extends HttpServlet {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) ... {
+        List&lt;FileMeta&gt; files = listUserFiles(currentUser);
+        req.setAttribute("files", files);
+        req.getRequestDispatcher("/list.jsp").forward(req, resp);
+    }
+}</code></pre>
+<div class="kp-warn"><b>⚠️ 删除操作虽然GET简单，但生产环境建议用POST+CSRF Token</b>：防止GET被浏览器预加载、被搜索引擎爬虫误删、被跨站请求伪造。教学场景为简化用GET，但讲课时一定要说明这个安全风险。另外 doGet 里不能调用 getPart()，只有 doPost + multipart/form-data 才能解析上传文件。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-dopost">
+<script type="text/html" id="kp-dopost">
+<div class="kp-def"><b>doPost</b>是处理POST请求的方法，文件上传<b>必须用POST</b>（GET有长度限制、也不支持multipart/form-data编码）。上传表单提交后进入该方法，通过 request.getPart() 获取文件项。</div>
+<h4 style="margin:12px 0 8px;">POST 三种Content-Type</h4>
+<table>
+<tr><th>Content-Type</th><th>用途</th><th>取参方式</th></tr>
+<tr><td><code>application/x-www-form-urlencoded</code></td><td>普通表单（默认）</td><td>getParameter 取字符串</td></tr>
+<tr><td><code>multipart/form-data</code></td><td>文件上传（必须）</td><td>getPart / getParts 取 Part</td></tr>
+<tr><td><code>application/json</code></td><td>AJAX发JSON</td><td>request.getReader() 读流再解析</td></tr>
+</table>
+<ul>
+  <li>表单必须写 <code>enctype="multipart/form-data"</code> 才能上传文件，否则getPart()取不到；</li>
+  <li>同时存在普通字段和文件字段：普通字段仍用 getParameter()，文件字段用 getPart()。</li>
+</ul>
+<pre class="code"><code>@Override
+protected void doPost(HttpServletRequest req, HttpServletResponse resp) ... {
+    req.setCharacterEncoding("UTF-8");  // 必须先设编码
+    Part filePart = req.getPart("file"); // multipart字段用getPart
+    String desc   = req.getParameter("desc"); // 普通字段仍用getParameter
+    // 处理文件保存...
+}</code></pre>
+<div class="kp-warn"><b>⚠️ 为什么不能用GET上传？</b>GET参数在URL中，浏览器+服务器对URL长度有限制（通常2~8KB），大文件传不了；且URL会被日志记录、历史记录、Referer泄露，不安全。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-file-delete">
+<script type="text/html" id="kp-file-delete">
+<div class="kp-def"><b>File.delete() / Files.deleteIfExists()</b> 用于删除服务器上的文件。文件管理功能（删除作业）必须做<b>权限双重校验</b>：用户只能删自己上传的文件，不能删别人的。</div>
+<h4 style="margin:12px 0 8px;">删除安全要点</h4>
+<table>
+<tr><th>风险</th><th>说明</th><th>防御</th></tr>
+<tr><td>路径穿越</td><td>传 <code>fileName=../../etc/passwd</code> 删系统文件</td><td>只取文件名部分，禁止..、/，并校验文件在预期目录内</td></tr>
+<tr><td>越权删除</td><td>改URL参数删别人的作业</td><td>用session取用户名，拼用户子目录后再判断file.exists()</td></tr>
+<tr><td>误删</td><td>GET请求被浏览器预加载/爬虫误删</td><td>删除用POST提交（或加二次确认）</td></tr>
+</table>
+<pre class="code"><code>String author = (String) request.getSession().getAttribute("loginUser");
+String fileName = request.getParameter("fileName");
+// 安全构造路径
+File userDir = new File(uploadRoot, author);
+File target  = new File(userDir, fileName).getCanonicalFile();
+// 关键校验：文件必须在 userDir 内（防路径穿越）
+if (!target.getPath().startsWith(userDir.getCanonicalPath())) {
+    response.sendError(403, "非法路径"); return;
+}
+if (target.exists() && target.isFile()) {
+    target.delete();
+}
+response.sendRedirect(request.getContextPath() + "/list");</code></pre>
+<div class="kp-warn"><b>⚠️ 关键校验：</b><code>target.getPath().startsWith(userDir.getCanonicalPath())</code> 这一行是<b>防止路径穿越的核心</b>，必须用 <code>getCanonicalFile()</code> 解析完所有 <code>../</code> 后再校验，只看文件名不够（用户可能传 <code>%2e%2e/admin/secret.doc</code> 绕过简单判断）。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-file-list">
+<script type="text/html" id="kp-file-list">
+<div class="kp-def"><b>File.listFiles()</b> 遍历用户子目录下所有文件，把每个文件包装成FileMeta对象存入List，传给JSP用<code>&lt;c:forEach&gt;</code>展示文件列表。Java NIO的 <code>Files.list()</code> 是更现代的流式API，但教学用经典File类更直观。</div>
+<h4 style="margin:12px 0 8px;">文件遍历常用方法</h4>
+<table>
+<tr><th>方法</th><th>返回值</th><th>说明</th></tr>
+<tr><td><code>file.list()</code></td><td>String[]</td><td>返回子文件/目录名字符串数组</td></tr>
+<tr><td><code>file.listFiles()</code></td><td>File[]</td><td>返回子文件/目录File对象数组（最常用）</td></tr>
+<tr><td><code>file.listFiles(filter)</code></td><td>File[]</td><td>带FilenameFilter/FileFilter过滤</td></tr>
+<tr><td><code>Files.list(path)</code>（NIO.2）</td><td>Stream&lt;Path&gt;</td><td>JDK 8+流式API，支持filter/map/sort</td></tr>
+</table>
+<pre class="code"><code>// 列出当前用户所有文件（教学经典写法）
+File userDir = new File(uploadRoot, author);
+if (!userDir.exists()) userDir.mkdirs();
+List&lt;FileMeta&gt; files = new ArrayList&lt;&gt;();
+File[] fsArr = userDir.listFiles();
+if (fsArr != null) {            // ⚠️ 目录不存在返回null，必须判断
+    for (File f : fsArr) {
+        if (f.isFile()) {       // 只取文件，排除子目录
+            FileMeta meta = new FileMeta();
+            meta.setName(f.getName());
+            meta.setSize(f.length());
+            meta.setUploadTime(new Date(f.lastModified()));
+            files.add(meta);
+        }
+    }
+}
+// 按上传时间倒序（最新的在前）
+files.sort((a,b) -&gt; Long.compare(b.getUploadTime().getTime(),
+                                  a.getUploadTime().getTime()));
+req.setAttribute("files", files);
+req.getRequestDispatcher("/list.jsp").forward(req, resp);</code></pre>
+<div class="kp-warn"><b>⚠️ listFiles() 的null问题：</b>目录不存在、路径是文件、无读权限时返回 <b>null</b>（不是空数组！），直接for循环会抛 NullPointerException，必须先判断。这是File API的经典坑。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-file-meta">
+<script type="text/html" id="kp-file-meta">
+<div class="kp-def"><b>FileMeta</b> 是封装<b>文件元信息</b>的Java实体类（POJO/DTO），把文件名、大小、上传时间、上传者等属性封装成一个对象，方便传值到JSP展示（比传一堆零散Map更规范）。</div>
+<h4 style="margin:12px 0 8px;">典型字段</h4>
+<table>
+<tr><th>字段</th><th>类型</th><th>说明</th></tr>
+<tr><td>name</td><td>String</td><td>保存后的UUID文件名（服务器上真实名字）</td></tr>
+<tr><td>originalName</td><td>String</td><td>原始文件名（用户看到的）</td></tr>
+<tr><td>size</td><td>long</td><td>文件字节数</td></tr>
+<tr><td>uploadTime</td><td>LocalDateTime</td><td>上传时间</td></tr>
+<tr><td>author</td><td>String</td><td>上传者用户名</td></tr>
+<tr><td>contentType</td><td>String</td><td>MIME类型</td></tr>
+</table>
+<pre class="code"><code>public class FileMeta implements Serializable {
+    private String name;
+    private String originalName;
+    private long size;
+    private LocalDateTime uploadTime;
+    private String author;
+    private String contentType;
+    // getter/setter ...
+    // 显示用辅助方法
+    public String getFormattedSize() {
+        if (size &lt; 1024) return size + " B";
+        if (size &lt; 1024*1024) return String.format("%.1f KB", size/1024.0);
+        return String.format("%.1f MB", size/1024.0/1024.0);
+    }
+}</code></pre>
+<div class="kp-warn"><b>💡 小技巧：</b>FileMeta务必实现 <code>Serializable</code> 接口，这样以后文件列表需要存到session或分布式缓存（Redis）时不会报 NotSerializableException。<code>getFormattedSize()</code> 这种辅助方法让JSP不用写格式化代码，直接 <code>${file.formattedSize}</code> 调用。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-file-upload-security">
+<script type="text/html" id="kp-file-upload-security">
+<div class="kp-def"><b>文件上传安全校验</b> 是企业开发必须做的防护。初学者最容易忽略——"让用户能上传任何文件"意味着服务器可以被上传jsp木马，直接getshell入侵。</div>
+<h4 style="margin:12px 0 8px;">必须做的5项校验</h4>
+<table>
+<tr><th>校验项</th><th>危险</th><th>解决方式</th></tr>
+<tr><td>文件类型白名单</td><td>上传.jsp/.war/.exe木马入侵</td><td>只允许 docx/pdf/png/jpg/zip/ppt 等安全扩展名，放在Set里判断</td></tr>
+<tr><td>文件大小上限</td><td>传超大文件占满磁盘</td><td>@MultipartConfig.maxFileSize + 判断part.getSize()</td></tr>
+<tr><td>文件名特殊字符</td><td>路径穿越 <code>../../etc/passwd</code></td><td>用UUID重命名，去掉..、/、\\、空格</td></tr>
+<tr><td>存放目录在WEB-INF外且不被执行</td><td>上传jsp直接被Tomcat执行</td><td>存在服务器本地磁盘（如 /data/upload），或在web.xml配置该目录为静态资源不解析</td></tr>
+<tr><td>用户权限隔离</td><td>上传到别人目录</td><td>按session用户名建子目录，目录名从session取（不能从参数取）</td></tr>
+</table>
+<pre class="code"><code>// 类型白名单校验
+Set&lt;String&gt; allowExt = new HashSet&lt;&gt;(Arrays.asList(
+    ".docx",".doc",".pdf",".zip",".rar",".ppt",".pptx",".txt",
+    ".png",".jpg",".jpeg",".gif",".mp4"));
+String ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+if (!allowExt.contains(ext)) {
+    request.setAttribute("msg", "不允许上传此类型文件：" + ext);
+    request.getRequestDispatcher("/upload.jsp").forward(request, response);
+    return;
+}
+if (part.getSize() > 10 * 1024 * 1024) {
+    request.setAttribute("msg", "文件不能超过10MB");
+    return;
+}</code></pre>
+<div class="kp-warn"><b>⚠️ 安全红线：</b>绝对不要用前端JS做校验就够了（前端可被绕过）；<b>服务端白名单校验是最后一道防线、必须做</b>。另外文件名不要直接用用户上传的原始文件名，要用UUID重命名后再保存，防止路径穿越攻击。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-filter">
+<script type="text/html" id="kp-filter">
+<div class="kp-def"><b>jakarta.servlet.Filter</b> 是过滤器的核心接口，用于在<b>请求到达Servlet之前、响应返回浏览器之前</b>做统一的预处理/后处理。典型用途：统一编码、登录校验、日志记录、敏感词过滤、跨域处理、XSS过滤、权限校验、压缩响应等"横切关注点"。</div>
+
+<h4 style="margin:12px 0 8px;">Filter 三个生命周期方法</h4>
+<table>
+<tr><th>方法</th><th>调用时机</th><th>常用操作</th></tr>
+<tr><td><code>init(FilterConfig config)</code></td><td>项目启动、过滤器被创建时调用<b>一次</b></td><td>读取初始化参数、初始化资源（连接池、线程池等）</td></tr>
+<tr><td><code>doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)</code></td><td><b>每次请求匹配路径都会调用</b>，核心方法</td><td>前置处理 → chain.doFilter放行 → 后置处理</td></tr>
+<tr><td><code>destroy()</code></td><td>项目关闭/过滤器被销毁时调用一次</td><td>释放资源（关流、关连接）</td></tr>
+</table>
+
+<h4 style="margin:14px 0 8px;">🔑 工作流程图解</h4>
+<pre class="code"><code>浏览器 → [过滤器1前置] → [过滤器2前置] → [Servlet处理业务]
+         [过滤器1后置] ← [过滤器2后置] ← 返回响应</code></pre>
+<ul>
+  <li><b>chain.doFilter(req,resp) 是"放行"</b>：调用它才会继续执行下一个过滤器 → 最终到Servlet；不调用 = 请求被拦截，直接返回（典型场景：未登录跳到登录页）；</li>
+  <li><b>doFilter 前后都可以写代码</b>：前面是"请求预处理"，chain.doFilter 之后是"响应后处理"，此时Servlet已经执行完，可以拿到响应数据做加工；</li>
+  <li>ServletRequest/ServletResponse 是<b>通用协议无关</b>的父接口，实际HTTP场景必须强转成 <code>HttpServletRequest</code>/<code>HttpServletResponse</code> 才能用 getSession、getHeader 等方法。</li>
+</ul>
+
+<h4 style="margin:14px 0 8px;">💡 最简骨架</h4>
+<pre class="code"><code>@WebFilter("/*")
+public class XxxFilter implements Filter {
+    public void init(FilterConfig config) {}
+    public void doFilter(ServletRequest req, ServletResponse resp,
+                         FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest  request  = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) resp;
+        // ① 前置处理
+        chain.doFilter(req, resp);   // ② 放行
+        // ③ 后置处理
+    }
+    public void destroy() {}
+}</code></pre>
+
+<div class="kp-warn"><b>⚠️ 经典错误：</b>
+<ul style="margin:4px 0 0 16px;">
+  <li>忘记调用 <code>chain.doFilter()</code>：请求被"卡住"，浏览器一直白屏转圈；</li>
+  <li>不放行也不写response响应：浏览器等到超时；</li>
+  <li>doFilter里直接用 request.getSession() —— 没强转！必须先 <code>(HttpServletRequest)request</code>。</li>
+</ul>
+</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-forward">
+<script type="text/html" id="kp-forward">
+<div class="kp-def"><b>forward</b> 转发用于上传/登录失败需要回显错误信息时，把带着错误提示的request转给JSP展示。转发后地址栏不变（还停留在/upload），但显示的是upload.jsp页面。</div>
+<h4 style="margin:12px 0 8px;">上传流程中的跳转选择</h4>
+<table>
+<tr><th>场景</th><th>跳转方式</th><th>原因</th></tr>
+<tr><td>登录成功</td><td>sendRedirect("/upload")</td><td>写操作→PRG</td></tr>
+<tr><td>登录失败</td><td>forward("/login.jsp")</td><td>需要回显errorMsg</td></tr>
+<tr><td>上传成功</td><td>sendRedirect("/list")</td><td>写操作→PRG防重复上传</td></tr>
+<tr><td>上传失败（类型/大小）</td><td>forward("/upload.jsp")</td><td>需要回显msg错误信息</td></tr>
+<tr><td>列表查询</td><td>forward("/list.jsp")</td><td>读操作+传files数据</td></tr>
+<tr><td>删除成功</td><td>sendRedirect("/list")</td><td>写操作→PRG</td></tr>
+</table>
+<pre class="code"><code>// 上传失败：存错误信息到request域，转发回表单页
+if (extNotAllowed) {
+    request.setAttribute("msg", "不允许上传此文件类型：" + ext);
+    request.getRequestDispatcher("/upload.jsp").forward(request, response);
+    return;
+}
+// upload.jsp 里显示错误：
+// &lt;c:if test="\${not empty msg}"&gt;&lt;div class="err">\${msg}&lt;/div&gt;&lt;/c:if&gt;</code></pre>
+<div class="kp-warn"><b>⚠️ 注意forward路径：</b>路径以 <code>/</code> 开头代表项目根，不用加项目名。forward()后务必 <code>return</code>，否则后续代码还会执行。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-getparam">
+<script type="text/html" id="kp-getparam">
+<div class="kp-def"><b>request.getParameter(String name)</b> 在multipart/form-data场景下也能获取<b>普通文本字段</b>（type=text/hidden/radio的字段），用法与普通表单一致。</div>
+<h4 style="margin:12px 0 8px;">上传表单的参数分类</h4>
+<table>
+<tr><th>字段类型</th><th>HTML写法</th><th>服务端获取</th></tr>
+<tr><td>文本描述</td><td><code>&lt;input type="text" name="desc"&gt;</code></td><td><code>request.getParameter("desc")</code></td></tr>
+<tr><td>提交人</td><td><code>&lt;input type="hidden" name="author" value="\${loginUser}"&gt;</code></td><td><code>getParameter("author")</code></td></tr>
+<tr><td>文件</td><td><code>&lt;input type="file" name="file"&gt;</code></td><td><code>request.getPart("file")</code>（Part对象）</td></tr>
+</table>
+<pre class="code"><code>req.setCharacterEncoding("UTF-8");
+String desc = req.getParameter("desc");  // 普通文本字段
+Part file = req.getPart("file");         // 文件字段（Part对象）
+if (desc != null && !desc.trim().isEmpty()) { ... }</code></pre>
+<div class="kp-warn"><b>⚠️ 安全提示：</b>上传者用户名<b>不要从表单参数取</b>，必须从 <code>session.getAttribute("loginUser")</code> 取。否则用户用F12改表单就能冒充别人上传。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-getpart">
+<script type="text/html" id="kp-getpart">
+<div class="kp-def"><b>request.getPart(String name)</b> 是 Servlet 3.0 原生上传API的核心方法，根据文件域name属性获取<b>单个Part对象</b>（代表一个上传文件）。多文件上传用 <code>getParts()</code> 获取全部。</div>
+<h4 style="margin:12px 0 8px;">Part 接口常用方法</h4>
+<table>
+<tr><th>方法</th><th>返回值</th><th>用途</th></tr>
+<tr><td><code>getSubmittedFileName()</code></td><td>String</td><td>获取上传时的<b>原始文件名</b>（含扩展名，如"作业.docx"）</td></tr>
+<tr><td><code>getContentType()</code></td><td>String</td><td>获取文件MIME类型（如application/pdf）</td></tr>
+<tr><td><code>getSize()</code></td><td>long</td><td>获取文件大小（字节）</td></tr>
+<tr><td><code>getInputStream()</code></td><td>InputStream</td><td>获取文件内容输入流（手动存盘用）</td></tr>
+<tr><td><code>write(String fileName)</code></td><td>void</td><td>便捷方法：直接把文件写入@MultipartConfig.location或相对路径</td></tr>
+<tr><td><code>delete()</code></td><td>void</td><td>删除临时文件（一般不用手动调，容器自动清理）</td></tr>
+<tr><td><code>getHeader(String name)</code></td><td>String</td><td>获取上传头信息（取文件名兼容用）</td></tr>
+</table>
+<pre class="code"><code>Part filePart = request.getPart("file");   // &lt;input type="file" name="file"&gt;
+String fileName = filePart.getSubmittedFileName(); // 原文件名
+long size       = filePart.getSize();              // 大小
+String mime     = filePart.getContentType();       // 类型
+// 保存到服务器
+filePart.write(savePath + File.separator + fileName);</code></pre>
+<div class="kp-warn"><b>⚠️ 浏览器兼容：</b>IE浏览器getSubmittedFileName()会返回完整路径 <code>"C:\Users\xxx\作业.docx"</code>，必须做切割：<code>fileName = fileName.substring(fileName.lastIndexOf("\\")+1);</code></div>
+</script>
+</script>
+
+<script type="text/html" id="kp-multipart-config">
+<script type="text/html" id="kp-multipart-config">
+<div class="kp-def"><b>@MultipartConfig</b> 是Servlet 3.0+提供的<b>文件上传配置注解</b>，标注在Servlet类上才能开启multipart解析能力。不写的话容器不会解析上传流，request.getPart() 返回 null。</div>
+<h4 style="margin:12px 0 8px;">4个核心属性</h4>
+<table>
+<tr><th>属性</th><th>类型</th><th>说明</th><th>推荐值（教学）</th></tr>
+<tr><td><code>maxFileSize</code></td><td>long</td><td><b>单个文件</b>最大字节数，超过抛IllegalStateException（容器返回500）</td><td>10*1024*1024（10MB）</td></tr>
+<tr><td><code>maxRequestSize</code></td><td>long</td><td><b>整个请求</b>最大字节数（所有文件+普通字段总和）</td><td>20*1024*1024（20MB）</td></tr>
+<tr><td><code>fileSizeThreshold</code></td><td>int</td><td>文件大小阈值，超过就写入临时目录（内存→磁盘）</td><td>1024*1024（1MB）</td></tr>
+<tr><td><code>location</code></td><td>String</td><td>临时文件存放目录（一般用容器默认）</td><td>""（默认）</td></tr>
+</table>
+<pre class="code"><code>@WebServlet("/upload")
+@MultipartConfig(
+    maxFileSize = 10 * 1024 * 1024,      // 单文件10MB
+    maxRequestSize = 20 * 1024 * 1024,   // 总请求20MB
+    fileSizeThreshold = 1024 * 1024      // 超过1MB写临时文件
+)
+public class UploadServlet extends HttpServlet { ... }</code></pre>
+<div class="kp-warn"><b>⚠️ 注意单位是字节</b>！很多新手写成 maxFileSize=10 以为是10MB，其实是10字节直接报错。计算方式：<code>MB数 * 1024 * 1024</code>。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-output-stream">
+<script type="text/html" id="kp-output-stream">
+<div class="kp-def"><b>response.getOutputStream()</b> 获取<b>二进制输出流</b>（ServletOutputStream），用于向浏览器输出字节数据（文件下载、图片、视频、PDF）。与之对应，输出文本用 <code>getWriter()</code>，二者<b>不能同时调用</b>。</div>
+<h4 style="margin:12px 0 8px;">getOutputStream vs getWriter 对比</h4>
+<table>
+<tr><th>方法</th><th>返回类型</th><th>用途</th><th>自动编码</th></tr>
+<tr><td><code>getOutputStream()</code></td><td>ServletOutputStream</td><td>输出二进制（文件、图片、视频）</td><td>❌ 原样输出字节</td></tr>
+<tr><td><code>getWriter()</code></td><td>PrintWriter</td><td>输出文本（HTML/JSON/字符串）</td><td>✅ 按response字符编码转</td></tr>
+</table>
+<h4 style="margin:14px 0 8px;">🔑 文件下载标准模板（必背）</h4>
+<pre class="code"><code>// ① 设置响应头（必须在getOutputStream之前）
+response.setContentType("application/octet-stream;charset=UTF-8");
+response.setHeader("Content-Disposition", "attachment; ...");
+response.setContentLengthLong(file.length()); // 进度条准确
+
+// ② try-with-resources 自动关流
+try (InputStream in = new FileInputStream(file);
+     OutputStream out = response.getOutputStream()) {
+    // ③ 缓冲区循环读写（经典IO模板）
+    byte[] buf = new byte[8192]; // 8KB
+    int len;
+    while ((len = in.read(buf)) != -1) { out.write(buf, 0, len); }
+    out.flush();
+}</code></pre>
+<ul>
+  <li><b>缓冲区8KB</b>是JDK BufferedInputStream默认值，平衡系统调用次数与内存占用；</li>
+  <li><b>try-with-resources</b>自动关闭流，避免资源泄漏（JDK 7+特性）；</li>
+  <li>手动 <code>out.close()</code> 可能与容器冲突，一般不调（try会自动关）。</li>
+</ul>
+<div class="kp-warn"><b>⚠️ 不能同时调用两个方法：</b>同一请求中调过getWriter()再getOutputStream()会抛 <code>IllegalStateException: getWriter() has already been called</code>，反之亦然。转发给的JSP里默认会用getWriter()，所以下载Servlet里不能forward到任何JSP。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-part-write">
+<script type="text/html" id="kp-part-write">
+<div class="kp-def"><b>part.write(String path)</b> 是 Part 接口提供的<b>快捷保存方法</b>，直接把上传文件写入磁盘。path可以是相对路径（相对于@MultipartConfig的location）或绝对路径。</div>
+<h4 style="margin:12px 0 8px;">write 方式 vs InputStream 手动复制</h4>
+<table>
+<tr><th>方式</th><th>优点</th><th>缺点</th></tr>
+<tr><td><code>part.write(绝对路径)</code></td><td>代码最简，一行搞定</td><td>不能做大小限制、进度监控、类型校验后再保存</td></tr>
+<tr><td><code>part.getInputStream() + Files.copy</code></td><td>灵活，可边读边校验、限流</td><td>代码多几行，要自己关流</td></tr>
+</table>
+<pre class="code"><code>// 方法1：write（推荐教学用，简洁）
+File saveFile = new File(userDir, saveName);
+part.write(saveFile.getAbsolutePath());
+
+// 方法2：InputStream手动复制（灵活）
+try (InputStream in = part.getInputStream();
+     OutputStream out = new FileOutputStream(saveFile)) {
+    byte[] buf = new byte[8192];
+    int len;
+    while ((len = in.read(buf)) != -1) { out.write(buf, 0, len); }
+}</code></pre>
+<div class="kp-warn"><b>⚠️ 路径必须是 File 对象的 getAbsolutePath()</b>，不要直接传字符串拼接的路径（Windows下\、Linux下/分隔符问题，用File.separator或File对象自动处理）。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-sendredirect">
+<script type="text/html" id="kp-sendredirect">
+<div class="kp-def"><b>response.sendRedirect</b> 重定向在文件上传/删除场景的规范用法：<b>上传/删除完成后必须重定向到列表页</b>（PRG模式），防止用户按F5刷新导致重复上传/删除。</div>
+<h4 style="margin:12px 0 8px;">PRG模式：Post-Redirect-Get</h4>
+<table>
+<tr><th>阶段</th><th>请求方式</th><th>处理内容</th></tr>
+<tr><td>用户提交表单</td><td>POST /upload</td><td>保存文件到服务器（写操作）</td></tr>
+<tr><td>服务器返回</td><td>302 Location:/list</td><td>告诉浏览器去访问/list</td></tr>
+<tr><td>浏览器自动跳转</td><td>GET /list</td><td>查询文件列表展示（读操作）</td></tr>
+</table>
+<pre class="code"><code>// 上传成功：PRG重定向到列表页
+response.sendRedirect(request.getContextPath() + "/list");
+return; // 必须return，后面代码不再执行</code></pre>
+<div class="kp-warn"><b>⚠️ 刷新后果：</b>如果上传后直接forward到list.jsp，用户按F5会重新提交POST请求 → 文件重复上传（出现多份UUID文件）。PRG后刷新只会刷新GET /list，幂等安全。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-servletcontext-file">
+<script type="text/html" id="kp-servletcontext-file">
+<div class="kp-def"><b>ServletContext</b> 在文件上传场景下承担<b>全局共享配置</b>的角色：保存上传根目录路径、MIME类型识别、getRealPath获取真实路径、存全局fileList（教学用）。</div>
+<h4 style="margin:12px 0 8px;">三大用途</h4>
+<table>
+<tr><th>方法</th><th>用途</th><th>调用方</th></tr>
+<tr><td><code>setAttribute/getAttribute("uploadPath")</code></td><td>存上传根目录路径（Listener启动时写）</td><td>所有文件Servlet读</td></tr>
+<tr><td><code>getMimeType(fileName)</code></td><td>根据文件名扩展名自动识别MIME类型</td><td>DownloadServlet设Content-Type</td></tr>
+<tr><td><code>getRealPath("/upload")</code></td><td>获取Web应用内upload目录真实磁盘路径</td><td>UploadDirInitListener创建目录</td></tr>
+</table>
+<pre class="code"><code>// 上传/下载/删除/列表 Servlet 都这么拿上传目录：
+String root = (String) getServletContext().getAttribute("uploadPath");
+File uploadRoot = new File(root);
+File userDir = new File(uploadRoot, author); // 当前用户的子目录
+
+// MIME类型自动识别（比手动if判断更全）
+String mime = getServletContext().getMimeType(fileName);
+if (mime == null) mime = "application/octet-stream"; // 未知类型用通用二进制</code></pre>
+<div class="kp-warn"><b>⚠️ getMimeType依据：</b>Tomcat 根据 <code>conf/web.xml</code> 里配置的MIME映射判断，比自己写if/else判断后缀更全面准确，企业开发推荐使用。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-session">
+<script type="text/html" id="kp-session">
+<div class="kp-def"><b>HttpSession</b> 在文件上传下载场景中用于<b>识别当前登录用户、记录用户私有目录</b>、防止越权下载/删除他人文件。这是比URL参数传递用户身份<b>安全一万倍</b>的做法。</div>
+<h4 style="margin:12px 0 8px;">Session在各环节的作用</h4>
+<table>
+<tr><th>环节</th><th>代码</th><th>作用</th></tr>
+<tr><td>登录</td><td><code>session.setAttribute("loginUser",username)</code></td><td>登录成功后保存用户名</td></tr>
+<tr><td>过滤器</td><td><code>session.getAttribute("loginUser")==null</code></td><td>未登录拦截</td></tr>
+<tr><td>上传</td><td><code>String author = (String)session.getAttribute("loginUser")</code></td><td>用session用户名建私有子目录</td></tr>
+<tr><td>列表</td><td><code>String author = (String)session.getAttribute("loginUser")</code></td><td>只列出当前用户的文件</td></tr>
+<tr><td>下载/删除</td><td>拼接 userDir = new File(uploadRoot, author)</td><td>双重校验防止越权</td></tr>
+</table>
+<pre class="code"><code>// 上传前拿到当前登录用户（不能从参数取！）
+String author = (String) request.getSession().getAttribute("loginUser");
+if (author == null) { // 双重保险（过滤器理论上已拦）
+    response.sendRedirect(request.getContextPath() + "/login.jsp");
+    return;
+}
+// 按用户名建子目录，每个用户独立
+File userDir = new File(uploadRoot, author);
+userDir.mkdirs(); // 递归创建</code></pre>
+<div class="kp-warn"><b>⚠️ 绝对不能从request.getParameter取用户名！</b>用户可以改URL或表单参数，冒充任何用户上传/下载/删除文件。所有敏感操作必须从session取身份。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-setattribute">
+<script type="text/html" id="kp-setattribute">
+<div class="kp-def"><b>setAttribute(String name, Object value)</b> 是<b>三大域对象（ServletContext/HttpSession/HttpServletRequest）共有的方法</b>，把一个Java对象以键值对形式存入域中，供后续转发/同会话/全局范围内使用。</div>
+
+<h4 style="margin:12px 0 8px;">三个域的 setAttribute 对比</h4>
+<table>
+<tr><th>域对象</th><th>作用范围</th><th>何时失效</th><th>典型场景</th></tr>
+<tr><td><code>request.setAttribute(k,v)</code></td><td>一次请求（forward有效，redirect失效）</td><td>响应返回</td><td>Servlet查完数据传给JSP展示（最常用）</td></tr>
+<tr><td><code>session.setAttribute(k,v)</code></td><td>一次会话（同浏览器的多次请求）</td><td>超时/invalidate</td><td>登录用户、购物车、验证码</td></tr>
+<tr><td><code>application.setAttribute(k,v)</code></td><td>整个应用（所有用户共享）</td><td>应用关闭</td><td>在线人数、全局配置</td></tr>
+</table>
+
+<h4 style="margin:14px 0 8px;">🔑 三个配套方法</h4>
+<ul>
+  <li><b>存</b>：<code>setAttribute("key", value)</code> —— key相同会覆盖（类似Map.put）；</li>
+  <li><b>取</b>：<code>getAttribute("key")</code> —— 返回 <code>Object</code>，必须强转；不存在返回 <code>null</code>；</li>
+  <li><b>删</b>：<code>removeAttribute("key")</code> —— 手动删除（不用等域销毁）。</li>
+</ul>
+
+<h4 style="margin:14px 0 8px;">💡 最小作用域原则（非常重要！）</h4>
+<pre class="code"><code>// ✅ 正确：Servlet→JSP传数据用request域（生命周期最短，内存及时释放）
+request.setAttribute("userList", userList);
+request.getRequestDispatcher("/userList.jsp").forward(request, response);
+
+// ❌ 错误：什么都往session里塞
+session.setAttribute("userList", userList); // 用户看完列表还占着内存！
+
+// ✅ 登录用户跨页面用session
+session.setAttribute("loginUser", user);
+
+// ✅ 全局共享用application（线程安全考虑）
+application.setAttribute("onlineCount", count);</code></pre>
+
+<div class="kp-warn"><b>⚠️ 常见错误：</b>
+<ul style="margin:4px 0 0 16px;">
+  <li><b>setAttribute 后重定向</b>：sendRedirect是新请求，request域丢失！要传数据必须用forward或session/拼接参数；</li>
+  <li><b>key 拼写不一致</b>：存的时候"userList"，取的时候"users"，返回null但不报错——建议用常量 <code>public static final String USER_LIST = "userList";</code>；</li>
+  <li>getAttribute返回Object忘记强转：编译不报错，运行 <code>ClassCastException</code>。</li>
+</ul>
+</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-submitted-filename">
+<script type="text/html" id="kp-submitted-filename">
+<div class="kp-def"><b>part.getSubmittedFileName()</b> 获取客户端上传的<b>原始文件名</b>（含扩展名），从Content-Disposition头的filename参数解析。是保存文件时确定扩展名、原始展示名的关键字段。</div>
+<h4 style="margin:12px 0 8px;">文件名处理的4个坑（必须全部处理）</h4>
+<table>
+<tr><th>坑</th><th>现象</th><th>解决代码</th></tr>
+<tr><td>IE返回完整路径</td><td><code>"C:\Users\xx\作业.docx"</code></td><td><code>fileName.substring(fileName.lastIndexOf("\\")+1)</code></td></tr>
+<tr><td>中文文件名乱码</td><td>变成ä½œä¸.docx</td><td><code>new String(fileName.getBytes("ISO-8859-1"),"UTF-8")</code></td></tr>
+<tr><td>同名文件覆盖</td><td>张三李四都叫"作业.docx"会互相覆盖</td><td>用UUID重命名保存，原名存在FileMeta里</td></tr>
+<tr><td>空文件</td><td>不选文件就提交，返回""或null</td><td><code>if(fileName==null||fileName.trim().isEmpty()) 提示</code></td></tr>
+</table>
+<pre class="code"><code>// 企业级文件名处理完整工具方法
+private String resolveFileName(Part part) {
+    String fileName = part.getSubmittedFileName();
+    if (fileName == null) return null;
+    int slash = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'));
+    if (slash > -1) fileName = fileName.substring(slash + 1);
+    try { fileName = new String(fileName.getBytes("ISO-8859-1"), "UTF-8"); }
+    catch (Exception ignore) {}
+    return fileName;
+}
+// 避免覆盖：UUID重命名（保留扩展名）
+String ext = fileName.substring(fileName.lastIndexOf('.'));
+String saveName = UUID.randomUUID().toString() + ext;</code></pre>
+<div class="kp-warn"><b>⚠️ 不能直接用原文件名保存！</b>除了覆盖问题，原文件名可能含有 <code>../</code>、特殊字符、空格，存在路径穿越风险。必须重命名。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-tag-page">
+<div class="kpcard-head"><span class="kptag">🏷️</span><span class="kpname">&lt;%@ page %&gt; 指令（JSP 页面声明）</span><span class="cat" style="background:#fce7f3;color:#bf3989;">标签/表达式</span></div>
+<div class="kpcard-body">
+  <div class="def">
+    <h4>📖 定义</h4>
+    <p><code class="hl">&lt;%@ page ... %&gt;</code> 是 JSP 的<b>页面指令</b>（page directive），用来告诉 JSP 引擎当前页面的 MIME 类型、字符编码、导入哪些 Java 类、是否启用会话等。它必须放在 JSP 文件<b>最顶部</b>（先于任何 HTML/脚本输出），一个 JSP 可以有多条 page 指令，但同属性只能出现一次（import 除外）。</p>
+  </div>
+
+  <div class="syn">
+    <h4>📝 标准写法</h4>
+<pre><code><span class="tag">&lt;%@ page </span><span class="attr">contentType</span>=<span class="str">"text/html;charset=UTF-8"</span> <span class="attr">language</span>=<span class="str">"java"</span><span class="tag">%&gt;</span>
+<span class="tag">&lt;%@ page </span><span class="attr">import</span>=<span class="str">"java.util.List, com.example.bookadmin.entity.Book"</span><span class="tag">%&gt;</span>
+<span class="tag">&lt;%@ page </span><span class="attr">session</span>=<span class="str">"true"</span> <span class="attr">errorPage</span>=<span class="str">"error.jsp"</span><span class="tag">%&gt;</span></code></pre>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h4>📊 常用属性一览</h4>
+      <table>
+        <thead><tr><th>属性</th><th>默认值</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td><code>contentType</code></td><td>text/html;charset=ISO-8859-1</td><td>设置响应 MIME 类型与编码，中文必须写 <b>UTF-8</b></td></tr>
+          <tr><td><code>pageEncoding</code></td><td>ISO-8859-1</td><td>JSP 源文件本身的解码编码（中文页面建议与 contentType 一致 UTF-8）</td></tr>
+          <tr><td><code>language</code></td><td>java</td><td>脚本语言，目前只能写 java</td></tr>
+          <tr><td><code>import</code></td><td>（无）</td><td>导包，唯一可以重复出现的属性；逗号分隔多个类</td></tr>
+          <tr><td><code>session</code></td><td>true</td><td>是否自动创建 session 对象；false 则不能直接用 &lt;%=session%&gt;</td></tr>
+          <tr><td><code>errorPage</code></td><td>（无）</td><td>当前页抛异常时跳转的错误页</td></tr>
+          <tr><td><code>isErrorPage</code></td><td>false</td><td>是否作为错误页，true 才可以使用 exception 内置对象</td></tr>
+          <tr><td><code>isELIgnored</code></td><td>false</td><td>是否忽略 EL 表达式 ${}；true 会按原样输出不解析</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h4>❌ 高频错误</h4>
+      <ul>
+        <li><b>漏写 contentType="...;charset=UTF-8"</b>：页面中文全部变成 <b>???</b> 或 <b>å¼ ä¸</b> 乱码，这是最常见的问题。</li>
+        <li><b>page 指令放在 HTML 后面</b>：例如先写 <code>&lt;!DOCTYPE html&gt;</code> 再写 page，会导致 contentType 设置无效、仍按 ISO-8859-1 响应。</li>
+        <li><b>import 多类时写错分隔符</b>：必须用<b>英文逗号</b>分隔，不能写多条 import 属性（虽然多数容器兼容，但不规范）。</li>
+        <li><b>contentType 写成 text/plain</b>：浏览器会把整个页面当纯文本显示，HTML 标签全可见。</li>
+        <li><b>同时用 pageEncoding 和 contentType charset 不一致</b>：会产生"编译用 UTF-8 读源文件、响应却按 GBK 写"的混合乱码。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip">
+    <h4>💡 企业实践</h4>
+    <p>每个 JSP 的第一行<b>固定模板</b>就写：<code>&lt;%@ page contentType="text/html;charset=UTF-8" language="java" %&gt;</code>，这是中文项目的"起手式"。IDEA 新建 JSP 时会自动插入这行；如果你的 IDEA 默认是 ISO-8859-1，去 <code>Settings → Editor → File Encodings → JSP Files Default encoding</code> 改成 UTF-8，一劳永逸。需要导实体类/List/Map 时再加 <code>&lt;%@ page import="..." %&gt;</code>。</p>
+  </div>
+</div>
+</script>
+
+<script type="text/html" id="kp-webfilter">
+<script type="text/html" id="kp-webfilter">
+<div class="kp-def"><b>@WebFilter</b> 是过滤器的注册注解，等价于 web.xml 中的 <code>&lt;filter&gt;</code>+<code>&lt;filter-mapping&gt;</code>。容器启动时自动扫描并把实现了 <code>Filter</code> 接口的类注册成过滤器，按路径或Servlet名匹配请求。</div>
+
+<h4 style="margin:12px 0 8px;">拦截规则属性</h4>
+<table>
+<tr><th>属性</th><th>说明</th><th>典型值</th></tr>
+<tr><td><code>value / urlPatterns</code></td><td>按URL路径拦截（最常用）</td><td><code>{"/*"}</code> 拦截所有；<code>{"/user/*"}</code> 拦截user目录</td></tr>
+<tr><td><code>servletNames</code></td><td>按Servlet名拦截（需配合@WebServlet的name）</td><td><code>{"LoginServlet"}</code></td></tr>
+<tr><td><code>filterName</code></td><td>过滤器名，默认是类全限定名</td><td><code>"encodingFilter"</code></td></tr>
+<tr><td><code>initParams</code></td><td>初始化参数</td><td><code>@WebInitParam(name="encoding",value="UTF-8")</code></td></tr>
+<tr><td><code>dispatcherTypes</code></td><td>拦截哪种转发方式</td><td>REQUEST/FORWARD/INCLUDE/ERROR/ASYNC</td></tr>
+</table>
+
+<h4 style="margin:14px 0 8px;">🔑 要点</h4>
+<ul>
+  <li><b>urlPatterns 必须写</b>，否则过滤器不拦截任何路径（等于白写）；</li>
+  <li><b>拦截所有路径用 /*</b>，不是 /**（Servlet规范里没有**通配，这是新手最容易抄Spring MVC写错的地方）；</li>
+  <li><b>多个过滤器同一路径</b>时，执行顺序<b>按类名字母序</b>（注解方式无法像 web.xml 那样用 &lt;filter-mapping&gt; 顺序控制），所以规范做法是类名前缀加01_、02_ 或首字母来控制顺序，如 <code>A_EncodingFilter</code> 最先执行；</li>
+  <li>默认只拦截<b>直接请求 REQUEST</b>，forward/include 内部转发不会经过过滤器，需要显式加 <code>dispatcherTypes = {DispatcherType.REQUEST, DispatcherType.FORWARD}</code>。</li>
+</ul>
+
+<h4 style="margin:14px 0 8px;">💡 企业常见写法</h4>
+<pre class="code"><code>@WebFilter(filterName = "encodingFilter", urlPatterns = "/*",
+           initParams = @WebInitParam(name = "encoding", value = "UTF-8"))
+public class EncodingFilter implements Filter { ... }</code></pre>
+
+<div class="kp-warn"><b>⚠️ 顺序坑：</b>使用注解配置多过滤器时，不要依赖"先写哪个类就先执行"，这不是规范！必须按<b>类名字母序</b>规划。如果项目里过滤器很多（>3个），建议改回 web.xml 配置以明确顺序。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-weblistener">
+<script type="text/html" id="kp-weblistener">
+<div class="kp-def"><b>@WebListener</b> 这次课用来做<b>上传目录自动初始化</b>：应用启动时自动创建upload根目录，并把路径存入ServletContext全局域，避免每个Servlet重复判断目录是否存在，也避免"目录不存在IOException"。</div>
+<h4 style="margin:12px 0 8px;">为什么用Listener创建目录？</h4>
+<table>
+<tr><th>方案</th><th>时机</th><th>问题</th></tr>
+<tr><td>在Servlet.init()里创建</td><td>第一次访问该Servlet</td><td>访问/upload前访问/download会NPE</td></tr>
+<tr><td>在Filter.init()里创建</td><td>应用启动时（loadOnStartup）</td><td>可以，但Filter职责应该是过滤，不是初始化</td></tr>
+<tr><td><b>ServletContextListener.contextInitialized()</b></td><td><b>应用启动即刻，所有Servlet/Filter之前</b></td><td><b>✅ 最佳实践，职责单一</b></td></tr>
+</table>
+<pre class="code"><code>@WebListener
+public class UploadDirInitListener implements ServletContextListener {
+    public void contextInitialized(ServletContextEvent sce) {
+        ServletContext app = sce.getServletContext();
+        // 获取部署真实路径，创建upload目录
+        String uploadPath = app.getRealPath("/upload");
+        File dir = new File(uploadPath);
+        if (!dir.exists()) dir.mkdirs();   // 递归创建
+        app.setAttribute("uploadPath", uploadPath); // 存全局域，所有Servlet共享
+        System.out.println("✓ 上传目录已创建：" + uploadPath);
+    }
+    public void contextDestroyed(ServletContextEvent sce) { /* 关闭时清理 */ }
+}</code></pre>
+<div class="kp-warn"><b>⚠️ 教学简化：</b>生产环境不要用 <code>getRealPath("/upload")</code>——重新部署war时Tomcat会清空work目录，文件丢失！生产环境一般配置外部目录（如 <code>D:/upload</code>）或用对象存储OSS。教学场景为简化演示用getRealPath。</div>
+</script>
+</script>
+
+<script type="text/html" id="kp-webservlet">
+<script type="text/html" id="kp-webservlet">
+<div class="kp-def"><b>@WebServlet</b> 是Jakarta Servlet 6.0提供的<b>类级注解</b>，把一个类注册为Servlet，替代web.xml中<code>&lt;servlet&gt;+&lt;servlet-mapping&gt;</code>配置。第二次课用它配置4个业务Servlet：上传/下载/列表/删除。</div>
+<h4 style="margin:12px 0 8px;">文件上传下载场景用法</h4>
+<table>
+<tr><th>Servlet</th><th>映射URL</th><th>请求方式</th><th>关键注解</th></tr>
+<tr><td>LoginServlet</td><td><code>/login</code></td><td>GET+POST</td><td>@WebServlet("/login")</td></tr>
+<tr><td>UploadServlet</td><td><code>/upload</code></td><td>GET(表单)+POST(上传)</td><td>@WebServlet("/upload") <b style="color:#cf222e;">+ @MultipartConfig</b></td></tr>
+<tr><td>ListServlet</td><td><code>/list</code></td><td>GET</td><td>@WebServlet("/list")</td></tr>
+<tr><td>DownloadServlet</td><td><code>/download</code></td><td>GET（超链接点击）</td><td>@WebServlet("/download")</td></tr>
+<tr><td>DeleteServlet</td><td><code>/delete</code></td><td>GET（教学简化）</td><td>@WebServlet("/delete")</td></tr>
+</table>
+<pre class="code"><code>// 最简写法（最常用）
+@WebServlet("/upload")
+public class UploadServlet extends HttpServlet { ... }</code></pre>
+<div class="kp-warn"><b>⚠️ 文件上传Servlet必须同时加 @MultipartConfig</b>，否则 request.getPart() 返回 null，后续调用 getSubmittedFileName() 直接抛 NullPointerException。</div>
+</script>
+</script>
+
+<script>
+
+function installWatermarkAndCopyright(){
+  var watermark = document.getElementById('__wm__');
+  var copyright = document.getElementById('__cr__');
+
+  // ============ 水印（浅灰色fixed铺满视口，随滚动始终可见，不依赖页面高度）============
+  if (typeof SHOW_WATERMARK !== 'undefined' && SHOW_WATERMARK) {
+    if (watermark) watermark.remove();
+    watermark = document.createElement('div');
+    watermark.id = '__wm__';
+    document.body.appendChild(watermark);
+
+    var text = (typeof WATERMARK_TEXT !== 'undefined') ? WATERMARK_TEXT : '';
+    var charCount = text.length || 10;
+    var fontSize = 16;
+    var unitW = fontSize * 1.05;
+    var textPixelWidth = charCount * unitW;
+    var stepX = Math.ceil(textPixelWidth * 1.8);     // 水平步长=字宽×1.8，16字也绝对不重叠
+    var stepY = 160;                                  // 垂直步长
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    // 多铺一圈，视口滚动resize时不出现空白
+    var cols = Math.ceil(vw / stepX) + 3;
+    var rows = Math.ceil(vh / stepY) + 3;
+
+    watermark.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:9998;pointer-events:none;overflow:hidden;';
+    var frag = document.createDocumentFragment();
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var t = document.createElement('span');
+        t.textContent = text;
+        // 奇数行错开半个步长，形成菱形交错
+        var offsetX = (r % 2 === 0) ? 0 : stepX / 2;
+        t.style.cssText = 'position:absolute;'
+          + 'left:' + (c * stepX + offsetX - stepX) + 'px;'
+          + 'top:'  + (r * stepY - stepY) + 'px;'
+          + 'font-size:' + fontSize + 'px;'
+          + 'color:#a8a8a8;'                  // 浅灰色
+          + 'opacity:0.07;'                   // 极淡，仅隐约可见
+          + 'font-weight:400;'
+          + 'letter-spacing:2px;'
+          + 'white-space:nowrap;'
+          + 'transform:rotate(-25deg);'
+          + 'transform-origin:left top;'
+          + 'user-select:none;';
+        frag.appendChild(t);
+      }
+    }
+    watermark.appendChild(frag);
+  } else {
+    if (watermark) { watermark.remove(); watermark = null; }
+  }
+
+  // ============ 版权信息条（追加到 main 末尾）============
+  if (typeof SHOW_COPYRIGHT !== 'undefined' && SHOW_COPYRIGHT) {
+    if (copyright) copyright.remove();
+    copyright = document.createElement('div');
+    copyright.id = '__cr__';
+    copyright.style.cssText = 'text-align:center;padding:22px 20px;color:#8a8f98;font-size:12px;border-top:1px solid #eaecef;background:#f6f8fa;margin-top:40px;line-height:1.9;clear:both;';
+    var main = document.getElementById('main');
+    var projName = document.title.replace(' - JSP交互教学课件','').replace(' · 分步向导','');
+    copyright.innerHTML = '<div style="font-weight:600;color:#57606a;margin-bottom:4px;letter-spacing:0.5px;">'
+      + ((typeof COPYRIGHT_TEXT !== 'undefined') ? COPYRIGHT_TEXT : '')
+      + '</div>'
+      + '<div>项目：<b style="color:#0969da;">' + projName + '</b> · 课时：4×40分钟=160分钟 · 适用环境：JDK 17 + IDEA 2024.1 + Tomcat 10.1.59 + Maven 3.9+</div>';
+    if (main) main.appendChild(copyright);
+    else document.body.appendChild(copyright);
+  } else {
+    if (copyright) { copyright.remove(); copyright = null; }
+  }
+}
+window.addEventListener('resize', function(){ installWatermarkAndCopyright(); });
+
+var _origRender = render;
+render = function(){
+  try { _origRender.apply(this, arguments); }
+  catch(e){ console.error(e); }
+  // 切换步骤/知识点后面板展开可能改变布局，重新铺设一次
+  setTimeout(installWatermarkAndCopyright, 100);
+};
+
+// 首次渲染
+render();
+
+</script>
+</body>
+</html>
