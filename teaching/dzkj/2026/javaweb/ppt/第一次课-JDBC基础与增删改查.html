@@ -1,0 +1,2395 @@
+<!--
+================================================================================
+  《Java Web 应用开发》交互式教学课件 · 单课空白模板
+================================================================================
+
+【结构顺序（严格遵守，否则渲染失败）】
+  <head>…</head>                    CSS样式（配色/布局/代码高亮/分类色条/水印等）
+  <body>
+    <div class="topbar">             顶栏（logo/标题/教师模式标识）
+    <div class="rail" id="rail">     左侧步骤轨道（JS动态渲染）
+    <div id="stage">                 主舞台（JS动态渲染）
+    <div id="toast">                 消息提示
+    【替换点6】&lt;script id="src-*">   源码容器（每个代码文件一个）
+    【替换点7】&lt;script id="kp-*">    知识点内容（每个知识点一个）
+    &lt;script>主JS第一段&lt;/script&gt;      常量+COURSE配置+工具函数+渲染+防复制
+    &lt;script id="tpl-*">             内置6个信息步骤模板（goal/env/struct/verify/std/summary）
+    &lt;script>主JS第二段&lt;/script&gt;      水印+版权+劫持render+首次render()调用
+  </body>
+
+【使用方法】搜索 "__" 定位所有占位符，共7处替换点：
+  【替换点1】<title> 与 顶栏文案：第一次课 · JDBC基础与增删改查 / 学生信息管理系统（JDBC版） / JDBC / Java Web 应用开发
+  【替换点2】COPYRIGHT_TEXT  页脚版权文字
+  【替换点3】WATERMARK_TEXT  水印文字（建议10~16字，过长会重叠）
+  【替换点4】const COURSE = {…}   课程元数据 + KPMETA + steps[]
+  【替换点5】（已内置5类知识点，Servlet章节解除 sec 注释即可新增安全配置类）
+  【替换点6】添加 &lt;script type="text/plain" id="src-xxx"> 源码块
+  【替换点7】添加 &lt;script type="text/html"  id="kp-xxx">  知识点块
+
+【源码级开关（无UI按钮）】
+  const TEACHER_MODE = false;   // true=教师可复制  false=学生防复制（默认）
+  const SHOW_COPYRIGHT = true;  // 底部版权信息条
+  const SHOW_WATERMARK = true;  // 全屏斜向水印
+
+【默认环境配置】
+  JDK 17 LTS + IntelliJ IDEA 2024.1 + Apache Tomcat 10.1.59 + Maven 3.9+ + Jakarta EE 9+
+  pom.xml 4个标准依赖：
+    jakarta.servlet:jakarta.servlet-api:6.0.0          (provided)
+    jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1  (provided)
+    jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.0
+    org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第一次课 · JDBC基础与增删改查 · 学生信息管理系统（JDBC版）</title>
+<style>
+:root{
+  --bg:#eef1f6;--panel:#fff;--line:#e1e7ef;--line2:#eef2f7;
+  --text:#1f2328;--muted:#6b7480;--brand:#e8632a;--brand2:#cf5320;
+  --data:#0b6b53;--data2:#8a5a00;
+  --codebg:#ffffff;--gut:#f7f9fc;--gut2:#fbfcfe;
+  --basic:#0969da;--object:#8250df;--flow:#1a7f37;--request:#bc4c00;--tag:#bf3989;
+  --std:#4a5563;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.75;}
+button{font-family:inherit;cursor:pointer;}
+code,pre,.mono{font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New","Microsoft YaHei",monospace;}
+body.student-mode,body.student-mode *{-webkit-user-select:none!important;user-select:none!important;}
+body.student-mode .kp-body,body.student-mode .kp-body *{-webkit-user-select:text!important;user-select:text!important;}
+
+.topbar{position:sticky;top:0;z-index:80;background:#1b2430;color:#fff;
+  display:flex;align-items:center;gap:22px;padding:10px 22px;flex-wrap:wrap;
+  box-shadow:0 2px 14px rgba(15,25,40,.22);}
+.brand{display:flex;align-items:center;gap:12px;min-width:270px;}
+.logo{width:42px;height:42px;flex:0 0 42px;border-radius:10px;background:linear-gradient(135deg,#ff8a4c,#e8632a);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:.5px;}
+.b1{font-size:15.5px;font-weight:700;letter-spacing:.3px;}
+.b2{font-size:12px;color:#9fb0c4;margin-top:1px;letter-spacing:.4px;}
+.tmode{margin-left:auto;font-size:12.5px;padding:5px 12px;border-radius:999px;
+  background:#2d3a49;color:#c3cfdd;border:1px solid #3a495b;}
+.tmode.on{background:#e8f7ee;color:#12693a;border-color:#6ebf8a;}
+
+.rail{position:sticky;top:62px;z-index:70;background:#fff;border-bottom:1px solid var(--line);
+  padding:9px 22px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(20,35,60,.05);}
+.rail::-webkit-scrollbar{height:5px;}
+.rail::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+.stepchip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:6px 14px;font-size:13px;color:#48525f;transition:.16s;flex:0 0 auto;}
+.stepchip .n{width:19px;height:19px;border-radius:50%;background:#eef2f7;color:#5b6673;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;}
+.stepchip:hover{border-color:#b9c6d6;background:#f7fafd;}
+.stepchip.active{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.stepchip.active .n{background:var(--brand);color:#fff;}
+.stepchip.done .n{background:#d8f0e2;color:#1a7f37;}
+
+.wrap{max-width:1600px;margin:0 auto;padding:22px 22px 80px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 3px 16px rgba(23,40,70,.06);padding:26px 30px;}
+.step-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+.step-kind{font-size:12px;font-weight:700;letter-spacing:.6px;padding:4px 11px;border-radius:6px;
+  background:#eef4ff;color:#0969da;flex:0 0 auto;margin-top:3px;}
+.step-kind.code{background:#fff1e8;color:#c9541c;}
+.step-kind.env{background:#e8f7ee;color:#12693a;}
+.step-kind.std{background:#f4edff;color:#8250df;}
+.step-title{font-size:20px;font-weight:800;letter-spacing:.2px;margin:0;}
+.step-sub{color:var(--muted);font-size:13px;margin-top:2px;}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;margin-top:4px;}
+.pill{font-size:12px;padding:4px 11px;border-radius:999px;background:#f2f5f9;color:#55606d;border:1px solid #e6ecf4;}
+.pill.time{background:#fff8ec;color:#9a6400;border-color:#f6e3c4;}
+.pill.file{background:#eef7f1;color:#12693a;border-color:#d5ebdd;}
+
+.workbench{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(360px,1fr);
+  gap:18px;align-items:start;margin-top:18px;}
+@media (max-width:1180px){.workbench{grid-template-columns:1fr;}}
+
+.left-col{min-width:0;display:flex;flex-direction:column;gap:16px;}
+.guide-box{background:#f8fafd;border:1px solid var(--line);border-left:4px solid var(--brand);
+  border-radius:10px;padding:14px 18px;}
+.guide-box h4{margin:0 0 8px;font-size:14px;color:#243040;letter-spacing:.3px;}
+.guide-box ol{margin:0;padding-left:20px;}
+.guide-box li{margin:5px 0;font-size:13.5px;color:#3c4757;}
+.guide-box li b{color:#16202c;}
+
+.code-panel{background:var(--codebg);border:1px solid #dde4ee;border-radius:12px;
+  overflow:hidden;box-shadow:0 4px 18px rgba(22,40,70,.07);}
+.code-head{display:flex;align-items:center;gap:12px;padding:9px 14px;background:#f8fafc;
+  border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.filedot{display:flex;gap:5px;}
+.filedot i{width:10px;height:10px;border-radius:50%;display:block;}
+.code-file{font-size:13px;font-weight:700;color:#33404f;letter-spacing:.3px;}
+.code-file small{font-weight:400;color:var(--muted);margin-left:6px;}
+.codeacts{margin-left:auto;display:flex;gap:8px;}
+.mini-btn{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:7px;
+  padding:5px 12px;font-size:12.5px;transition:.15s;}
+.mini-btn:hover{background:#eef4fb;border-color:#b7c9dd;color:#12212f;}
+.mini-btn.ok{background:#e8f7ee;border-color:#bfe3cd;color:#12693a;}
+.mini-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.legend{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;background:#fcfdff;
+  border-bottom:1px solid #eef2f8;}
+.lg{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#5d6875;
+  background:#fff;border:1px solid #e6ecf4;border-radius:999px;padding:3px 10px;}
+.lg b{font-size:12.5px;}
+
+.code-body{max-height:640px;overflow:auto;padding:8px 0;background:var(--codebg);}
+.code-body::-webkit-scrollbar{width:10px;height:10px;}
+.code-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px;}
+.code-body::-webkit-scrollbar-track{background:#f4f7fb;}
+.cl{display:flex;align-items:flex-start;min-height:22px;border-left:3px solid transparent;}
+.cl:hover{background:#f4f8ff;}
+.cl.clickable{cursor:pointer;}
+.cl.clickable:hover{background:#eaf3ff;}
+.cl.active{background:#e4f0ff!important;border-left-color:#0969da!important;}
+.cl .ic{flex:0 0 30px;text-align:center;font-size:13px;line-height:22px;user-select:none;padding-top:1px;}
+.cl .ln{flex:0 0 40px;text-align:right;padding-right:12px;font-size:12px;color:#a6b3c2;
+  line-height:22px;user-select:none;font-family:Consolas,monospace;}
+.cl.active .ln{color:#0969da;font-weight:700;}
+.cl .src{flex:1 1 auto;white-space:pre;padding-right:20px;font-size:13px;line-height:22px;
+  color:#1f2328;font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;}
+.cl.marked{border-left-width:3px;border-left-style:solid;}
+.cl.marked.k-basic{border-left-color:var(--basic);background:rgba(9,105,218,.035);}
+.cl.marked.k-object{border-left-color:var(--object);background:rgba(130,80,223,.035);}
+.cl.marked.k-flow{border-left-color:var(--flow);background:rgba(26,127,55,.035);}
+.cl.marked.k-request{border-left-color:var(--request);background:rgba(188,76,0,.035);}
+.cl.marked.k-tag{border-left-color:var(--tag);background:rgba(191,57,137,.035);}
+.cl.marked:hover{filter:saturate(1.15);}
+.code-body .cl.marked:hover{background:#eff5ff;}
+.code-body .cl.active .ic{transform:scale(1.25);}
+
+.tok-cmt{color:#6e7781;font-style:italic;}
+.tok-kw{color:#cf222e;font-weight:700;}
+.tok-str{color:#0a3069;}
+.tok-num{color:#0550ae;}
+.tok-tag{color:#116329;font-weight:700;}
+.tok-attr{color:#0550ae;}
+.tok-punc{color:#57606a;}
+.tok-jsp{color:#8250df;font-weight:700;}
+.tok-jspcode{color:#953800;}
+.tok-el{color:#8250df;font-weight:700;background:#faf5ff;border-radius:3px;padding:0 2px;}
+.tok-dir{color:#bf3989;font-weight:700;}
+
+.kp-panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  box-shadow:0 4px 18px rgba(22,40,70,.07);position:sticky;top:118px;max-height:calc(100vh - 140px);
+  display:flex;flex-direction:column;}
+@media (max-width:1180px){.kp-panel{position:static;max-height:none;}}
+.kp-head{display:flex;align-items:center;gap:10px;padding:11px 16px;
+  background:linear-gradient(135deg,#f7f9fc,#eef3fa);border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.kp-head .t{font-size:14px;font-weight:800;color:#1b2430;letter-spacing:.3px;}
+.kp-head .hint{font-size:11.5px;color:var(--muted);}
+.kp-nav{margin-left:auto;display:flex;gap:6px;}
+.kp-nav button{background:#fff;border:1px solid #d6dfea;border-radius:7px;padding:4px 10px;
+  font-size:12px;color:#41505f;}
+.kp-nav button:hover{background:#eef4fb;border-color:#b7c9dd;}
+.kp-nav button:disabled{opacity:.4;cursor:not-allowed;}
+.kp-chips{display:flex;gap:6px;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid #eef2f8;background:#fcfdff;}
+.kchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:999px;
+  background:#f3f6fa;border:1px solid #e3eaf3;color:#4c5765;transition:.15s;}
+.kchip:hover{background:#e9f1fb;border-color:#c3d5e9;}
+.kchip.on{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.kp-body{padding:16px 18px 24px;overflow:auto;flex:1 1 auto;}
+.kp-body::-webkit-scrollbar{width:9px;}
+.kp-body::-webkit-scrollbar-thumb{background:#cfd8e3;border-radius:5px;}
+.kp-empty{text-align:center;color:#8b96a5;padding:50px 20px;font-size:14px;line-height:2;}
+.kp-empty .big{font-size:40px;display:block;margin-bottom:12px;}
+.kp-empty b{color:#2d3a49;}
+.kpcard{border:1px solid #e6ecf4;border-radius:11px;overflow:hidden;margin-bottom:16px;background:#fff;}
+.kpcard-head{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid #eef2f8;}
+.kpcard-head .ic{font-size:16px;}
+.kpcard-head .tt{font-size:15px;font-weight:800;color:#141b23;}
+.kpcard-head .cat{margin-left:auto;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;}
+.kpcard-body{padding:14px 16px 18px;font-size:13.5px;color:#2c3540;}
+.kp-def{background:#f7fafd;border:1px solid #e6eef7;border-left:4px solid #4a90d9;
+  border-radius:8px;padding:11px 14px;margin-bottom:14px;color:#26313d;}
+.kpcard h5{margin:16px 0 8px;font-size:13.5px;color:#16202c;display:flex;align-items:center;gap:7px;
+  padding-bottom:5px;border-bottom:1px dashed #e3eaf3;}
+.kpcard h5:first-of-type{margin-top:6px;}
+.kpcard ul,.kpcard ol{margin:6px 0;padding-left:20px;}
+.kpcard li{margin:4px 0;}
+.kpcard b{color:#101820;}
+table.kpt{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:12.8px;}
+table.kpt th{background:#f4f7fb;color:#2b3542;text-align:left;padding:7px 10px;
+  border:1px solid #e3eaf3;font-weight:700;}
+table.kpt td{padding:7px 10px;border:1px solid #e8eef6;vertical-align:top;}
+table.kpt tr:nth-child(even) td{background:#fbfcfe;}
+table.kpt code{background:#eef4fb;padding:1px 5px;border-radius:4px;font-size:12px;color:#0a3d78;}
+pre.kpcode{background:#f8fafc;border:1px solid #e5ebf3;border-radius:8px;padding:11px 13px;
+  overflow-x:auto;font-size:12.6px;line-height:1.7;color:#1f2937;margin:8px 0 12px;white-space:pre;}
+pre.kpcode .c-str{color:#0a3069;}
+pre.kpcode .c-kw{color:#cf222e;font-weight:700;}
+pre.kpcode .c-cmt{color:#6e7781;font-style:italic;}
+pre.kpcode .c-jsp{color:#8250df;font-weight:700;}
+pre.kpcode .c-el{color:#8250df;font-weight:700;}
+pre.kpcode .c-tag{color:#116329;font-weight:700;}
+.tip{background:#e8f7ee;border:1px solid #bfe3cd;border-left:4px solid #1a7f37;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#124225;}
+.warn{background:#fff8ec;border:1px solid #f6e3c4;border-left:4px solid #bc4c00;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#6b3f00;}
+.std{background:#f4edff;border:1px solid #e0d1ff;border-left:4px solid #8250df;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#4a2e87;}
+.kplink{display:inline-block;margin:3px 4px 3px 0;padding:4px 10px;border-radius:6px;
+  background:#eef4fb;border:1px solid #cfe0f2;color:#0a3d78;font-size:12px;cursor:pointer;}
+.kplink:hover{background:#ddeaf8;}
+
+.info-section{margin-top:18px;}
+.info-section h3{font-size:17px;margin:20px 0 10px;color:#1b2430;padding-left:10px;border-left:4px solid var(--brand);}
+.info-section h4{font-size:14.5px;margin:16px 0 8px;color:#2d3a49;}
+.info-section p{font-size:13.5px;color:#3c4757;margin:8px 0;}
+.info-section ul,.info-section ol{padding-left:22px;}
+.info-section li{margin:4px 0;font-size:13.5px;color:#3c4757;}
+.info-section table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
+.info-section table th,.info-section table td{border:1px solid #e3eaf3;padding:8px 12px;text-align:left;}
+.info-section table th{background:#f4f7fb;color:#2b3542;}
+.pom-box{background:#f6f8fa;color:#24292f;border:1px solid #d0d7de;border-left:4px solid #0969da;border-radius:10px;padding:18px 22px;font-family:"JetBrains Mono","Fira Code",Consolas,"Courier New",monospace;font-size:13.5px;line-height:1.75;white-space:pre;overflow-x:auto;tab-size:4;box-shadow:0 1px 3px rgba(0,0,0,.06);margin:14px 0;}
+.pom-box .p-kw{color:#cf222e;font-weight:600;}
+.pom-box .p-str{color:#0a3069;}
+.pom-box .p-tag{color:#116329;}
+.pom-box .p-cmt{color:#6e7781;font-style:italic;}
+.pom-box .p-num{color:#953800;}
+.tree{background:#f8fafc;border:1px solid #e5ebf3;border-radius:10px;padding:16px 20px;font-family:"JetBrains Mono",Consolas,monospace;
+  font-size:13px;line-height:1.9;white-space:pre;margin:10px 0;color:#3c4757;}
+.tree .dir{color:#0969da;font-weight:700;}.tree .file{color:#1f2328;}.tree .note{color:#8b96a5;font-style:italic;}
+.browser-mock{background:#fff;border:1px solid #dde4ee;border-radius:10px;overflow:hidden;margin:14px 0;max-width:680px;}
+.browser-bar{background:#f4f7fb;padding:8px 12px;display:flex;gap:6px;align-items:center;border-bottom:1px solid #e5ebf3;}
+.browser-bar i{width:10px;height:10px;border-radius:50%;}
+.browser-url{flex:1;background:#fff;border:1px solid #d6dfea;border-radius:6px;padding:4px 10px;font-size:12px;color:#5b6673;font-family:Consolas,monospace;}
+.browser-body{padding:24px;background:#fff;min-height:160px;}
+.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0;}
+.kpi{flex:1 1 180px;background:linear-gradient(135deg,#fff8ec,#fef3e2);border:1px solid #f6e3c4;border-radius:10px;padding:14px 16px;}
+.kpi .v{font-size:22px;font-weight:800;color:#cf5320;}
+.kpi .l{font-size:12px;color:#8a5a00;margin-top:4px;}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px;}
+.kitem{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:.18s;}
+.kitem:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(23,40,70,.1);border-color:#b7c9dd;}
+.kitem .ic{font-size:22px;flex:0 0 30px;}
+.kitem .kt{font-size:13.5px;font-weight:700;color:#1b2430;}
+.kitem .kc{font-size:11.5px;color:#7b8795;margin-top:3px;}
+
+.navrow{display:flex;justify-content:space-between;margin-top:22px;gap:10px;flex-wrap:wrap;}
+.navrow button{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:8px;padding:8px 18px;font-size:13.5px;}
+.navrow button.primary{background:linear-gradient(135deg,#ff8a4c,#e8632a);color:#fff;border-color:transparent;font-weight:700;}
+.navrow button:hover{filter:brightness(1.05);}
+.navrow button:disabled{opacity:.4;cursor:not-allowed;}
+
+.toast{position:fixed;right:20px;bottom:24px;z-index:999;padding:12px 20px;border-radius:10px;
+  font-size:13.5px;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.2);opacity:0;transform:translateY(20px);
+  transition:.25s;pointer-events:none;max-width:360px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#1a7f37;}
+.toast.err{background:#cf222e;}
+.toast.warn{background:#bc4c00;}
+
+/* ============ 水印 ============ */
+.wm-layer{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9998;overflow:hidden;}
+.wm-layer .wm-tile{position:absolute;color:rgba(9,105,218,.13);font:700 24px/1.2 "Microsoft YaHei",sans-serif;
+  transform:rotate(-28deg);white-space:nowrap;letter-spacing:2px;user-select:none;}
+/* ============ 页脚版权 ============ */
+.cr-foot{margin-top:24px;padding:14px 18px;text-align:center;font-size:12.5px;color:#6e7781;
+  border-top:1px solid #eaeef2;background:#f6f8fa;border-radius:0 0 10px 10px;line-height:1.8;}
+.cr-foot b{color:#24292f;}.cr-foot .dot{color:#d0d7de;margin:0 8px;}
+</style>
+</head>
+<body class="student-mode">
+
+<!-- ============ 顶栏 ============ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">JDBC</div>
+    <div>
+      <div class="b1">Java Web 应用开发</div>
+      <div class="b2">第一次课 · JDBC基础与增删改查 · 学生信息管理系统（JDBC版）</div>
+    </div>
+  </div>
+  <div class="tmode" id="tmode">🛡️ 教师模式：关闭</div>
+</div>
+
+<!-- ============ 步骤轨道 ============ -->
+<div class="rail" id="rail"></div>
+
+<!-- ============ 主舞台 ============ -->
+<div class="wrap" id="stage"></div>
+
+<!-- ============ Toast ============ -->
+<div class="toast" id="toast"></div>
+
+<!-- ============ 源码容器（script text/plain 避免嵌套解析问题） ============ -->
+
+<!-- ==================================================================== -->
+<!-- 【替换点6】源码容器区（自动构建） -->
+<script type="text/plain" id="src-JdbcUtil.java">
+package com.example.jdbc.util;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
+/*
+ * JDBC 工具类（JdbcUtil）：把"加载驱动、获取连接、关闭资源"这些
+ * 每次数据库操作都要写的重复代码集中到这里。
+ *
+ * 工具类写法规范：
+ *   1. 构造方法私有——不允许 new，所有方法都是 static
+ *   2. 配置放在 src/main/resources 下的 .properties 文件，
+ *      不允许把账号密码硬编码在 Java 源码里
+ *   3. 资源关闭顺序与打开顺序相反：ResultSet → Statement → Connection
+ */
+public class JdbcUtil {
+    private static String url;
+    private static String user;
+    private static String password;
+    private static String driver;
+
+    /*
+     * 静态代码块：类加载时只执行一次，用来完成"读配置+注册驱动"
+     * 驱动自 JDBC 4.0 起可通过 SPI 自动注册，显式写 Class.forName
+     * 在老版本驱动、或者需要兼容的项目里仍是标准写法。
+     */
+    static {
+        Properties prop = new Properties();
+        /*
+         * 用 ClassLoader.getResourceAsStream 读类路径下的文件：
+         * Maven 项目中，src/main/resources 下的文件会被打到 WEB-INF/classes 根下，
+         * 直接写文件名即可，不要写磁盘绝对路径。
+         */
+        try (InputStream in = JdbcUtil.class.getClassLoader()
+                .getResourceAsStream("jdbc.properties")) {
+            if (in == null) {
+                throw new RuntimeException(
+                    "没找到 jdbc.properties，请确认放在 src/main/resources 下");
+            }
+            prop.load(in);
+            url      = prop.getProperty("jdbc.url");
+            user     = prop.getProperty("jdbc.user");
+            password = prop.getProperty("jdbc.password");
+            driver   = prop.getProperty("jdbc.driver");
+            Class.forName(driver);
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException("JDBC 工具类初始化失败", e);
+        }
+    }
+
+    private JdbcUtil() {}   // 禁止外部 new
+
+    /** 获取一个数据库连接 */
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
+    }
+
+    /*
+     * 重载 close：分三参数、两参数、单参数，
+     * 调用方按本次用到的资源数量选对应版本，不用写一堆 if(rs!=null) try...
+     * 注意：Connection 关闭会一并归还/销毁物理连接，必须放在 finally 中。
+     */
+    public static void close(ResultSet rs, Statement stmt, Connection conn) {
+        try { if (rs   != null) rs.close();   } catch (SQLException ignored) {}
+        try { if (stmt != null) stmt.close(); } catch (SQLException ignored) {}
+        try { if (conn != null) conn.close(); } catch (SQLException ignored) {}
+    }
+
+    public static void close(Statement stmt, Connection conn) {
+        close(null, stmt, conn);
+    }
+
+    public static void close(Connection conn) {
+        close(null, null, conn);
+    }
+}
+
+</script>
+<script type="text/plain" id="src-Student.java">
+package com.example.jdbc.entity;
+
+import java.time.LocalDate;
+
+/*
+ * 实体类（JavaBean / Entity）：与数据库 student 表一一对应的 Java 对象
+ *
+ * 为什么要写它？
+ *   ResultSet 只能"读一次、按列读"，把它的每一行包装成一个 Student 对象，
+ *   才能在 Servlet 和 JSP 之间像"传一个学生"那样传递，而不是到处传 ResultSet。
+ *
+ * JavaBean 四条规范（必须遵守，否则 JSP/JSTL/DBUtils 反射映射会失效）：
+ *   1. 类必须 public，且有 public 的无参构造
+ *   2. 属性全部 private，通过 getter/setter 访问
+ *   3. getter/setter 命名必须是 getXxx/setXxx（boolean 用 isXxx）
+ *   4. 最好实现 Serializable（跨网络或序列化时需要）
+ */
+public class Student {
+    private Integer id;
+    private String name;
+    private String gender;
+    private Integer age;
+    private String major;
+    private LocalDate enrollDate;   // 数据库 DATE 类型对应 Java 8 LocalDate
+
+    public Student() {}
+
+    public Integer getId()          { return id; }
+    public void setId(Integer id)   { this.id = id; }
+
+    public String getName()         { return name; }
+    public void setName(String name){ this.name = name; }
+
+    public String getGender()       { return gender; }
+    public void setGender(String g) { this.gender = g; }
+
+    public Integer getAge()         { return age; }
+    public void setAge(Integer age) { this.age = age; }
+
+    public String getMajor()        { return major; }
+    public void setMajor(String m)  { this.major = m; }
+
+    public LocalDate getEnrollDate()      { return enrollDate; }
+    public void setEnrollDate(LocalDate d){ this.enrollDate = d; }
+}
+
+</script>
+<script type="text/plain" id="src-StudentAddServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import com.example.jdbc.entity.Student;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.time.LocalDate;
+
+/*
+ * 新增学生提交 Servlet：处理 add.jsp 表单 POST，
+ * 调用 DAO 插入数据，之后重定向到列表页（PRG 模式）。
+ */
+@WebServlet("/student/add")
+public class StudentAddServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        Student s = new Student();
+        s.setName(req.getParameter("name"));
+        s.setGender(req.getParameter("gender"));
+        String age = req.getParameter("age");
+        s.setAge(age == null || age.isEmpty() ? null : Integer.parseInt(age));
+        s.setMajor(req.getParameter("major"));
+        String date = req.getParameter("enrollDate");
+        s.setEnrollDate(date == null || date.isEmpty() ? null : LocalDate.parse(date));
+        dao.insert(s);
+        resp.sendRedirect(req.getContextPath() + "/student/list");
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentDao.java">
+package com.example.jdbc.dao;
+
+import com.example.jdbc.entity.Student;
+import com.example.jdbc.util.JdbcUtil;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+/*
+ * DAO（Data Access Object，数据访问对象）：
+ *   把"对 student 表的所有 SQL 操作"封装在这一个类里，
+ *   Servlet 只调用方法、不写 SQL——实现业务层与数据层解耦。
+ *
+ * 本类是第一次课的核心：要重点演示
+ *   1. PreparedStatement 的使用（防 SQL 注入 + 可读性好）
+ *   2. ResultSet 遍历 → 实体对象封装
+ *   3. try-with-resources 自动关闭资源
+ *   4. 增删改返回 int（影响行数），查询返回 List<Student> 或 Student
+ */
+public class StudentDao {
+
+    /** 查询全部学生，按 id 升序 */
+    public List<Student> findAll() {
+        List<Student> list = new ArrayList<>();
+        String sql = "SELECT id, name, gender, age, major, enroll_date FROM student ORDER BY id";
+
+        /*
+         * try-with-resources（JDK 7+）：
+         *   括号里声明的资源必须实现 AutoCloseable 接口，
+         *   无论正常结束还是抛异常，都会在离开 try 块时自动 close，
+         *   再也不用在 finally 里写一大段关闭代码。
+         *
+         * Connection → PreparedStatement → ResultSet 按"从大到小"声明，
+         * 关闭顺序是反向自动处理的。
+         */
+        try (Connection conn = JdbcUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            /*
+             * ResultSet 是一个"游标"，初始指向第一行之前：
+             *   next() 每调用一次游标下移一行，有数据返回 true，到底返回 false
+             *   必须在 next() 返回 true 之后才能读列值
+             *   getXxx(列名) 按列名取值，可读性比 getXxx(列序号) 好
+             */
+            while (rs.next()) {
+                Student s = new Student();
+                s.setId(rs.getInt("id"));
+                s.setName(rs.getString("name"));
+                s.setGender(rs.getString("gender"));
+                s.setAge((Integer) rs.getObject("age")); // 允许 NULL 的列用 getObject
+                s.setMajor(rs.getString("major"));
+                // DATE → LocalDate 用 getObject(..., LocalDate.class)，避免 java.sql.Date 转型坑
+                s.setEnrollDate(rs.getObject("enroll_date", LocalDate.class));
+                list.add(s);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("查询学生列表失败", e);
+        }
+        return list;
+    }
+
+    /** 新增学生，返回受影响行数（1 表示成功） */
+    public int insert(Student s) {
+        /*
+         * PreparedStatement 的参数占位符是英文问号 ?
+         *   1. 下标从 1 开始，不是 0！
+         *   2. 每个 ? 都必须用 setXxx 设值，不能漏
+         *   3. LocalDate 用 setObject 传，JDBC 4.2+ 自动映射到 DATE
+         *
+         * 对比 Statement：
+         *   - 可以写字符串拼接 SQL → 有 SQL 注入风险（演示：' OR '1'='1）
+         *   - PreparedStatement 预编译 + 参数化，从根本上防注入
+         */
+        String sql = "INSERT INTO student(name, gender, age, major, enroll_date) VALUES(?,?,?,?,?)";
+        try (Connection conn = JdbcUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, s.getName());
+            pstmt.setString(2, s.getGender());
+            pstmt.setObject(3, s.getAge());
+            pstmt.setString(4, s.getMajor());
+            pstmt.setObject(5, s.getEnrollDate());
+            return pstmt.executeUpdate();  // executeUpdate 用于 INSERT/UPDATE/DELETE
+        } catch (SQLException e) {
+            throw new RuntimeException("新增学生失败", e);
+        }
+    }
+
+    /** 按 id 查单个学生（编辑页面回显用） */
+    public Student findById(Integer id) {
+        String sql = "SELECT id, name, gender, age, major, enroll_date FROM student WHERE id = ?";
+        try (Connection conn = JdbcUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Student s = new Student();
+                    s.setId(rs.getInt("id"));
+                    s.setName(rs.getString("name"));
+                    s.setGender(rs.getString("gender"));
+                    s.setAge((Integer) rs.getObject("age"));
+                    s.setMajor(rs.getString("major"));
+                    s.setEnrollDate(rs.getObject("enroll_date", LocalDate.class));
+                    return s;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("查询学生失败", e);
+        }
+        return null;
+    }
+
+    /** 修改学生信息 */
+    public int update(Student s) {
+        String sql = "UPDATE student SET name=?, gender=?, age=?, major=?, enroll_date=? WHERE id=?";
+        try (Connection conn = JdbcUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, s.getName());
+            pstmt.setString(2, s.getGender());
+            pstmt.setObject(3, s.getAge());
+            pstmt.setString(4, s.getMajor());
+            pstmt.setObject(5, s.getEnrollDate());
+            pstmt.setInt(6, s.getId());
+            return pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("修改学生失败", e);
+        }
+    }
+
+    /** 按 id 删除学生 */
+    public int deleteById(Integer id) {
+        String sql = "DELETE FROM student WHERE id = ?";
+        try (Connection conn = JdbcUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            return pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("删除学生失败", e);
+        }
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentDeleteServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
+/* 删除学生 Servlet：接收 GET ?id=xx，删除后重定向到列表页。 */
+@WebServlet("/student/delete")
+public class StudentDeleteServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        Integer id = Integer.parseInt(req.getParameter("id"));
+        dao.deleteById(id);
+        resp.sendRedirect(req.getContextPath() + "/student/list");
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentListServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import com.example.jdbc.entity.Student;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
+
+/*
+ * 学生列表 Servlet：访问 /student/list 时从数据库查出全部学生，
+ * 转发到 list.jsp 展示。
+ * （@WebServlet、doGet/doPost、request.setAttribute、forward 等
+ *  知识点已在 Servlet 第一次课详细讲过，这里不再重复大段注释。）
+ */
+@WebServlet("/student/list")
+public class StudentListServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        List<Student> students = dao.findAll();
+        req.setAttribute("students", students);
+        req.getRequestDispatcher("/WEB-INF/student/list.jsp").forward(req, resp);
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentToAddServlet.java">
+package com.example.jdbc.web;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
+/* 跳转"新增学生"页面 Servlet：直接转发到 WEB-INF 下的 add.jsp */
+@WebServlet("/student/toAdd")
+public class StudentToAddServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/student/add.jsp").forward(req, resp);
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentToEditServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import com.example.jdbc.entity.Student;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
+/* 进入"修改学生"页面：按 id 查出原数据，转发到 edit.jsp 回显。 */
+@WebServlet("/student/toEdit")
+public class StudentToEditServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        Integer id = Integer.parseInt(req.getParameter("id"));
+        Student s = dao.findById(id);
+        req.setAttribute("s", s);
+        req.getRequestDispatcher("/WEB-INF/student/edit.jsp").forward(req, resp);
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentUpdateServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import com.example.jdbc.entity.Student;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.time.LocalDate;
+
+/* 修改学生提交 Servlet：接收 edit.jsp 表单，调用 DAO update 后重定向。 */
+@WebServlet("/student/update")
+public class StudentUpdateServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        Student s = new Student();
+        s.setId(Integer.parseInt(req.getParameter("id")));
+        s.setName(req.getParameter("name"));
+        s.setGender(req.getParameter("gender"));
+        String age = req.getParameter("age");
+        s.setAge(age == null || age.isEmpty() ? null : Integer.parseInt(age));
+        s.setMajor(req.getParameter("major"));
+        String date = req.getParameter("enrollDate");
+        s.setEnrollDate(date == null || date.isEmpty() ? null : LocalDate.parse(date));
+        dao.update(s);
+        resp.sendRedirect(req.getContextPath() + "/student/list");
+    }
+}
+
+</script>
+<script type="text/plain" id="src-add.jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>新增学生</title>
+    <style>
+        body { font-family:"Microsoft YaHei",sans-serif; margin:24px; }
+        form { max-width: 480px; }
+        label { display:block; margin-top:10px; font-weight:bold; }
+        input, select { width:100%; padding:6px; margin-top:4px;
+                        border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
+        button { margin-top:14px; padding:8px 20px; background:#0969da;
+                 color:#fff; border:none; border-radius:4px; cursor:pointer; }
+        a.back { margin-left:12px; color:#57606a; text-decoration:none; }
+    </style>
+</head>
+<body>
+<h2>➕ 新增学生</h2>
+<%-- 表单提交到 /student/add，method=post 对应 Servlet 的 doPost --%>
+<form action="<c:url value='/student/add'/>" method="post">
+    <label>姓名：<input type="text" name="name" required></label>
+    <label>性别：
+        <select name="gender">
+            <option value="男">男</option>
+            <option value="女">女</option>
+        </select>
+    </label>
+    <label>年龄：<input type="number" name="age" min="15" max="60"></label>
+    <label>专业：<input type="text" name="major"></label>
+    <label>入学日期：<input type="date" name="enrollDate"></label>
+    <button type="submit">保存</button>
+    <a class="back" href="<c:url value='/student/list'/>">返回列表</a>
+</form>
+</body>
+</html>
+
+</script>
+<script type="text/plain" id="src-edit.jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>编辑学生</title>
+    <style>
+        body { font-family:"Microsoft YaHei",sans-serif; margin:24px; }
+        form { max-width:480px; }
+        label { display:block; margin-top:10px; font-weight:bold; }
+        input, select { width:100%; padding:6px; margin-top:4px;
+                        border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
+        button { margin-top:14px; padding:8px 20px; background:#1a7f37;
+                 color:#fff; border:none; border-radius:4px; cursor:pointer; }
+        a.back { margin-left:12px; color:#57606a; text-decoration:none; }
+    </style>
+</head>
+<body>
+<h2>✏️ 编辑学生</h2>
+<%-- 隐藏域传 id，服务端据此定位要修改的记录 --%>
+<form action="<c:url value='/student/update'/>" method="post">
+    <input type="hidden" name="id" value="${s.id}">
+    <label>姓名：<input type="text" name="name" value="${s.name}" required></label>
+    <label>性别：
+        <select name="gender">
+            <option value="男" ${s.gender=='男'?'selected':''}>男</option>
+            <option value="女" ${s.gender=='女'?'selected':''}>女</option>
+        </select>
+    </label>
+    <label>年龄：<input type="number" name="age" value="${s.age}"></label>
+    <label>专业：<input type="text" name="major" value="${s.major}"></label>
+    <label>入学日期：
+        <input type="date" name="enrollDate"
+               value="<fmt:formatDate value='${s.enrollDate}' pattern='yyyy-MM-dd'/>">
+    </label>
+    <button type="submit">保存修改</button>
+    <a class="back" href="<c:url value='/student/list'/>">返回列表</a>
+</form>
+</body>
+</html>
+
+</script>
+<script type="text/plain" id="src-index.jsp">
+<%-- 访问 http://localhost:8080/jdbc-student/ 时直接跳到学生列表 --%>
+<% response.sendRedirect(request.getContextPath() + "/student/list"); %>
+
+</script>
+<script type="text/plain" id="src-init.sql">
+-- ============================================================
+-- student 表建表脚本
+-- 执行环境：MySQL 8.0+，字符集 utf8mb4
+-- 在 Navicat / IDEA Database 中先创建数据库 jdbc_demo，
+-- 再选中该数据库执行本脚本。
+-- ============================================================
+CREATE DATABASE IF NOT EXISTS jdbc_demo
+    DEFAULT CHARACTER SET utf8mb4
+    DEFAULT COLLATE utf8mb4_unicode_ci;
+
+USE jdbc_demo;
+
+-- 学生表：id 主键自增，姓名、性别、年龄、专业、入学时间
+DROP TABLE IF EXISTS student;
+CREATE TABLE student (
+    id       INT PRIMARY KEY AUTO_INCREMENT COMMENT '学号（主键）',
+    name     VARCHAR(20)  NOT NULL COMMENT '姓名',
+    gender   CHAR(1)      NOT NULL DEFAULT '男' COMMENT '性别',
+    age      INT          COMMENT '年龄',
+    major    VARCHAR(50)  COMMENT '所学专业',
+    enroll_date DATE       COMMENT '入学日期'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生信息表';
+
+-- 初始测试数据
+INSERT INTO student(name, gender, age, major, enroll_date) VALUES
+('张三', '男', 20, '软件技术', '2024-09-01'),
+('李四', '女', 19, '计算机应用', '2024-09-01'),
+('王五', '男', 21, '大数据技术', '2023-09-01');
+
+</script>
+<script type="text/plain" id="src-jdbc.properties">
+# =====================================================
+# JDBC 连接配置（必须放在 src/main/resources 根下）
+# MySQL 8 写法要点：
+#   1. driver 类名是 com.mysql.cj.jdbc.Driver（cj 包，不是老版的 com.mysql.jdbc.Driver）
+#   2. url 必须带 serverTimezone=Asia/Shanghai，否则时区报错
+#   3. useSSL=false 本地开发可关闭 SSL
+#   4. useUnicode=true&characterEncoding=utf8 避免中文乱码
+#   5. allowPublicKeyRetrieval=true 解决 MySQL 8 公钥检索报错
+# =====================================================
+jdbc.driver=com.mysql.cj.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/jdbc_demo?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+jdbc.user=root
+jdbc.password=root
+
+</script>
+<script type="text/plain" id="src-list.jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%-- JSP 基础语法、JSTL <c:forEach>、EL 表达式已在 JSP 两次课详细讲过，
+     这里直接使用，注释聚焦"怎么用 DAO 查出来的数据渲染表格"。 --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>学生列表</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 24px; }
+        h2 { margin-bottom: 12px; }
+        a.btn { display:inline-block; padding:6px 14px; background:#0969da;
+                color:#fff; text-decoration:none; border-radius:4px; margin-right:8px; }
+        table { border-collapse: collapse; width: 100%; margin-top:12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align:center; }
+        th { background: #f6f8fa; }
+        tr:hover { background: #f6f8fa; }
+        .op a { margin: 0 6px; color:#0969da; text-decoration:none; }
+        .op a.del { color:#cf222e; }
+    </style>
+</head>
+<body>
+<h2>👨‍🎓 学生信息管理（JDBC 版）</h2>
+<a class="btn" href="<c:url value='/student/toAdd'/>">➕ 新增学生</a>
+
+<table>
+    <tr>
+        <th>学号</th><th>姓名</th><th>性别</th><th>年龄</th>
+        <th>专业</th><th>入学日期</th><th>操作</th>
+    </tr>
+    <%-- students 是 ListServlet 用 request.setAttribute 放进来的 List<Student>，
+         JSTL <c:forEach> 循环每一行，EL 表达式 ${s.name} 实际调用 getName() --%>
+    <c:forEach items="${students}" var="s">
+        <tr>
+            <td>${s.id}</td>
+            <td>${s.name}</td>
+            <td>${s.gender}</td>
+            <td>${s.age}</td>
+            <td>${s.major}</td>
+            <td><fmt:formatDate value="${s.enrollDate}" pattern="yyyy-MM-dd"/></td>
+            <td class="op">
+                <a href="<c:url value='/student/toEdit?id=${s.id}'/>">编辑</a>
+                <a class="del" href="<c:url value='/student/delete?id=${s.id}'/>"
+                   onclick="return confirm('确认删除 ${s.name} 吗？');">删除</a>
+            </td>
+        </tr>
+    </c:forEach>
+</table>
+</body>
+</html>
+
+</script>
+<script type="text/plain" id="src-pom.xml">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 项目三要素：groupId(公司/组织)、artifactId(项目名)、version(版本) -->
+    <groupId>com.example</groupId>
+    <artifactId>jdbc-student</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- ① Servlet API（Tomcat 10 已内置，scope=provided 表示编译用、运行不打包） -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ② JSP API（Tomcat 10 已内置） -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
+            <version>3.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ③ JSTL 标签库（页面迭代、判断要用） -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
+        <!-- ④ MySQL JDBC 驱动：JDBC 规范的 MySQL 实现，
+             程序只面向 JDBC 接口编程，运行时由驱动完成与 MySQL 的通信。 -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.0.33</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>jdbc-student</finalName>
+    </build>
+</project>
+
+</script>
+<script type="text/plain" id="src-web.xml">
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>jdbc-student</display-name>
+
+    <!-- 欢迎页：访问根路径时由 index.jsp 重定向到 /student/list -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+</web-app>
+
+</script>
+
+<!-- 【替换点7】知识点内容区（自动构建） -->
+<script type="text/html" id="kp-bind-form">
+<div class="kpcard" data-k="kp-bind-form" data-cat="reuse" style="border-left: 4px solid #6e7781;">
+  <div class="kp-head"><span class="kp-icon">📌</span><span class="kp-title">表单参数绑定（已讲过）</span><span class="kp-cat" style="background:#6e778122;color:#6e7781;">复用知识点</span></div>
+  <div class="kp-body">
+    <p><code>req.getParameter</code>、类型转换（Integer.parseInt、LocalDate.parse）、空值判断等表单绑定知识点已在 Servlet 课讲过。</p><p>新要点：日期参数从 HTML5 <code>&lt;input type="date"&gt;</code> 提交过来是 "yyyy-MM-dd" 字符串，直接 <code>LocalDate.parse(date)</code> 即可转换为 LocalDate，不需要 SimpleDateFormat。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-create-db">
+<div class="kpcard" data-k="kp-create-db" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">CREATE DATABASE 创建数据库</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b><code>CREATE DATABASE</code> 是 MySQL 的 DDL 语句，用来创建一个新的数据库（schema）。<code>IF NOT EXISTS</code> 表示"已存在就不报错、跳过"。</p>
+<p><b>为什么必须指定字符集 utf8mb4：</b>MySQL 的 <code>utf8</code> 是历史遗留的"伪 utf8"，最多 3 字节，不支持 emoji 和部分生僻字；<code>utf8mb4</code> 才是真正的 4 字节 UTF-8。</p>
+<p><b>关键参数：</b></p>
+<ul><li><code>DEFAULT CHARACTER SET utf8mb4</code>：默认字符集</li>
+<li><code>DEFAULT COLLATE utf8mb4_unicode_ci</code>：默认排序规则，<code>_ci</code> 表示 case-insensitive（不区分大小写）</li></ul>
+<p><b>教师演示建议：</b>先在命令行 <code>SHOW DATABASES;</code> 看现有库，再执行建库语句，让学生看到 jdbc_demo 出现的过程。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-create-table">
+<div class="kpcard" data-k="kp-create-table" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">CREATE TABLE 与字段类型选择</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b><code>CREATE TABLE</code> 在数据库里创建一张表。定义表的三个要素：<b>列名、列类型、约束</b>。</p>
+<p><b>常用 MySQL 列类型与 Java 类型对照：</b></p>
+<table class="kp-table"><tr><th>MySQL 类型</th><th>Java 类型</th><th>用途</th></tr>
+<tr><td>INT</td><td>Integer / int</td><td>整数（年龄、外键、主键）</td></tr>
+<tr><td>BIGINT</td><td>Long</td><td>大整数（主键、订单号）</td></tr>
+<tr><td>VARCHAR(n)</td><td>String</td><td>变长字符串（姓名、专业）</td></tr>
+<tr><td>CHAR(n)</td><td>String</td><td>定长字符串（性别、手机号）</td></tr>
+<tr><td>DATE</td><td>LocalDate</td><td>日期（入学时间、生日）</td></tr>
+<tr><td>DATETIME / TIMESTAMP</td><td>LocalDateTime</td><td>日期时间</td></tr>
+<tr><td>DECIMAL(m,n)</td><td>BigDecimal</td><td>金额（不能用 float/double）</td></tr>
+</table>
+<p><b>常见约束：</b></p>
+<ul><li><code>PRIMARY KEY</code>：主键，唯一且非空</li>
+<li><code>AUTO_INCREMENT</code>：自增，插入时无需指定</li>
+<li><code>NOT NULL</code>：非空</li>
+<li><code>DEFAULT 'xxx'</code>：默认值</li>
+<li><code>COMMENT 'xxx'</code>：列注释（生产环境必须写）</li></ul>
+<p><b>易错点：</b></p>
+<ul><li>性别用 <code>CHAR(1)</code>（存'男'/'女'）比 VARCHAR(2) 更省空间。</li>
+<li>金额绝对不要用 FLOAT/DOUBLE，会有精度丢失。</li>
+<li>每个列加 <code>COMMENT</code> 是企业开发规范。</li></ul>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-dao-call-list">
+<div class="kpcard" data-k="kp-dao-call-list" data-cat="reuse" style="border-left: 4px solid #6e7781;">
+  <div class="kp-head"><span class="kp-icon">📌</span><span class="kp-title">调用 DAO + forward 转发（已讲过）</span><span class="kp-cat" style="background:#6e778122;color:#6e7781;">复用知识点</span></div>
+  <div class="kp-body">
+    <p><code>@WebServlet</code>、<code>doGet/doPost</code>、<code>setAttribute</code>、<code>forward</code> 都是 Servlet 基础，已在 Servlet 第一次课详细讲过。</p><p>这里的新内容只有一行：<code>dao.findAll()</code>——Servlet 不写 SQL，直接调 DAO 方法拿数据。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-dao-intro">
+<div class="kpcard" data-k="kp-dao-intro" data-cat="arch" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🏛️</span><span class="kp-title">DAO 分层模式（Data Access Object）</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">架构分层</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>DAO（数据访问对象）是一种经典的<b>分层设计模式</b>，核心思想：<b>把所有对某张表的 SQL 操作封装在一个类里</b>，对外提供语义明确的方法（findAll、findById、insert、update、delete），业务层（Servlet）只调方法，不写 SQL。</p>
+<p><b>三层架构分工：</b></p>
+<table class="kp-table"><tr><th>层</th><th>包名</th><th>职责</th><th>能不能写SQL</th></tr>
+<tr><td>表示层（web）</td><td>web / controller</td><td>接收请求、调业务、返回响应</td><td>❌</td></tr>
+<tr><td>业务层（service）</td><td>service</td><td>业务逻辑（登录校验、事务）</td><td>❌</td></tr>
+<tr><td>数据访问层（dao）</td><td>dao / mapper</td><td>CRUD 数据库操作</td><td>✅</td></tr>
+<tr><td>实体（entity）</td><td>entity / pojo</td><td>数据载体，没有业务逻辑</td><td>❌</td></tr>
+<tr><td>工具（util）</td><td>util</td><td>通用工具类</td><td>❌</td></tr>
+</table>
+<p><b>为什么要分层：</b></p>
+<ul><li><b>解耦</b>：将来把 JDBC 换成 MyBatis、把 MySQL 换成 Oracle，只改 DAO 层，Servlet 和 JSP 一行代码不用动</li>
+<li><b>职责单一</b>：Servlet 只关心"怎么响应用户"，DAO 只关心"怎么操作数据库"</li>
+<li><b>可复用</b>：多个 Servlet 可以调用同一个 DAO 方法</li>
+<li><b>易测试</b>：可以单独测试 DAO 层 SQL 是否正确</li></ul>
+<p><b>命名约定：</b>表 student → 实体 Student → DAO StudentDao → 方法 findAll/findById/insert/update/deleteById，这是企业开发的标准命名。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-delete">
+<div class="kpcard" data-k="kp-delete" data-cat="security" style="border-left: 4px solid #cf222e;">
+  <div class="kp-head"><span class="kp-icon">🔒</span><span class="kp-title">删除操作的 GET 方式与风险</span><span class="kp-cat" style="background:#cf222e22;color:#cf222e;">安全配置</span></div>
+  <div class="kp-body">
+    <p><b>当前写法：</b>删除用 <code>&lt;a href="/student/delete?id=1"&gt;</code> 发起 GET 请求。这是入门阶段的简单写法，方便教学。</p>
+<p><b>生产环境必须改为 POST + 权限校验，原因：</b></p>
+<ul><li>GET 请求会被浏览器预加载、被搜索引擎爬虫访问，可能导致"打开页面就自动删除数据"</li>
+<li>CSRF（跨站请求伪造）风险：恶意网站可以放一个 <code>&lt;img src="http://你的网站/student/delete?id=1"&gt;</code>，管理员访问时就会被偷偷删除数据</li>
+<li>不符合 RESTful 规范：删除操作应该用 POST/DELETE 方法，且加 token 校验</li></ul>
+<p><b>本课程阶段说明：</b>教学阶段用 GET 方式方便演示，学完过滤器/监听器后会讲解如何做权限和 CSRF 防护。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-edit-echo">
+<div class="kpcard" data-k="kp-edit-echo" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">编辑回显模式（ToEdit → edit.jsp）</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>编辑页面必须先把"原数据"查出来显示在表单里，用户改完再提交。这个"先查再显示"的过程叫<b>数据回显</b>。</p>
+<p><b>标准编辑流程：</b></p>
+<ol><li>用户点"编辑"链接 → 带 id 参数访问 <code>/student/toEdit?id=1</code></li>
+<li>ToEditServlet 调用 <code>dao.findById(id)</code> 查出原 Student 对象</li>
+<li>用 <code>request.setAttribute("s", s)</code> 放进请求域</li>
+<li>forward 到 edit.jsp，JSP 用 <code>${s.name}</code> 等 EL 把原数据填进 input 的 value</li>
+<li>用户修改后提交到 UpdateServlet</li></ol>
+<p><b>易错点：</b>不能直接把用户链接到 edit.jsp，必须先经过 ToEditServlet 查数据，否则 edit.jsp 拿不到 ${s}，表单全部空白。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-executeupdate">
+<div class="kpcard" data-k="kp-executeupdate" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">executeUpdate 与受影响行数</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b><code>executeUpdate()</code> 用于执行 INSERT / UPDATE / DELETE 以及 DDL 语句（CREATE/ALTER/DROP），返回值是一个 int，表示<b>本次操作影响的行数</b>。</p>
+<p><b>常见返回值含义：</b></p>
+<table class="kp-table"><tr><th>返回值</th><th>含义</th></tr>
+<tr><td>1</td><td>成功新增/修改/删除了 1 行</td></tr>
+<tr><td>0</td><td>WHERE 条件没匹配到数据，未影响任何行（例如删除一个不存在的 id）</td></tr>
+<tr><td>N</td><td>批量操作时影响了 N 行</td></tr>
+</table>
+<p><b>实战用法：</b>可以根据返回值判断操作是否成功，例如 update 返回 0 时给用户提示"数据不存在或已被删除"。</p>
+<p><b>易错点：</b>SELECT 查询必须用 executeQuery()，不能用 executeUpdate()，否则会抛异常。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-hidden-id">
+<div class="kpcard" data-k="kp-hidden-id" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">隐藏域传 id</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>为什么需要隐藏域：</b>编辑提交时需要知道"改的是哪条记录"，但 id 不希望用户看到也不希望用户修改。用 <code>&lt;input type="hidden" name="id" value="${s.id}"&gt;</code> 可以把 id 随表单一起提交，但页面上不显示。</p>
+<p><b>安全注意：</b>hidden 只是在页面上不可见，用户通过 F12 仍然可以看到并修改 id 值。所以后端不能信任前端传来的 id，必须做权限校验（课程后续阶段会讲）。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-index-redirect">
+<div class="kpcard" data-k="kp-index-redirect" data-cat="reuse" style="border-left: 4px solid #6e7781;">
+  <div class="kp-head"><span class="kp-icon">📌</span><span class="kp-title">sendRedirect 重定向（已在 Servlet 课讲过）</span><span class="kp-cat" style="background:#6e778122;color:#6e7781;">复用知识点</span></div>
+  <div class="kp-body">
+    <p>已在 Servlet 第一次课详细讲解：<code>response.sendRedirect(path)</code> 是 302 重定向，浏览器地址栏会变，请求域数据丢失。这里用于访问根路径时直接跳到列表页。</p><p>不再重复展开。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-javabean-field">
+<div class="kpcard" data-k="kp-javabean-field" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">实体类字段类型选择</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>为什么年龄用 Integer 而不是 int：</b>数据库列允许为 NULL，如果用基本类型 <code>int</code>，当数据库值为 NULL 时 JDBC 会抛 <code>NullPointerException</code>；用包装类 <code>Integer</code> 才能正确表达"未填写"。</p>
+<p><b>日期类型为什么用 LocalDate 而不是 java.util.Date：</b></p>
+<ul><li><code>java.util.Date</code> 是旧 API，设计差、线程不安全，已被官方标记为 legacy</li>
+<li><code>java.time.LocalDate</code>（JDK 8+）是不可变、线程安全的新 API</li>
+<li>JDBC 4.2 起直接支持 <code>rs.getObject("enroll_date", LocalDate.class)</code>，无需手动转换</li></ul>
+<p><b>类型选择口诀：</b></p>
+<ul><li>可能为 NULL 的字段 → 包装类型（Integer/Long/Double）</li>
+<li>日期 → LocalDate/LocalDateTime</li>
+<li>金额 → BigDecimal</li>
+<li>其他字段 → String</li></ul>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-javabean">
+<div class="kpcard" data-k="kp-javabean" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">JavaBean 实体类规范</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>JavaBean 是一种符合特定写法规范的 Java 类，专门用来<b>封装数据</b>。在 JDBC/MyBatis/Spring 项目里，一张数据库表对应一个 JavaBean（也叫 Entity/POJO）。</p>
+<p><b>四条硬性规范（违反会导致反射、JSTL、DBUtils 全部失效）：</b></p>
+<ol><li>类必须 <code>public</code>，并且有 <code>public</code> 的无参构造方法</li>
+<li>所有属性必须 <code>private</code>，外部只能通过 getter/setter 访问</li>
+<li>getter/setter 命名必须严格 <code>getXxx</code>/<code>setXxx</code>（布尔属性可用 <code>isXxx</code>）</li>
+<li>最好实现 <code>Serializable</code> 接口（分布式/序列化场景必需）</li></ol>
+<p><b>命名约定：</b></p>
+<ul><li>数据库字段：<code>enroll_date</code>（下划线命名）</li>
+<li>Java 属性：<code>enrollDate</code>（驼峰命名）</li>
+<li>getter：<code>getEnrollDate()</code>（首字母大写）</li></ul>
+<p><b>为什么必须写 getter/setter：</b>EL 表达式 <code>${s.name}</code>、JSTL、DBUtils、Spring 等框架都是通过反射调用 getter 取值，如果只有 public 字段没有 getter，这些框架都取不到值。</p>
+<p><b>易错点：</b>属性 <code>enrollDate</code> 的 getter 必须写成 <code>getEnrollDate()</code>（两个字母 En 大写开头），写成 <code>getenrollDate()</code> 框架识别不了。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-jdbc-driver">
+<div class="kpcard" data-k="kp-jdbc-driver" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">JDBC 驱动（mysql-connector-j）</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>JDBC 是 Java 定义的一套"访问关系数据库"的标准接口（<code>java.sql.*</code>），各数据库厂商按这套接口提供自己的实现类——这个实现类打成的 jar 就叫<b>JDBC 驱动</b>。MySQL 8 的驱动坐标是 <code>com.mysql:mysql-connector-j:8.0.33</code>。</p>
+<p><b>为什么要加这个依赖：</b>没有驱动 jar，程序在运行时找不到 <code>com.mysql.cj.jdbc.Driver</code>，就无法与 MySQL 建立连接，会抛 <code>ClassNotFoundException: com.mysql.cj.jdbc.Driver</code>。</p>
+<p><b>版本对应关系：</b></p>
+<table class="kp-table"><tr><th>MySQL 版本</th><th>推荐驱动</th><th>driver 类名</th></tr>
+<tr><td>MySQL 5.1.x</td><td>mysql-connector-java 5.1.x</td><td>com.mysql.jdbc.Driver</td></tr>
+<tr><td>MySQL 8.0.x</td><td>mysql-connector-j 8.0.33（本项目）</td><td>com.mysql.cj.jdbc.Driver</td></tr>
+</table>
+<p><b>易错点：</b></p>
+<ul><li>MySQL 8 的 driver 类名带 <code>cj</code>，不带 cj 的老类名虽然也能用但会报 deprecated 警告。</li>
+<li>驱动坐标从 <code>mysql-connector-java</code> 改名为 <code>mysql-connector-j</code>，老教材的 artifactId 要更新。</li>
+<li>JDBC 是接口、驱动是实现——这是面向接口编程的经典案例。</li></ul>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-jdbc-flow">
+<div class="kpcard" data-k="kp-jdbc-flow" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">JDBC 六步标准流程</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>一次完整 JDBC 操作的标准 6 步（必须背下来）：</b></p>
+<ol>
+<li><b>加载/注册驱动</b>：<code>Class.forName("com.mysql.cj.jdbc.Driver")</code>（静态块里做一次）</li>
+<li><b>获取连接</b>：<code>Connection conn = DriverManager.getConnection(url, user, password)</code>（通过 JdbcUtil 封装后调 <code>JdbcUtil.getConnection()</code>）</li>
+<li><b>创建语句对象</b>：<code>PreparedStatement pstmt = conn.prepareStatement(sql)</code>（查询/更新都用 PreparedStatement，不用 Statement）</li>
+<li><b>设置参数 &amp; 执行 SQL</b>：<code>pstmt.setXxx(1, value); ResultSet rs = pstmt.executeQuery();</code> 或 <code>int rows = pstmt.executeUpdate();</code></li>
+<li><b>处理结果</b>：查询就遍历 ResultSet 封装成 List；增删改就判断返回的影响行数</li>
+<li><b>释放资源</b>：try-with-resources 自动关闭，或 finally 里按 ResultSet→Statement→Connection 顺序关闭</li>
+</ol>
+<p><b>executeQuery vs executeUpdate 区别：</b></p>
+<table class="kp-table"><tr><th>方法</th><th>返回值</th><th>使用场景</th></tr>
+<tr><td>executeQuery()</td><td>ResultSet</td><td>SELECT 查询</td></tr>
+<tr><td>executeUpdate()</td><td>int（受影响行数）</td><td>INSERT / UPDATE / DELETE / DDL</td></tr>
+<tr><td>execute()</td><td>boolean</td><td>通用执行（少用）</td></tr>
+</table>
+<p><b>记忆口诀：</b>"驱连语执处关"（加载驱动→取连接→建语句→执行→处理结果→关资源）。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-jdbc-props">
+<div class="kpcard" data-k="kp-jdbc-props" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">jdbc.properties 连接四要素</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>JDBC 连接数据库需要四个参数，合称为"连接四要素"：</p>
+<table class="kp-table"><tr><th>参数</th><th>作用</th><th>MySQL 8 常见值</th></tr>
+<tr><td>jdbc.driver</td><td>驱动类全名</td><td>com.mysql.cj.jdbc.Driver</td></tr>
+<tr><td>jdbc.url</td><td>数据库地址</td><td>jdbc:mysql://主机:3306/库名?参数</td></tr>
+<tr><td>jdbc.user</td><td>数据库用户名</td><td>root</td></tr>
+<tr><td>jdbc.password</td><td>数据库密码</td><td>root / 123456</td></tr>
+</table>
+<p><b>MySQL 8 url 必带参数：</b></p>
+<ul><li><code>serverTimezone=Asia/Shanghai</code>：设置时区，否则报"The server time zone value ... is unrecognized"</li>
+<li><code>useUnicode=true&amp;characterEncoding=utf8</code>：启用 UTF-8 编码，避免中文乱码</li>
+<li><code>useSSL=false</code>：本地开发关闭 SSL</li>
+<li><code>allowPublicKeyRetrieval=true</code>：允许客户端获取服务器公钥（MySQL 8 认证需要）</li></ul>
+<p><b>为什么必须放在 properties 文件里而不是硬编码：</b></p>
+<ul><li>开发/测试/生产环境数据库地址、账号不同，改配置文件不用改代码、不用重新编译</li>
+<li>密码不能写进源码，避免泄露到版本控制系统</li>
+<li>运维可以单独管理配置文件</li></ul>
+<p><b>易错点：</b>properties 文件必须放在 <code>src/main/resources</code> 根下，Maven 编译后会自动复制到 <code>WEB-INF/classes</code>，才能被类加载器读到。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-jdbcutil-close">
+<div class="kpcard" data-k="kp-jdbcutil-close" data-cat="util" style="border-left: 4px solid #bf8700;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">JDBC 资源关闭</span><span class="kp-cat" style="background:#bf870022;color:#bf8700;">工具类</span></div>
+  <div class="kp-body">
+    <p><b>为什么必须关资源：</b></p>
+<ul><li>数据库连接是<b>有限且昂贵</b>的资源，MySQL 默认最大连接数通常是 151，不关很快就会耗尽</li>
+<li>连接泄漏：忘记关 Connection，会导致应用运行一段时间后报"Too many connections"，整个系统卡死</li>
+<li>Statement、ResultSet 同样占用数据库端的游标和内存，不关也会泄漏</li></ul>
+<p><b>关闭顺序原则：</b>先开的后关，后开的先关。顺序是 <code>ResultSet → Statement → Connection</code>。</p>
+<p><b>为什么每个 close 都单独 try-catch 并吞异常：</b>前面的 close 失败不影响后面资源继续关闭，保证所有资源都能被尝试关闭。吞异常是因为关闭阶段的异常对业务无意义，不应覆盖业务异常。</p>
+<p><b>重载版本的意义：</b>executeUpdate 没有 ResultSet，调用 close(Statement, Connection) 两参数版本即可；只拿了 Connection 就调单参数版本，不用传 null。</p>
+<p><b>推荐做法：</b>后续学到 try-with-resources 后，可以替代手动 close，代码更简洁、更安全。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-jdbcutil-intro">
+<div class="kpcard" data-k="kp-jdbcutil-intro" data-cat="util" style="border-left: 4px solid #bf8700;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">JDBC 工具类的封装思路</span><span class="kp-cat" style="background:#bf870022;color:#bf8700;">工具类</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>每次操作数据库都要写"加载驱动、获取连接、关闭资源"这三段重复代码，把它们抽成一个 <code>JdbcUtil</code> 工具类，让 DAO 方法只关注 SQL 本身。</p>
+<p><b>工具类的设计原则：</b></p>
+<ul><li>构造方法 private：禁止外部 new 工具类</li>
+<li>所有方法 static：直接 <code>JdbcUtil.getConnection()</code> 调用</li>
+<li>配置通过 static 块在类加载时读取一次，之后不用反复读文件</li>
+<li>close 方法做多个重载，调用方按需使用</li></ul>
+<p><b>静态代码块 vs 普通代码块 vs 构造方法：</b></p>
+<table class="kp-table"><tr><th>类型</th><th>执行时机</th><th>次数</th><th>典型用途</th></tr>
+<tr><td>static {}</td><td>类第一次被加载时</td><td>整个 JVM 只执行 1 次</td><td>读配置、注册驱动</td></tr>
+<tr><td>{}</td><td>每次 new 对象前</td><td>每创建一个对象执行 1 次</td><td>初始化实例变量</td></tr>
+<tr><td>构造方法</td><td>new 时执行</td><td>每 new 一次执行 1 次</td><td>初始化对象</td></tr>
+</table>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-jdbcutil-static">
+<div class="kpcard" data-k="kp-jdbcutil-static" data-cat="util" style="border-left: 4px solid #bf8700;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">静态代码块：读配置+注册驱动</span><span class="kp-cat" style="background:#bf870022;color:#bf8700;">工具类</span></div>
+  <div class="kp-body">
+    <p><b>执行流程：</b></p>
+<ol><li>JVM 第一次用到 JdbcUtil 类时触发 static 块</li>
+<li>创建 Properties 对象（Map 的一种，专门处理 key=value 配置）</li>
+<li>通过类加载器 <code>getResourceAsStream("jdbc.properties")</code> 从类路径读取配置文件为字节流</li>
+<li><code>prop.load(in)</code> 解析字节流，填充 key-value</li>
+<li><code>Class.forName(driver)</code> 加载驱动类，触发驱动的 static 块向 DriverManager 注册自己</li></ol>
+<p><b>为什么必须用类加载器读：</b>Java Web 项目运行时，配置文件被打包在 <code>WEB-INF/classes</code> 里，没有固定磁盘路径，必须通过 ClassLoader 以"类路径相对路径"方式读取，部署到任何服务器都能找到。</p>
+<p><b>JDBC 4.0+ 还需要 Class.forName 吗？</b>JDBC 4.0 起支持 SPI 自动注册驱动，只要驱动 jar 在 classpath 下，无需显式 Class.forName。但企业老项目里写 Class.forName 仍是标准写法，保留能兼容所有环境。</p>
+<p><b>易错点：</b></p>
+<ul><li><code>in == null</code> 必须判空，否则文件放错位置时会直接 NPE，给出的报错"没找到 jdbc.properties"能帮学生快速定位问题。</li>
+<li>路径前面不要加 <code>/</code>：ClassLoader.getResourceAsStream 默认从 classpath 根开始找，加 / 反而找不到。</li></ul>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-js-confirm">
+<div class="kpcard" data-k="kp-js-confirm" data-cat="reuse" style="border-left: 4px solid #6e7781;">
+  <div class="kp-head"><span class="kp-icon">📌</span><span class="kp-title">JS confirm 确认框</span><span class="kp-cat" style="background:#6e778122;color:#6e7781;">复用知识点</span></div>
+  <div class="kp-body">
+    <p><code>onclick="return confirm('...');"</code>：点击删除链接时弹出浏览器原生确认框，点"取消"会 return false 阻止链接跳转，防止误删。这是一个简单的前端交互小技巧。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-jstl-foreach">
+<div class="kpcard" data-k="kp-jstl-foreach" data-cat="reuse" style="border-left: 4px solid #6e7781;">
+  <div class="kp-head"><span class="kp-icon">📌</span><span class="kp-title">JSTL &lt;c:forEach&gt;（已在 JSP 课讲过）</span><span class="kp-cat" style="background:#6e778122;color:#6e7781;">复用知识点</span></div>
+  <div class="kp-body">
+    <p>已在 JSP 第二次课详细讲解：<code>&lt;c:forEach items="${students}" var="s"&gt;</code> 遍历集合，EL 表达式 <code>${s.name}</code> 通过反射调用 <code>getName()</code>。</p><p>新要点：students 是 Servlet 通过 <code>request.setAttribute</code> 传过来的 <code>List&lt;Student&gt;</code>，里面的每个 Student 对象都是 DAO 从 ResultSet 封装出来的——这就是 DAO + Servlet + JSP 的完整数据链路。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-preparedstatement-single">
+<div class="kpcard" data-k="kp-preparedstatement-single" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">单条查询（if(rs.next()) 模式）</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>按主键 id 查询一条记录时，结果最多一行，所以用 <code>if (rs.next())</code> 而不是 <code>while</code>。</p>
+<p><b>if 与 while 的选择：</b></p>
+<ul><li>结果<b>可能有多行</b>（findAll、模糊查询、列表查询）→ 用 <code>while(rs.next())</code> 循环</li>
+<li>结果<b>最多一行</b>（按主键/唯一键查询，如 findById、登录校验）→ 用 <code>if (rs.next())</code></li></ul>
+<p><b>找不到数据时的处理：</b>if (rs.next()) 为 false 说明数据库里没有对应 id 的记录，方法返回 null；Servlet 拿到 null 应提示"记录不存在"并返回列表页。</p>
+<p><b>try-with-resources 嵌套：</b>ResultSet 也可以单独放在内层 try() 里，保证它被及时关闭，不会等到整个方法结束。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-preparedstatement">
+<div class="kpcard" data-k="kp-preparedstatement" data-cat="security" style="border-left: 4px solid #cf222e;">
+  <div class="kp-head"><span class="kp-icon">🔒</span><span class="kp-title">PreparedStatement 与 SQL 注入防御</span><span class="kp-cat" style="background:#cf222e22;color:#cf222e;">安全配置</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>PreparedStatement 是 Statement 的子类，代表"预编译语句对象"。SQL 语句在创建时就发送给数据库<b>预编译</b>，之后通过 setXxx 设置的参数会被驱动<b>当作纯数据处理</b>，不会参与 SQL 语法解析。</p>
+<p><b>SQL 注入演示：</b></p>
+<ul><li>登录校验 SQL（危险写法）：<code>SELECT * FROM user WHERE name='" + name + "' AND pwd='" + pwd + "'</code></li>
+<li>用户在用户名输入：<code>' OR '1'='1</code>，密码随便填</li>
+<li>拼接后 SQL 变成：<code>SELECT * FROM user WHERE name='' OR '1'='1' AND pwd='xxx'</code></li>
+<li>条件永远为真，用户无需正确密码就能登录，甚至用 <code>'; DROP TABLE student; --</code> 删表</li></ul>
+<p><b>PreparedStatement 的三大优点：</b></p>
+<ol><li><b>防注入</b>：参数被转义成纯数据，不可能改变 SQL 语义</li>
+<li><b>性能好</b>：SQL 结构固定，数据库可以缓存执行计划，多次执行时只需替换参数，无需反复编译</li>
+<li><b>可读性好</b>：不用拼字符串，代码清晰，类型安全</li></ol>
+<p><b>? 占位符的规则：</b></p>
+<ul><li>? 只能<b>代替参数值</b>，不能代替表名、列名、关键字（SELECT/ORDER BY 等）</li>
+<li>下标从 <b>1</b> 开始，不是 0</li>
+<li>每个 ? 都必须调用 setXxx 设值，漏一个就报错</li>
+<li>参数类型要和数据库列类型匹配：int 列用 setInt，字符串用 setString，日期用 setObject(LocalDate)</li></ul>
+<p><b>行业规范：</b>现代企业开发中<b>严禁使用 Statement</b>，一律使用 PreparedStatement。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-resultset-wrap">
+<div class="kpcard" data-k="kp-resultset-wrap" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">ResultSet → JavaBean 封装（ORM 思想）</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>把 ResultSet 的每一行数据"映射"成一个 Java 对象的过程，就是最简单的 <b>ORM（Object Relational Mapping，对象关系映射）</b>思想。后面学到的 MyBatis、Spring Data JPA 都是在做这件事，只是自动化程度更高。</p>
+<p><b>手动封装套路（固定 4 步）：</b></p>
+<ol><li>new 一个 ArrayList 用来装所有对象</li>
+<li>while(rs.next()) 循环每一行</li>
+<li>循环体内 new 一个 Student 对象，用 rs.getXxx 依次给每个属性 set 值</li>
+<li>把对象 add 进 list，循环结束返回 list</li></ol>
+<p><b>为什么必须在循环里 new 对象：</b>如果在循环外 new 一个对象，每次 set 只是修改同一个对象的属性，最后 list 里所有元素都指向同一个对象，且值都是最后一行的数据。这是初学者最常见的 bug。</p>
+<p><b>下一课预告：</b>Apache Commons DBUtils 的 <code>BeanHandler</code>/<code>BeanListHandler</code> 可以自动完成这个封装过程，不用手动写 while 循环。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-resultset">
+<div class="kpcard" data-k="kp-resultset" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">ResultSet 结果集与游标</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>ResultSet 是 SELECT 查询返回的"结果集"对象，内部维护一个<b>游标（cursor）</b>，初始位置在第一行<b>之前</b>。</p>
+<p><b>核心方法：</b></p>
+<ul><li><code>rs.next()</code>：游标向下移动一行，有数据返回 true，已到末尾返回 false。必须先 next() 再取值，否则报"Before start of result set"。</li>
+<li><code>rs.getXxx(列名)</code>：按列名取当前行指定列的值，Xxx 为 Int/String/Object/LocalDate 等</li>
+<li><code>rs.getXxx(列序号)</code>：按列序号取值（从 1 开始，不是 0！），按列名取值可读性更好，列顺序变化也不影响</li></ul>
+<p><b>ResultSet 的三个特性：</b></p>
+<ul><li><b>只读</b>：默认 ResultSet 不能修改数据</li>
+<li><b>向前</b>：只能 next() 向下移动，不能 previous() 回去（可通过 createStatement 参数开启可滚动，一般不使用）</li>
+<li><b>一次性</b>：Statement 关闭后 ResultSet 自动关闭，所以必须在关闭前把数据读出来封装好</li></ul>
+<p><b>NULL 列的读取技巧：</b>对于可能为 NULL 的列（如 age、enroll_date），用 <code>rs.getObject("age")</code> 返回 Integer/LocalDate 或 null，而不是 getInt（会返回 0，无法区分"年龄为 0"和"没填年龄"）。</p>
+<p><b>日期读取：</b>JDBC 4.2+ 推荐 <code>rs.getObject("enroll_date", LocalDate.class)</code>，一步到位拿到 LocalDate，避免 <code>java.sql.Date</code> 转 <code>LocalDate</code> 的麻烦。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-servlet-reuse">
+<div class="kpcard" data-k="kp-servlet-reuse" data-cat="reuse" style="border-left: 4px solid #6e7781;">
+  <div class="kp-head"><span class="kp-icon">📌</span><span class="kp-title">新增/修改/删除 Servlet（知识点复用）</span><span class="kp-cat" style="background:#6e778122;color:#6e7781;">复用知识点</span></div>
+  <div class="kp-body">
+    <p>ToAdd / Add / ToEdit / Update / Delete 这几个 Servlet 的注解、doGet/doPost、请求参数绑定、setCharacterEncoding、sendRedirect 等知识点已在 Servlet 第一次课全部讲过。</p><p>本次课的新知识点集中在 DAO 层和 JDBC API 上，Servlet 写法完全沿用之前的 PRG 模式（POST 处理后重定向到 GET 列表）。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-try-with-resources">
+<div class="kpcard" data-k="kp-try-with-resources" data-cat="base" style="border-left: 4px solid #0969da;">
+  <div class="kp-head"><span class="kp-icon">📘</span><span class="kp-title">try-with-resources 自动资源管理</span><span class="kp-cat" style="background:#0969da22;color:#0969da;">基础语法</span></div>
+  <div class="kp-body">
+    <p><b>是什么：</b>JDK 7 引入的语法糖，括号里声明的资源必须实现 <code>AutoCloseable</code> 接口（JDBC 的 Connection/Statement/ResultSet 全部实现了），离开 try 块时<b>无论正常结束还是抛异常，都会自动调用 close()</b>，彻底告别 finally 里大段关闭代码。</p>
+<p><b>对比旧式写法：</b></p>
+<table class="kp-table"><tr><th>旧式 try-catch-finally</th><th>try-with-resources</th></tr>
+<tr><td>Connection conn = null;
+Statement stmt = null;
+try {
+  conn = ...; stmt = ...;
+  // 业务
+} finally {
+  if (stmt!=null) try{stmt.close();}catch(Exception e){}
+  if (conn!=null) try{conn.close();}catch(Exception e){}
+}</td><td>try (Connection conn = ...;
+     Statement stmt = ...) {
+  // 业务
+} // 自动关闭</td></tr>
+</table>
+<p><b>多资源声明顺序：</b>按"从大到小"声明（Connection → PreparedStatement → ResultSet），关闭顺序是反向的（ResultSet → Statement → Connection），与手动关闭顺序一致，JDK 保证顺序。</p>
+<p><b>什么时候不能用：</b>连接从连接池（Druid/HikariCP）借出时，close 不是销毁而是"归还"，try-with-resources 依然适用且推荐使用。</p>
+<p><b>易错点：</b>资源必须在 try 的括号里声明并初始化，括号外声明的资源不会被自动管理。</p>
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-welcome-file">
+<div class="kpcard" data-k="kp-welcome-file" data-cat="reuse" style="border-left: 4px solid #6e7781;">
+  <div class="kp-head"><span class="kp-icon">📌</span><span class="kp-title">welcome-file-list（已在 JSP 课讲过）</span><span class="kp-cat" style="background:#6e778122;color:#6e7781;">复用知识点</span></div>
+  <div class="kp-body">
+    <p>这是 Servlet/JSP 基础知识点，已在 JSP 进阶课详细讲解：</p><p><code>&lt;welcome-file-list&gt;</code> 配置 Tomcat 访问根路径时默认跳转的页面。这里配置为 <code>index.jsp</code>，再由 index.jsp 重定向到学生列表。</p><p>不再重复展开。</p>
+  </div>
+</div>
+
+</script>
+
+<script>
+/* ============================================================
+   配置：教师模式开关（源码级设置，无 UI 开关）
+   教师使用时改为 true 即可复制代码，默认 false 为学生模式
+   ============================================================ */
+const TEACHER_MODE = false;
+// ========== 【版权与水印开关】 ==========
+//   SHOW_COPYRIGHT = true/false  是否显示页脚版权信息条
+//   SHOW_WATERMARK = true/false  是否显示整页斜向水印
+//   COPYRIGHT_TEXT = "..."       版权文字内容（支持HTML）
+//   WATERMARK_TEXT = "..."       水印文字（建议 10~20 字，会平铺整页）
+const SHOW_COPYRIGHT = true;
+const SHOW_WATERMARK = true;
+const COPYRIGHT_TEXT = '© Java Web 应用开发课程 · 交互教学课件（教师版）';  // 【替换点2】页脚版权文字
+const WATERMARK_TEXT = 'Java Web JDBC基础';  // 【替换点3】水印文字（建议10~16字，避免重叠）
+
+
+/* ============================================================
+   课程配置（第二次课）
+   ============================================================ */
+const COURSE = {
+  title: '第一次课 · JDBC基础与增删改查',
+  subtitle: '学生信息管理系统 CRUD 实战 —— 4课时',
+  techTag: 'JDK17 + Tomcat10 + MySQL8 + Jakarta',
+  categories: {
+    base:     { name: '基础语法', icon: '📘', color: '#0969da' },
+    api:      { name: 'JDBC API', icon: '🔌', color: '#1a7f37' },
+    dao:      { name: 'DAO分层',  icon: '🧱', color: '#8250df' },
+    servlet:  { name: 'Servlet', icon: '📡', color: '#bc4c00' },
+    jsp:      { name: 'JSP页面', icon: '🏷️', color: '#bf3989' },
+    sec:      { name: '安全配置', icon: '🔒', color: '#cf222e' }
+  },
+  KPMETA: {
+    // ====== pom.xml / SQL ======
+    'kp-jdbc-driver':      { title: 'JDBC 驱动 mysql-connector-j', cat: 'base' },
+    'kp-create-db':        { title: 'CREATE DATABASE 建库',        cat: 'base' },
+    'kp-create-table':     { title: 'CREATE TABLE 建 student 表', cat: 'base' },
+    // ====== Student.java ======
+    'kp-javabean':         { title: 'JavaBean 实体类规范',        cat: 'base' },
+    'kp-javabean-field':   { title: '字段与数据库列映射',          cat: 'base' },
+    // ====== jdbc.properties ======
+    'kp-jdbc-props':       { title: 'jdbc.properties 连接配置',    cat: 'base' },
+    // ====== JdbcUtil.java ======
+    'kp-jdbcutil-intro':   { title: 'JDBC 工具类作用',             cat: 'dao' },
+    'kp-jdbcutil-static':  { title: 'static 静态代码块加载驱动',   cat: 'dao' },
+    'kp-jdbcutil-close':   { title: '资源关闭（finally 顺序）',    cat: 'dao' },
+    // ====== StudentDao.java ======
+    'kp-dao-intro':             { title: 'DAO 分层思想',                cat: 'dao' },
+    'kp-try-with-resources':    { title: 'try-with-resources 自动关流', cat: 'api' },
+    'kp-jdbc-flow':             { title: 'JDBC 六步执行流程',            cat: 'api' },
+    'kp-resultset':             { title: 'ResultSet 结果集',             cat: 'api' },
+    'kp-resultset-wrap':        { title: '结果集 → JavaBean 封装',       cat: 'dao' },
+    'kp-preparedstatement':     { title: 'PreparedStatement 防SQL注入',  cat: 'sec' },
+    'kp-executeupdate':         { title: 'executeUpdate 返回影响行数',   cat: 'api' },
+    'kp-preparedstatement-single':{ title:'按主键查询单条记录',           cat: 'api' },
+    // ====== web.xml ======
+    'kp-welcome-file':      { title: 'welcome-file-list 欢迎页',     cat: 'jsp' },
+    // ====== index.jsp ======
+    'kp-index-redirect':    { title: 'jsp:forward 服务器跳转',       cat: 'jsp' },
+    // ====== Servlet 层 ======
+    'kp-servlet-reuse':     { title: 'Servlet 调用 DAO 转发 JSP',    cat: 'servlet' },
+    'kp-delete':            { title: '删除后 sendRedirect 重定向',   cat: 'servlet' },
+    'kp-edit-echo':         { title: '编辑回显：findById → setAttribute', cat: 'servlet' },
+    'kp-bind-form':         { title: 'req.getParameter 表单取值',    cat: 'servlet' },
+    'kp-js-confirm':        { title: 'JS confirm 删除二次确认',      cat: 'jsp' },
+    'kp-jstl-foreach':      { title: 'JSTL c:forEach 遍历列表',      cat: 'jsp' },
+    'kp-hidden-id':         { title: '隐藏域携带主键 ID',            cat: 'jsp' }
+  },
+  steps: [
+    { tpl: 'goal',   title: '🎯 学习目标' },
+    { tpl: 'env',    title: '🖥️ 环境与依赖准备' },
+    { tpl: 'struct', title: '📁 项目结构' },
+
+    { src: 'pom.xml', title: 'pom.xml · Maven 依赖配置',
+      kps: ['kp-jdbc-driver'],
+      marks: [
+        ['<!-- ④ MySQL JDBC 驱动', '数据库的通信。 -->', 'kp-jdbc-driver']
+      ]},
+    { src: 'init.sql', title: 'init.sql · 建库建表与测试数据',
+      kps: ['kp-create-db','kp-create-table'],
+      marks: [
+        ['CREATE DATABASE IF NOT EXISTS jdbc_demo', 'utf8mb4_unicode_ci;', 'kp-create-db'],
+        ['CREATE TABLE student (', '学生信息表\';', 'kp-create-table']
+      ]},
+    { src: 'Student.java', title: 'Student.java · JavaBean 实体类',
+      kps: ['kp-javabean','kp-javabean-field'],
+      marks: [
+        ['/*', '规范（必须遵守，否则 JSP/JSTL 反射映射会失效）：', 'kp-javabean'],
+        ['private Integer id;', 'private LocalDate enrollDate;', 'kp-javabean-field']
+      ]},
+    { src: 'jdbc.properties', title: 'jdbc.properties · 连接配置文件',
+      kps: ['kp-jdbc-props'],
+      marks: [
+        ['jdbc.driver=com.mysql.cj.jdbc.Driver', 'allowPublicKeyRetrieval=true', 'kp-jdbc-props']
+      ]},
+    { src: 'JdbcUtil.java', title: 'JdbcUtil.java · JDBC 工具类（取连接+关资源）',
+      kps: ['kp-jdbcutil-intro','kp-jdbcutil-static','kp-jdbcutil-close'],
+      marks: [
+        ['/*', '集中到这里。', 'kp-jdbcutil-intro'],
+        ['static {', '} }', 'kp-jdbcutil-static'],
+        ['/*', '必须放在 finally 中。', 'kp-jdbcutil-close']
+      ]},
+    { src: 'StudentDao.java', title: 'StudentDao.java · DAO 分层 + findAll 查询',
+      kps: ['kp-dao-intro','kp-try-with-resources','kp-jdbc-flow','kp-resultset','kp-resultset-wrap'],
+      marks: [
+        ['/*', '不写 SQL——实现业务层与数据层解耦。', 'kp-dao-intro'],
+        ['String sql = "SELECT id, name, gender, age, major, enroll_date FROM student ORDER BY id";', 'String sql = "SELECT id, name, gender, age, major, enroll_date FROM student ORDER BY id";', 'kp-jdbc-flow'],
+        ['/*', '关闭顺序是反向自动处理的。', 'kp-try-with-resources'],
+        ['Connection conn = JdbcUtil.getConnection();', 'ResultSet rs = pstmt.executeQuery()) {', 'kp-jdbc-flow'],
+        ['/*', 'getXxx(列序号) 好', 'kp-resultset'],
+        ['while (rs.next()) {', 'list.add(s);', 'kp-resultset-wrap']
+      ]},
+    { src: 'StudentDao.java', title: 'StudentDao.java · insert 新增（PreparedStatement 防注入）',
+      kps: ['kp-preparedstatement','kp-executeupdate'],
+      marks: [
+        ['/*', 'PreparedStatement 预编译 + 参数化，从根本上防注入', 'kp-preparedstatement'],
+        ['pstmt.setString(1, s.getName());', 'return pstmt.executeUpdate();', 'kp-executeupdate']
+      ]},
+    { src: 'StudentDao.java', title: 'StudentDao.java · findById / update / delete',
+      kps: ['kp-preparedstatement-single'],
+      marks: [
+        ['public Student findById(Integer id) {', 'public Student findById(Integer id) {'],
+        ['pstmt.setInt(1, id);', 'if (rs.next()) {', 'kp-preparedstatement-single']
+      ]},
+    { src: 'web.xml', title: 'web.xml · 部署描述符',
+      kps: ['kp-welcome-file'],
+      marks: [
+        ['<welcome-file-list>', '</welcome-file-list>', 'kp-welcome-file']
+      ]},
+    { src: 'index.jsp', title: 'index.jsp · 入口跳转页',
+      kps: ['kp-index-redirect'],
+      marks: [
+        ['<jsp:forward page="/student/list"/>', '<jsp:forward page="/student/list"/>', 'kp-index-redirect']
+      ]},
+    { src: 'StudentListServlet.java', title: 'StudentListServlet · 查询并转发列表',
+      kps: ['kp-servlet-reuse','kp-jstl-foreach'],
+      marks: [
+        ['StudentDao dao = new StudentDao();', 'req.getRequestDispatcher(dispatcherPath).forward(req, resp);', 'kp-servlet-reuse']
+      ]},
+    { src: 'list.jsp', title: 'list.jsp · 学生列表页（展示+入口）',
+      kps: ['kp-jstl-foreach','kp-js-confirm'],
+      marks: [
+        ['<c:forEach', '</c:forEach>', 'kp-jstl-foreach'],
+        ['onclick="return confirm(', 'onclick="return confirm(', 'kp-js-confirm']
+      ]},
+    { src: 'StudentToAddServlet.java', title: 'StudentToAddServlet · 跳转到新增表单',
+      kps: [],
+      marks: []},
+    { src: 'add.jsp', title: 'add.jsp · 新增学生表单',
+      kps: [],
+      marks: []},
+    { src: 'StudentAddServlet.java', title: 'StudentAddServlet · 处理新增提交',
+      kps: ['kp-bind-form'],
+      marks: [
+        ['String name = req.getParameter("name");', 's.setEnrollDate(LocalDate.parse(enrollDate));', 'kp-bind-form']
+      ]},
+    { src: 'StudentToEditServlet.java', title: 'StudentToEditServlet · 编辑回显',
+      kps: ['kp-edit-echo'],
+      marks: [
+        ['Student s = dao.findById(Integer.valueOf(id));', 'req.getRequestDispatcher(path).forward(req, resp);', 'kp-edit-echo']
+      ]},
+    { src: 'edit.jsp', title: 'edit.jsp · 编辑表单（隐藏域传ID）',
+      kps: ['kp-hidden-id'],
+      marks: [
+        ['<input type="hidden" name="id"', '<input type="hidden" name="id"', 'kp-hidden-id']
+      ]},
+    { src: 'StudentUpdateServlet.java', title: 'StudentUpdateServlet · 处理修改提交',
+      kps: ['kp-bind-form'],
+      marks: [
+        ['String name = req.getParameter("name");', 'dao.update(s);', 'kp-bind-form']
+      ]},
+    { src: 'StudentDeleteServlet.java', title: 'StudentDeleteServlet · 删除后重定向',
+      kps: ['kp-delete'],
+      marks: [
+        ['@WebServlet("/student/delete")', 'resp.sendRedirect(req.getContextPath() + "/student/list");', 'kp-delete']
+      ]},
+
+    { tpl: 'verify',  title: '🚀 部署与效果验证' },
+    { tpl: 'std',     title: '📐 行业规范与易错点' },
+    { tpl: 'summary', title: '🧩 课程总结', sumGrid: true }
+  ]
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const state = { step:0, selKp:null };
+const srcCache = {};
+
+function $(id){return document.getElementById(id);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg, type){
+  const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (type||'ok');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>{t.className='toast';},2000);
+}
+
+function getSource(id){
+  if(srcCache[id]) return srcCache[id];
+  const el = document.getElementById(id);
+  let raw = el ? el.textContent : '';
+  // 去除首尾空行
+  raw = raw.replace(/\r/g,'').replace(/^\n+/,'').replace(/\n+$/,'');
+  const lines = raw.split('\n');
+  srcCache[id] = lines;
+  return lines;
+}
+
+function copyText(text, btn){
+  if(!TEACHER_MODE){ toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err'); return; }
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('✅ 代码已复制到剪贴板','ok');
+    if(btn){ const o=btn.textContent; btn.textContent='✅ 已复制'; setTimeout(()=>btn.textContent=o,1200);}
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('✅ 代码已复制','ok');
+  });
+}
+
+/* ============================================================
+   语法高亮（自研，白底GitHub Light风格）
+   ============================================================ */
+function hlJava(s, isDir){
+  const KW = ['abstract','assert','boolean','break','byte','case','catch','char','class','const','continue','default','do','double','else','enum','extends','final','finally','float','for','goto','if','implements','import','instanceof','int','interface','long','native','new','package','private','protected','public','return','short','static','strictfp','super','switch','synchronized','this','throw','throws','transient','try','void','volatile','while',
+             'true','false','null',
+             'String','Integer','Boolean','Double','Float','Long','Object','System','out','println','print','request','response','session','application','pageContext','config','out','page','exception'];
+  let out='',buf='',i=0,inStr=null;
+  const flush=()=>{if(buf){out+='<span class="tok-jspcode">'+esc(buf)+'</span>';buf='';}};
+  const flushKw=()=>{
+    if(!buf){return;}
+    if(/^\d/.test(buf)||/^0x[\da-f]+$/i.test(buf)){out+='<span class="tok-num">'+esc(buf)+'</span>';}
+    else if(KW.indexOf(buf)>=0){out+='<span class="tok-kw">'+esc(buf)+'</span>';}
+    else out+='<span class="tok-jspcode">'+esc(buf)+'</span>';
+    buf='';
+  };
+  while(i<s.length){
+    const c=s[i];
+    if(inStr){
+      buf+=c;
+      if(c===inStr&&s[i-1]!=='\\'){flush();inStr=null;}
+      i++;continue;
+    }
+    if(c==='"'||c==="'"){flushKw();buf+=c;inStr=c;i++;continue;}
+    if(c==='/'&&s[i+1]==='/'){flushKw();const e=s.indexOf('\n',i);out+='<span class="tok-cmt">'+esc(e<0?s.slice(i):s.slice(i,e))+'</span>';if(e<0)return out;i=e;continue;}
+    if(c==='/'&&s[i+1]==='*'){flushKw();const e=s.indexOf('*/',i+2);const end=e<0?s.length:e+2;out+='<span class="tok-cmt">'+esc(s.slice(i,end))+'</span>';i=end;continue;}
+    if(/[A-Za-z_$]/.test(c)){buf+=c;i++;continue;}
+    if(/\d/.test(c)&&(!buf||/[\d.]$/.test(buf))){buf+=c;i++;continue;}
+    if(/[\w.]/.test(c)){buf+=c;i++;continue;}
+    flushKw();
+    if(/\s/.test(c)){buf+=c;flush();i++;continue;}
+    out+='<span class="tok-punc">'+esc(c)+'</span>';i++;
+  }
+  if(inStr){out+='<span class="tok-str">'+esc(buf)+'</span>';}else{flushKw();}
+  return out;
+}
+function renderJsp(m){
+  const open=m.slice(0,3); let rest=m.slice(3,-2); if('@!='.indexOf(m[2])>=0){return '<span class="tok-dir">'+esc(open)+'</span>'+hlJava(rest,open==='<%@')+'<span class="tok-dir">%&gt;</span>';}
+  return '<span class="tok-jsp">'+esc(open)+'</span>'+hlJava(rest,false)+'<span class="tok-jsp">%&gt;</span>';
+}
+function renderTag(t){
+  const m=t.match(/^<\/?([a-zA-Z][\w:-]*)/);if(!m)return esc(t);
+  const rest=t.slice(m[0].length);
+  const re2=/("[^"]*"|'[^']*')|([a-zA-Z_:][\w:.-]*)(\s*=\s*)|(\/?>)|(\s+)|([^\s"'>=/]+)/g;
+  let out2='',last=0,mm;
+  while((mm=re2.exec(rest))){
+    out2+=esc(rest.slice(last,mm.index));
+    if(mm[1])out2+='<span class="tok-str">'+esc(mm[1])+'</span>';
+    else if(mm[2])out2+='<span class="tok-attr">'+esc(mm[2])+'</span><span class="tok-punc">'+esc(mm[3])+'</span>';
+    else if(mm[4])out2+='<span class="tok-punc">'+esc(mm[4])+'</span>';
+    else if(mm[5])out2+=mm[5];
+    else out2+=esc(mm[6]);
+    last=re2.lastIndex;
+  }
+  out2+=esc(rest.slice(last));
+  return '<span class="tok-tag">'+esc(m[0])+'</span>'+out2;
+}
+function tokenizeText(text){
+  let html='',buf='',i=0,pending=null;
+  const flush=()=>{if(buf){html+=esc(buf);buf='';}};
+  while(i<text.length){
+    const c=text[i];
+    if(c==='<'&&text.startsWith('<!--',i)){const e=text.indexOf('-->',i+4);const end=e>=0?e+3:text.length;flush();html+='<span class="tok-cmt">'+esc(text.slice(i,end))+'</span>';i=end;continue;}
+    if(c==='<'&&text.startsWith('<%',i)){
+      const e=text.indexOf('%>',i+2);
+      if(e<0){let open='<%',body=text.slice(i+2);if('@!='.indexOf(body[0])>=0){open='<%'+body[0];body=body.slice(1);}flush();const cls=(open==='<%@')?'tok-dir':'tok-jsp';html+='<span class="'+cls+'">'+esc(open)+'</span>'+hlJava(body,open==='<%@');pending={cls,dir:open==='<%@'};i=text.length;continue;}
+      flush();html+=renderJsp(text.slice(i,e+2));i=e+2;continue;
+    }
+    if(c==='$'&&text[i+1]==='{'){const e=text.indexOf('}',i+2);if(e>=0){flush();html+='<span class="tok-el">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    if(c==='<'&&(text[i+1]==='/'||/[A-Za-z]/.test(text[i+1]||''))){
+      let j=i+1,q=null;while(j<text.length){const ch=text[j];if(q){if(ch===q)q=null;}else if(ch==='"'||ch==="'"){q=ch;}else if(ch==='>'){break;}j++;}
+      if(j<text.length){flush();html+=renderTag(text.slice(i,j+1));i=j+1;continue;}
+    }
+    if(c==='"'||c==="'"){const e=text.indexOf(c,i+1);if(e>=0){flush();html+='<span class="tok-str">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    buf+=c;i++;
+  }
+  flush();return{html,pending};
+}
+function commentMask(lines){
+  const mask=new Array(lines.length).fill(false);let inC=false;
+  for(let i=0;i<lines.length;i++){const t=lines[i].trim();if(!inC){if(t.indexOf('<%--')===0){inC=true;mask[i]=true;if(t.indexOf('--%>',4)>=0)inC=false;}}else{mask[i]=true;if(t.slice(-4)==='--%>')inC=false;}}
+  return mask;
+}
+function highlightCode(lines){
+  const mask=commentMask(lines);const res=[];const st={open:false,cls:'tok-jsp',dir:false};
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(mask[i]){res.push('<span class="tok-cmt">'+esc(line)+'</span>');continue;}
+    let seg=line,html='';
+    if(st.open){
+      const e=seg.indexOf('%>');
+      if(e>=0){html+='<span class="'+st.cls+'">'+hlJava(seg.slice(0,e),st.dir)+'</span><span class="'+st.cls+'">%&gt;</span>';seg=seg.slice(e+2);st.open=false;}
+      else{html+='<span class="'+st.cls+'">'+hlJava(seg,st.dir)+'</span>';res.push(html||'&nbsp;');continue;}
+    }
+    const r=tokenizeText(seg);html+=r.html;if(r.pending){st.open=true;st.cls=r.pending.cls;st.dir=r.pending.dir;}
+    res.push(html||'&nbsp;');
+  }
+  return res;
+}
+
+/* ============================================================
+   标记解析
+   ============================================================ */
+function resolveMarks(lines, marks){
+  const out=[];
+  (marks||[]).forEach(m=>{
+    let s=-1;for(let i=0;i<lines.length;i++){if(lines[i].indexOf(m.from)>=0){s=i;break;}}
+    if(s<0)return;let e=s;
+    if(m.to){for(let i=s;i<lines.length;i++){if(lines[i].indexOf(m.to)>=0){e=i;break;}}}
+    e+=(m.plus||0);if(e>lines.length-1)e=lines.length-1;
+    out.push({s,e,k:m.k});
+  });
+  return out;
+}
+
+/* ============================================================
+   步骤索引查找
+   ============================================================ */
+function kpStepIndex(kp){
+  const steps=COURSE.steps;
+  for(let i=0;i<steps.length;i++){if(steps[i].type==='code'&&(steps[i].kps||[]).indexOf(kp)>=0)return i;}
+  return -1;
+}
+function kpList(){
+  const seen=[],out=[];
+  COURSE.steps.forEach(s=>{(s.kps||[]).forEach(k=>{if(seen.indexOf(k)<0){seen.push(k);out.push(k);}});});
+  return out;
+}
+
+/* ============================================================
+   渲染步骤轨道
+   ============================================================ */
+function renderRail(){
+  const rail=$('rail');rail.innerHTML='';
+  COURSE.steps.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='stepchip'+(i===state.step?' active':'')+(i<state.step?' done':'');
+    const isCode=s.type==='code';
+    b.innerHTML='<span class="n">'+(i+1)+'</span>'+(isCode?s.file:s.title);
+    b.onclick=()=>{state.step=i;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});};
+    rail.appendChild(b);
+  });
+  const act=rail.querySelector('.active');if(act&&act.scrollIntoView)act.scrollIntoView({block:'nearest',inline:'center'});
+}
+
+/* ============================================================
+   知识点卡片
+   ============================================================ */
+function kpCard(kp){
+  const meta=COURSE.KPMETA[kp];if(!meta)return '';
+  const cat=COURSE.categories[meta.cat];
+  const tpl=$('kp-'+kp);const inner=tpl?tpl.innerHTML:'<p>（未找到该知识点内容）</p>';
+  // 处理相关知识点跳转
+  const wrap=document.createElement('div');wrap.innerHTML=inner;
+  wrap.querySelectorAll('.kplink').forEach(el=>{
+    el.onclick=()=>{const target=el.dataset.jump;const si=kpStepIndex(target);
+      if(si>=0){state.step=si;state.selKp=target;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);}};
+  });
+  return '<div class="kpcard"><div class="kpcard-head" style="background:'+cat.bg+'"><span class="ic">'+cat.icon+'</span><span class="tt">'+meta.title+'</span><span class="cat" style="color:'+cat.color+';background:#fff;border:1px solid '+cat.color+'33">'+cat.name+'</span></div><div class="kpcard-body">'+wrap.innerHTML+'</div></div>';
+}
+
+function renderKpPanel(){
+  const body=$('kpBody');const chips=$('kpChips');
+  const st=COURSE.steps[state.step];
+  const kps=st.kps||[];
+  chips.innerHTML=kps.map(k=>{
+    const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+    return '<button class="kchip'+(state.selKp===k?' on':'')+'" data-kp="'+k+'">'+cat.icon+' '+meta.title+'</button>';
+  }).join('');
+  chips.querySelectorAll('.kchip').forEach(b=>{b.onclick=()=>{state.selKp=b.dataset.kp;renderKpPanel();};});
+  const sel=state.selKp;
+  if(sel&&kps.indexOf(sel)>=0){
+    const idx=kps.indexOf(sel);
+    body.innerHTML=kpCard(sel);body.scrollTop=0;
+    $('kpPrev').disabled=false;$('kpNext').disabled=false;
+    $('kpPrev').dataset.idx=idx;$('kpNext').dataset.idx=idx;
+    document.querySelectorAll('.cl.clickable').forEach(el=>{el.classList.toggle('active',(el.dataset.k||'').split(' ').indexOf(sel)>=0);});
+  }else{
+    body.innerHTML='<div class="kp-empty"><span class="big">👈</span>点击左侧<b>带图标的代码行</b><br>这里就会显示对应的完整知识点<br><br><span style="color:#b8c2cf;font-size:12.5px;">也可以点上方标签直接查看</span></div>';
+    $('kpPrev').disabled=true;$('kpNext').disabled=true;
+    document.querySelectorAll('.cl.clickable').forEach(el=>el.classList.remove('active'));
+  }
+}
+
+/* ============================================================
+   渲染代码步骤
+   ============================================================ */
+function renderCodeStep(s,host){
+  const lines=getSource(s.src);const marks=resolveMarks(lines,s.marks);
+  const lineK=lines.map((_,i)=>marks.filter(m=>i>=m.s&&i<=m.e).map(m=>m.k));
+  const htmls=highlightCode(lines);
+  const catsInStep=[];(s.kps||[]).forEach(k=>{const c=COURSE.KPMETA[k].cat;if(catsInStep.indexOf(c)<0)catsInStep.push(c);});
+  const legend=catsInStep.map(c=>{const cat=COURSE.categories[c];return '<span class="lg" style="border-color:'+cat.color+'33"><b>'+cat.icon+'</b>'+cat.name+'</span>';}).join('')+'<span class="lg" style="border-color:#d9e0ea"><b>▎</b>左侧色条 = 该行含知识点</span>';
+
+  let codeHtml='';
+  htmls.forEach((h,i)=>{
+    const ks=lineK[i];const hasK=ks.length>0;
+    const mainCat=hasK?COURSE.KPMETA[ks[0]].cat:'';
+    const icon=hasK?COURSE.categories[mainCat].icon:'';
+    codeHtml+='<div class="cl'+(hasK?' clickable marked k-'+mainCat:'')+'"'+(hasK?' data-k="'+ks.join(' ')+'" data-line="'+(i+1)+'"':'')+'><span class="ic">'+icon+'</span><span class="ln">'+(i+1)+'</span><code class="src">'+h+'</code></div>';
+  });
+
+  const guideHtml=s.guide?('<div class="guide-box"><h4>🧭 本步操作指引</h4><ol>'+s.guide.map(g=>'<li>'+g+'</li>').join('')+'</ol></div>'):'';
+
+  host.innerHTML=
+    '<div class="card"><div class="step-head"><span class="step-kind code">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+s.sub+'</div></div><div class="meta"><span class="pill file">📄 '+s.file+'</span><span class="pill time">⏱ '+s.dur+'</span><span class="pill">🧩 '+(s.kps||[]).length+' 个知识点</span></div></div></div>'+
+    '<div class="workbench"><div class="left-col">'+guideHtml+
+      '<div class="code-panel"><div class="code-head"><div class="filedot"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><div class="code-file">'+s.file+'<small>'+s.fileNote+'</small></div><div class="codeacts"><button class="mini-btn" id="btnCopy"'+(TEACHER_MODE?'':' disabled')+'>📋 复制代码</button><button class="mini-btn" id="btnClear">✖ 取消选中</button></div></div>'+
+      '<div class="legend">'+legend+'</div><div class="code-body" id="codeBody">'+codeHtml+'</div></div></div>'+
+      '<aside class="kp-panel"><div class="kp-head"><span class="t">📖 知识点解析</span><span class="hint">点左侧代码行 → 看完整讲解</span><div class="kp-nav"><button id="kpPrev" disabled>◀ 上一个</button><button id="kpNext" disabled>下一个 ▶</button></div></div><div class="kp-chips" id="kpChips"></div><div class="kp-body" id="kpBody"></div></aside></div>'+
+      navRow();
+
+  host.querySelectorAll('.cl.clickable').forEach(el=>{
+    el.onclick=()=>{const ks=(el.dataset.k||'').split(' ');state.selKp=ks[0];renderKpPanel();if(el.scrollIntoView)el.scrollIntoView({block:'nearest'});};
+  });
+  $('btnClear').onclick=()=>{state.selKp=null;renderKpPanel();};
+  $('btnCopy').onclick=(e)=>{copyText(lines.join('\n'),e.currentTarget);};
+  $('kpPrev').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=0;state.selKp=kps[(i-1+kps.length)%kps.length];renderKpPanel();};
+  $('kpNext').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=-1;state.selKp=kps[(i+1)%kps.length];renderKpPanel();};
+  bindNav();
+  renderKpPanel();
+}
+
+function navRow(){
+  const i=state.step,total=COURSE.steps.length;
+  return '<div class="navrow"><button id="navPrev"'+(i<=0?' disabled':'')+'>◀ 上一步</button><button id="navNext" class="primary"'+(i>=total-1?' disabled':'')+'>下一步 ▶</button></div>';
+}
+function bindNav(){
+  const pv=$('navPrev'),nx=$('navNext');
+  if(pv)pv.onclick=()=>{if(state.step>0){state.step--;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+  if(nx)nx.onclick=()=>{if(state.step<COURSE.steps.length-1){state.step++;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+}
+
+/* ============================================================
+   渲染信息步骤
+   ============================================================ */
+function renderInfoStep(s,host){
+  const tpl=$(s.tpl);const inner=tpl?tpl.innerHTML:'<p>内容缺失</p>';
+  host.innerHTML='<div class="card"><div class="step-head"><span class="step-kind '+(s.kind==='环境准备'?'env':s.kind==='行业标准'?'std':'')+'">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+s.sub+'</div></div></div><div class="info-section">'+inner+'</div></div>'+navRow();
+  bindNav();
+  if(s.sumGrid){
+    const grid=document.getElementById(s.sumGrid);
+    if(grid){
+      const wrap=grid.previousElementSibling;
+      if(wrap){const h=wrap.querySelector('h4');if(h)h.textContent='📚 本课知识点全景（共 '+kpList().length+' 个，点击卡片可跳回对应代码位置）';}
+      grid.innerHTML=kpList().map(k=>{
+        const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+        return '<div class="kitem" data-kp="'+k+'"><span class="ic">'+cat.icon+'</span><div><div class="kt">'+meta.title+'</div><div class="kc">'+cat.name+' ｜ 位于步骤 '+(kpStepIndex(k)+1)+'</div></div></div>';
+      }).join('');
+      grid.querySelectorAll('.kitem').forEach(el=>{el.onclick=()=>{const kp=el.dataset.kp;const si=kpStepIndex(kp);if(si<0)return;state.step=si;state.selKp=kp;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);};});
+    }
+  }
+}
+
+/* ============================================================
+   主渲染
+   ============================================================ */
+function render(){
+  renderRail();
+  const stage=$('stage');
+  const s=COURSE.steps[state.step];
+  if(s.type==='code')renderCodeStep(s,stage);else renderInfoStep(s,stage);
+  // 更新教师模式显示
+  $('tmode').textContent=TEACHER_MODE?'✅ 教师模式：开启':'🛡️ 教师模式：关闭';
+  $('tmode').className='tmode'+(TEACHER_MODE?' on':'');
+  document.body.classList.toggle('student-mode',!TEACHER_MODE);
+}
+
+/* ============================================================
+   学生模式复制拦截
+   ============================================================ */
+document.addEventListener('contextmenu',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止右键菜单','warn');}});
+document.addEventListener('dragstart',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('copy',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err');}});
+document.addEventListener('cut',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('keydown',e=>{
+  if(TEACHER_MODE)return;
+  const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&(k==='c'||k==='a'||k==='s'||k==='p'||k==='u')){e.preventDefault();toast('🔒 学生模式下该快捷键已禁用','warn');}
+  if(k==='f12'||(e.ctrlKey&&e.shiftKey&&(k==='i'||k==='j'||k==='c'))){e.preventDefault();toast('🔒 学生模式下禁止打开开发者工具','warn');}
+});
+document.addEventListener('mouseup',()=>{if(!TEACHER_MODE)window.getSelection().removeAllRanges();});
+if(!TEACHER_MODE&&navigator.clipboard){
+  navigator.clipboard.writeText=()=>Promise.reject('student mode');
+}
+
+
+/* ============ 构建注入：兼容补丁 ============ */
+(function(){
+  // 统一归一化 marks：2 元组（纯高亮）或 k 为空时不加入知识点数组（避免渲染 undefined）
+  var _origResolve = resolveMarks;
+  resolveMarks = function(lines, marks){
+    var arr=[];
+    (marks||[]).forEach(function(m){
+      if(!Array.isArray(m)||m.length<2) return;
+      var k = m.length>=3 ? String(m[2]||'').trim() : '';
+      // 只有合法 kpId（以 kp- 开头）才作为知识点高亮，其余标记直接丢弃（避免产生空k）
+      if(!k || k.indexOf('kp-')!==0) return;
+      if(typeof m[0]==='number'){
+        var s=m[0]-1,e=m[1]-1;
+        if(s<0)s=0; if(e>=lines.length)e=lines.length-1;
+        if(s<=e) arr.push({s:s,e:e,k:k});
+      } else {
+        var s=-1; for(var i=0;i<lines.length;i++){if(lines[i].indexOf(m[0])>=0){s=i;break;}}
+        if(s<0) return; var e=s;
+        if(m[1]){for(var i=s;i<lines.length;i++){if(lines[i].indexOf(m[1])>=0){e=i;break;}}}
+        arr.push({s:s,e:e,k:k});
+      }
+    });
+    return arr;
+  };
+})();
+
+(function(){
+  var FTM={'.xml':'Maven 配置','.jsp':'JSP 页面','.java':'Java 类','.sql':'SQL 脚本','.properties':'配置文件'};
+  var KM={'tpl-goal':'学习目标','tpl-env':'环境准备','tpl-struct':'项目结构','tpl-verify':'效果验证','tpl-std':'编码规范','tpl-summary':'课时小结'};
+  COURSE.steps.forEach(function(s){
+    var isCode=!!s.src;
+    if(!s.type)s.type=isCode?'code':'info';
+    if(isCode){
+      s.kind='代码实操';
+      var srcPath = s.src;
+      if(srcPath.indexOf('src-')!==0) srcPath = 'src-' + srcPath;
+      s.src = srcPath;
+      var fullRel = srcPath.replace(/^src-/,'');
+      if(!s.file) s.file = fullRel;
+      var baseName = fullRel;
+      var idx = Math.max(fullRel.lastIndexOf('/'), fullRel.lastIndexOf('\\'));
+      if(idx>=0) baseName = fullRel.substring(idx+1);
+      if(!s.fileNote){var d=baseName.lastIndexOf('.');s.fileNote=d>=0?(FTM[baseName.substring(d)]||'文件'):'';}
+      if(!s.sub)s.sub=''; if(!s.dur)s.dur='';
+    }else{
+      if(s.tpl&&s.tpl.indexOf('tpl-')!==0)s.tpl='tpl-'+s.tpl;
+      if(KM[s.tpl])s.kind=KM[s.tpl]; else if(!s.kind)s.kind='';
+      if(!s.fileNote)s.fileNote='';
+      if(!s.sub)s.sub='';
+      if(s.tpl==='tpl-summary')s.sumGrid='sumGrid2';
+    }
+  });
+})();
+
+
+/* ============ 信息步骤模板 ============ */
+</script>
+<script type="text/html" id="tpl-goal">
+<div class="goal-wrap">
+  <div class="goal-title">🎯 本次课学习目标</div>
+  <div class="goal-desc">第一次课：掌握 JDBC 核心 API，独立完成学生信息表的增删改查，理解"面向接口编程"和 DAO 分层思想。</div>
+  <ul class="goal-list">
+    <li>📦 理解 <b>JDBC</b> 是什么、解决什么问题、一次操作的完整六步流程</li>
+    <li>🔌 掌握 <b>DriverManager + Connection + PreparedStatement + ResultSet</b> 四个核心 API</li>
+    <li>🧱 会写 <b>JavaBean 实体类</b>，能把 ResultSet 的一行封装成对象</li>
+    <li>🛠️ 会写 <b>JDBC 工具类</b>，把连接获取和资源关闭集中管理</li>
+    <li>🏛️ 理解 <b>DAO 分层模式</b>，把 SQL 操作封装在 DAO 里，Servlet 只调用不写 SQL</li>
+    <li>🚨 理解 <b>SQL 注入</b>原理，掌握 PreparedStatement 参数化查询的正确写法</li>
+    <li>🔁 会用 <b>try-with-resources</b> 语法让资源自动关闭，避免连接泄漏</li>
+    <li>✅ 独立跑通"学生信息管理"CRUD 完整页面</li>
+  </ul>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-env">
+<div class="env-wrap">
+  <div class="env-title">🖥️ 环境与依赖准备</div>
+  <div class="env-desc">本次课沿用前面已装好的 JDK 17 + IDEA 2024.1 + Tomcat 10.1.59 + Maven 3.9+，只需要额外安装 <b>MySQL 8.0</b> 并导入 MySQL JDBC 驱动。</div>
+  <div class="env-grid">
+    <div class="env-card"><div class="env-ver">JDK 17 LTS</div><div class="env-tip">已安装</div></div>
+    <div class="env-card"><div class="env-ver">IDEA 2024.1</div><div class="env-tip">已安装</div></div>
+    <div class="env-card"><div class="env-ver">Tomcat 10.1.59</div><div class="env-tip">已安装</div></div>
+    <div class="env-card"><div class="env-ver">Maven 3.9+</div><div class="env-tip">已安装</div></div>
+    <div class="env-card highlight"><div class="env-ver">MySQL 8.0.x</div><div class="env-tip">本次课必装，root/root</div></div>
+    <div class="env-card highlight"><div class="env-ver">mysql-connector-j 8.0.33</div><div class="env-tip">Maven 依赖自动下载</div></div>
+  </div>
+  <div class="env-warn">
+    ⚠️ <b>关键配置</b>：MySQL 安装后记得启动服务；jdbc.properties 里的 url 必须带 <code>serverTimezone=Asia/Shanghai</code>，否则会报时区错误。
+  </div>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-struct">
+<div class="struct-wrap">
+  <div class="struct-title">📁 项目结构（第一次课：纯 JDBC 版）</div>
+  <div class="struct-desc">标准 Maven Web 项目结构，分层清晰：entity（实体）→ util（工具）→ dao（数据访问）→ web（Servlet）→ JSP 视图。</div>
+<pre class="tree">
+<span class="dir">jdbc-student/</span>
+├── <span class="file">pom.xml</span>                <span class="note">Maven 依赖：Servlet/JSP/JSTL + MySQL 驱动</span>
+├── <span class="dir">src/main/</span>
+│   ├── <span class="dir">java/com/example/jdbc/</span>
+│   │   ├── <span class="dir">entity/</span>
+│   │   │   └── <span class="file">Student.java</span>      <span class="note">学生实体类（与 student 表一一对应）</span>
+│   │   ├── <span class="dir">util/</span>
+│   │   │   └── <span class="file">JdbcUtil.java</span>     <span class="note">JDBC 工具类：读配置、取连接、关资源</span>
+│   │   ├── <span class="dir">dao/</span>
+│   │   │   └── <span class="file">StudentDao.java</span>   <span class="note">DAO：对 student 表的所有增删改查</span>
+│   │   └── <span class="dir">web/</span>
+│   │       ├── <span class="file">StudentListServlet.java</span> <span class="note">查询全部学生</span>
+│   │       ├── <span class="file">StudentToAddServlet.java</span><span class="note">跳转新增页</span>
+│   │       ├── <span class="file">StudentAddServlet.java</span>  <span class="note">处理新增提交</span>
+│   │       ├── <span class="file">StudentToEditServlet.java</span><span class="note">跳转编辑页（回显）</span>
+│   │       ├── <span class="file">StudentUpdateServlet.java</span><span class="note">处理修改提交</span>
+│   │       └── <span class="file">StudentDeleteServlet.java</span><span class="note">删除学生</span>
+│   ├── <span class="dir">resources/</span>
+│   │   └── <span class="file">jdbc.properties</span>      <span class="note">数据库连接四要素（driver/url/user/password）</span>
+│   └── <span class="dir">webapp/</span>
+│       ├── <span class="file">index.jsp</span>            <span class="note">首页（重定向到学生列表）</span>
+│       ├── <span class="file">WEB-INF/web.xml</span>      <span class="note">部署描述符</span>
+│       └── <span class="dir">WEB-INF/student/</span>
+│           ├── <span class="file">list.jsp</span>          <span class="note">学生列表页</span>
+│           ├── <span class="file">add.jsp</span>           <span class="note">新增表单页</span>
+│           └── <span class="file">edit.jsp</span>          <span class="note">编辑表单页</span>
+└── <span class="dir">sql/</span>
+    └── <span class="file">init.sql</span>               <span class="note">建库建表+初始数据（手动执行）</span>
+</pre>
+  <div class="struct-tip">💡 <b>分层原则</b>：web 层只接收请求/响应、调用 dao；dao 只做数据库操作、不碰 request/response；entity 只放数据、不写业务逻辑。</div>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-verify">
+<div class="verify-wrap">
+  <div class="verify-title">🚀 部署与效果验证</div>
+  <div class="verify-desc">按以下 5 步跑起来，看到 3 条初始学生数据说明 JDBC 链路通了。</div>
+  <ol class="verify-steps">
+    <li><b>建库建表</b>：打开 IDEA Database / Navicat，执行 <code>init.sql</code>，确认 <code>jdbc_demo.student</code> 表中有 3 条数据。</li>
+    <li><b>配置数据库</b>：打开 <code>jdbc.properties</code>，把 <code>jdbc.user/jdbc.password</code> 改成你自己的 MySQL 账号密码。</li>
+    <li><b>IDEA 配置 Tomcat 10</b>：Deployment 添加 <code>jdbc-student:war exploded</code>，Application context 改为 <code>/jdbc-student</code>。</li>
+    <li><b>启动 Tomcat</b>：控制台无异常，访问 <code>http://localhost:8080/jdbc-student/</code>。</li>
+    <li><b>验证 CRUD</b>：新增→列表看到新数据；编辑→数据被修改；删除→数据消失；能跑通全部流程说明合格。</li>
+  </ol>
+  <div class="verify-preview">
+    <div class="browser-mock">
+      <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="browser-url">http://localhost:8080/jdbc-student/student/list</span></div>
+      <div class="browser-body">
+        <h3 style="margin:0 0 10px 0;">👨‍🎓 学生信息管理（JDBC 版）</h3>
+        <button style="background:#0969da;color:#fff;border:none;padding:6px 12px;border-radius:4px;">➕ 新增学生</button>
+        <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">
+          <tr style="background:#f6f8fa;"><th style="border:1px solid #ddd;padding:6px;">学号</th><th style="border:1px solid #ddd;padding:6px;">姓名</th><th style="border:1px solid #ddd;padding:6px;">性别</th><th style="border:1px solid #ddd;padding:6px;">年龄</th><th style="border:1px solid #ddd;padding:6px;">专业</th><th style="border:1px solid #ddd;padding:6px;">入学日期</th><th style="border:1px solid #ddd;padding:6px;">操作</th></tr>
+          <tr><td style="border:1px solid #ddd;padding:6px;text-align:center;">1</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">张三</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">男</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">20</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">软件技术</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">2024-09-01</td><td style="border:1px solid #ddd;padding:6px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+          <tr><td style="border:1px solid #ddd;padding:6px;text-align:center;">2</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">李四</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">女</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">19</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">计算机应用</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">2024-09-01</td><td style="border:1px solid #ddd;padding:6px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+          <tr><td style="border:1px solid #ddd;padding:6px;text-align:center;">3</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">王五</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">男</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">21</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">大数据技术</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">2023-09-01</td><td style="border:1px solid #ddd;padding:6px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-std">
+<div class="std-wrap">
+  <div class="std-title">📐 行业规范与易错点</div>
+  <div class="std-grid">
+    <div class="std-card bad">
+      <div class="std-badge">❌ 错误写法</div>
+      <div class="std-code">Statement stmt = conn.createStatement();
+ResultSet rs = stmt.executeQuery(
+  "SELECT * FROM user WHERE name='" + name + "'");
+// 输入 ' OR '1'='1 即可绕过登录校验</div>
+    </div>
+    <div class="std-card good">
+      <div class="std-badge">✅ 正确写法</div>
+      <div class="std-code">PreparedStatement ps = conn.prepareStatement(
+  "SELECT * FROM user WHERE name=? AND pwd=?");
+ps.setString(1, name);
+ps.setString(2, pwd);
+ResultSet rs = ps.executeQuery();</div>
+    </div>
+  </div>
+  <ul class="std-list">
+    <li>🔒 <b>永远不要用字符串拼接 SQL</b>：所有外部传入参数必须用 ? 占位 + setXxx 设值，从根本上防 SQL 注入。</li>
+    <li>🚰 <b>资源必须关</b>：Connection/Statement/ResultSet 都是昂贵资源，必须关；推荐 try-with-resources，finally 里也要判 null。</li>
+    <li>🔑 <b>配置外置</b>：driver/url/user/password 放在 jdbc.properties，通过类加载器读取，严禁硬编码在 Java 里。</li>
+    <li>📦 <b>分层明确</b>：Servlet 不写 SQL、DAO 不碰 request/response、实体类不放业务逻辑，三层各司其职。</li>
+    <li>🧯 <b>异常转译</b>：DAO 里把 SQLException catch 成 RuntimeException 往上抛，不让 SQLException 污染上层代码。</li>
+    <li>⚠️ <b>MySQL 8 常见坑</b>：driver 类名带 cj、url 必须带 serverTimezone、公钥检索需 allowPublicKeyRetrieval=true。</li>
+  </ul>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-summary">
+<div class="sum-wrap">
+  <div class="sum-title">🧩 课程总结</div>
+  <div class="sum-sec-title">📚 知识点全景地图（点击卡片跳回代码）</div>
+  <div class="sum-grid" id="sumGrid2"></div>
+
+  <div class="sum-sec-title" style="margin-top:28px;">🧠 知识点详细分类总结</div>
+
+  <h4 style="color:#0969da;margin:18px 0 8px;">① JDBC 核心概念</h4>
+  <ul class="sum-list">
+    <li><b>是什么</b>：JDBC（Java Database Connectivity）是 Sun 提供的一套<b>统一访问关系数据库的 API（接口）</b>，由 Java 定义规范、各数据库厂商提供驱动实现。</li>
+    <li><b>用途</b>：让 Java 程序用同一套代码连接不同数据库（MySQL/Oracle/SQL Server），切换数据库只需要换驱动 jar + 改 driver/url。</li>
+    <li><b>六步流程</b>：① 加载驱动 → ② 获取连接 Connection → ③ 创建 Statement/PreparedStatement → ④ 执行 SQL → ⑤ 处理 ResultSet → ⑥ 关闭资源。</li>
+  </ul>
+
+  <h4 style="color:#0969da;margin:18px 0 8px;">② 四大核心 API</h4>
+  <table class="sum-table">
+    <tr><th>API</th><th>作用</th><th>常见方法</th></tr>
+    <tr><td>DriverManager</td><td>驱动管理器，根据 url 选驱动</td><td>getConnection(url,user,pwd)</td></tr>
+    <tr><td>Connection</td><td>数据库连接（会话）</td><td>prepareStatement、createStatement、close</td></tr>
+    <tr><td>PreparedStatement</td><td>预编译语句对象</td><td>setXxx、executeQuery、executeUpdate</td></tr>
+    <tr><td>ResultSet</td><td>结果集（游标）</td><td>next、getXxx(列名/序号)</td></tr>
+  </table>
+
+  <h4 style="color:#8250df;margin:18px 0 8px;">③ JavaBean 实体类</h4>
+  <ul class="sum-list">
+    <li>四规范：public 类 + public 无参构造 + private 属性 + getXxx/setXxx。</li>
+    <li>数据库 DATE/TIMESTAMP 对应 Java 8 <code>LocalDate/LocalDateTime</code>，用 <code>rs.getObject(col, LocalDate.class)</code> 读取最稳妥。</li>
+  </ul>
+
+  <h4 style="color:#8250df;margin:18px 0 8px;">④ JDBC 工具类（JdbcUtil）</h4>
+  <ul class="sum-list">
+    <li>静态块读 jdbc.properties + Class.forName(driver) 注册驱动（JDBC 4.0+ 可省略，保留是兼容习惯）。</li>
+    <li>getConnection() 封装 DriverManager.getConnection，调用方不用关心 url/user/pwd。</li>
+    <li>close 重载三/两/单参数版本，按打开顺序反向关闭 ResultSet→Statement→Connection。</li>
+  </ul>
+
+  <h4 style="color:#bc4c00;margin:18px 0 8px;">⑤ DAO 分层模式</h4>
+  <ul class="sum-list">
+    <li><b>DAO（Data Access Object）</b>：把所有对某张表的 SQL 操作封装在一个类里，Servlet 通过调用 DAO 方法操作数据，不直接写 SQL。</li>
+    <li>解耦好处：将来换数据库连接池、换 ORM 框架（MyBatis），只需改 DAO 层，Servlet/JSP 完全不动。</li>
+  </ul>
+
+  <h4 style="color:#cf222e;margin:18px 0 8px;">⑥ SQL 注入与防御</h4>
+  <ul class="sum-list">
+    <li><b>原理</b>：攻击者通过在输入框提交 <code>' OR '1'='1</code> 之类的特殊字符串，拼接后改变 SQL 语义，绕过登录校验、拖库甚至删表。</li>
+    <li><b>防御</b>：一律使用 <code>PreparedStatement + ? 参数占位</code>，驱动会把参数<b>当作纯数据转义</b>处理，不会参与 SQL 语法解析，从根本上杜绝注入。</li>
+  </ul>
+
+  <h4 style="color:#1a7f37;margin:18px 0 8px;">⑦ 资源管理 try-with-resources</h4>
+  <ul class="sum-list">
+    <li>JDK 7+ 语法，括号里的资源必须实现 <code>AutoCloseable</code>，离开 try 块自动 close，不写 finally 也不会泄漏。</li>
+    <li>Connection/Statement/ResultSet 都实现了 AutoCloseable，强烈推荐用这种写法。</li>
+  </ul>
+
+  <h4 style="color:#1a7f37;margin:18px 0 8px;">💪 学完本次课你已经掌握了</h4>
+  <div class="ab-grid">
+    <div class="ab-card">✅ 独立完成 JDBC 六步流程代码</div>
+    <div class="ab-card">✅ 用 PreparedStatement 做增删改查</div>
+    <div class="ab-card">✅ 会封装 JDBC 工具类</div>
+    <div class="ab-card">✅ 会写 JavaBean 实体类与 DAO</div>
+    <div class="ab-card">✅ 理解 SQL 注入原理并会防御</div>
+    <div class="ab-card">✅ 会用 try-with-resources 管理资源</div>
+    <div class="ab-card">✅ 能把查询结果封装成 List&lt;实体&gt;</div>
+    <div class="ab-card">✅ 独立跑通学生管理 CRUD</div>
+  </div>
+
+  <h4 style="color:#57606a;margin:22px 0 8px;">📝 课后作业</h4>
+  <ul class="sum-list">
+    <li><b>必做</b>：不看课件，独立从零搭建项目、写出 StudentDao 的全部 5 个方法并跑通 CRUD。</li>
+    <li><b>必做</b>：把 jdbc.properties 的 url 故意改错，观察控制台异常，学会根据报错信息定位问题。</li>
+    <li><b>选做</b>：给学生列表增加"按姓名模糊查询"功能，SQL 用 <code>LIKE CONCAT('%', ?, '%')</code>。</li>
+    <li><b>思考</b>：现在每次请求都会创建新的 Connection、用完就 close，高并发下会有什么问题？（预习第二次课"数据库连接池"）</li>
+  </ul>
+
+  <h4 style="color:#0969da;margin:22px 0 8px;">🔜 下节课预告</h4>
+  <div class="next-card">
+    <b>第二次课：数据库连接池与 DBUtils</b> —— 解决"每次请求都新建连接"的性能问题，并使用 Apache Commons DBUtils 把 DAO 里的重复 ResultSet 封装代码精简到一行。
+  </div>
+</div>
+
+</script>
+<script>
+
+function installWatermarkAndCopyright(){
+  var watermark = document.getElementById('__wm__');
+  var copyright = document.getElementById('__cr__');
+
+  // ============ 水印（浅灰色fixed铺满视口，随滚动始终可见，不依赖页面高度）============
+  if (typeof SHOW_WATERMARK !== 'undefined' && SHOW_WATERMARK) {
+    if (watermark) watermark.remove();
+    watermark = document.createElement('div');
+    watermark.id = '__wm__';
+    document.body.appendChild(watermark);
+
+    var text = (typeof WATERMARK_TEXT !== 'undefined') ? WATERMARK_TEXT : '';
+    var charCount = text.length || 10;
+    var fontSize = 16;
+    var unitW = fontSize * 1.05;
+    var textPixelWidth = charCount * unitW;
+    var stepX = Math.ceil(textPixelWidth * 1.8);     // 水平步长=字宽×1.8，16字也绝对不重叠
+    var stepY = 160;                                  // 垂直步长
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    // 多铺一圈，视口滚动resize时不出现空白
+    var cols = Math.ceil(vw / stepX) + 3;
+    var rows = Math.ceil(vh / stepY) + 3;
+
+    watermark.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:9998;pointer-events:none;overflow:hidden;';
+    var frag = document.createDocumentFragment();
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var t = document.createElement('span');
+        t.textContent = text;
+        // 奇数行错开半个步长，形成菱形交错
+        var offsetX = (r % 2 === 0) ? 0 : stepX / 2;
+        t.style.cssText = 'position:absolute;'
+          + 'left:' + (c * stepX + offsetX - stepX) + 'px;'
+          + 'top:'  + (r * stepY - stepY) + 'px;'
+          + 'font-size:' + fontSize + 'px;'
+          + 'color:#a8a8a8;'                  // 浅灰色
+          + 'opacity:0.07;'                   // 极淡，仅隐约可见
+          + 'font-weight:400;'
+          + 'letter-spacing:2px;'
+          + 'white-space:nowrap;'
+          + 'transform:rotate(-25deg);'
+          + 'transform-origin:left top;'
+          + 'user-select:none;';
+        frag.appendChild(t);
+      }
+    }
+    watermark.appendChild(frag);
+  } else {
+    if (watermark) { watermark.remove(); watermark = null; }
+  }
+
+  // ============ 版权信息条（追加到 main 末尾）============
+  if (typeof SHOW_COPYRIGHT !== 'undefined' && SHOW_COPYRIGHT) {
+    if (copyright) copyright.remove();
+    copyright = document.createElement('div');
+    copyright.id = '__cr__';
+    copyright.style.cssText = 'text-align:center;padding:22px 20px;color:#8a8f98;font-size:12px;border-top:1px solid #eaecef;background:#f6f8fa;margin-top:40px;line-height:1.9;clear:both;';
+    var main = document.getElementById('main');
+    var projName = document.title.replace(' - JSP交互教学课件','').replace(' · 分步向导','');
+    copyright.innerHTML = '<div style="font-weight:600;color:#57606a;margin-bottom:4px;letter-spacing:0.5px;">'
+      + ((typeof COPYRIGHT_TEXT !== 'undefined') ? COPYRIGHT_TEXT : '')
+      + '</div>'
+      + '<div>项目：<b style="color:#0969da;">' + projName + '</b> · 课时：4×40分钟=160分钟 · 适用环境：JDK 17 + IDEA 2024.1 + Tomcat 10.1.59 + Maven 3.9+</div>';
+    if (main) main.appendChild(copyright);
+    else document.body.appendChild(copyright);
+  } else {
+    if (copyright) { copyright.remove(); copyright = null; }
+  }
+}
+window.addEventListener('resize', function(){ installWatermarkAndCopyright(); });
+
+var _origRender = render;
+render = function(){
+  try { _origRender.apply(this, arguments); }
+  catch(e){ console.error(e); }
+  // 切换步骤/知识点后面板展开可能改变布局，重新铺设一次
+  setTimeout(installWatermarkAndCopyright, 100);
+};
+
+// 首次渲染
+render();
+
+</script>
+</body>
+</html>

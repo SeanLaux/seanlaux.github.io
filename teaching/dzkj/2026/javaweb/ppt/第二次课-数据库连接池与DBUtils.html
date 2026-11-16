@@ -1,0 +1,2938 @@
+<!--
+================================================================================
+  《Java Web 应用开发》交互式教学课件 · 单课空白模板
+================================================================================
+
+【结构顺序（严格遵守，否则渲染失败）】
+  <head>…</head>                    CSS样式（配色/布局/代码高亮/分类色条/水印等）
+  <body>
+    <div class="topbar">             顶栏（logo/标题/教师模式标识）
+    <div class="rail" id="rail">     左侧步骤轨道（JS动态渲染）
+    <div id="stage">                 主舞台（JS动态渲染）
+    <div id="toast">                 消息提示
+    【替换点6】&lt;script id="src-*">   源码容器（每个代码文件一个）
+    【替换点7】&lt;script id="kp-*">    知识点内容（每个知识点一个）
+    &lt;script>主JS第一段&lt;/script&gt;      常量+COURSE配置+工具函数+渲染+防复制
+    &lt;script id="tpl-*">             内置6个信息步骤模板（goal/env/struct/verify/std/summary）
+    &lt;script>主JS第二段&lt;/script&gt;      水印+版权+劫持render+首次render()调用
+  </body>
+
+【使用方法】搜索 "__" 定位所有占位符，共7处替换点：
+  【替换点1】<title> 与 顶栏文案：第二次课 · 数据库连接池与DBUtils / 学生信息管理系统（连接池+DBUtils重构版） / JDBC / Java Web 应用开发
+  【替换点2】COPYRIGHT_TEXT  页脚版权文字
+  【替换点3】WATERMARK_TEXT  水印文字（建议10~16字，过长会重叠）
+  【替换点4】const COURSE = {…}   课程元数据 + KPMETA + steps[]
+  【替换点5】（已内置5类知识点，Servlet章节解除 sec 注释即可新增安全配置类）
+  【替换点6】添加 &lt;script type="text/plain" id="src-xxx"> 源码块
+  【替换点7】添加 &lt;script type="text/html"  id="kp-xxx">  知识点块
+
+【源码级开关（无UI按钮）】
+  const TEACHER_MODE = false;   // true=教师可复制  false=学生防复制（默认）
+  const SHOW_COPYRIGHT = true;  // 底部版权信息条
+  const SHOW_WATERMARK = true;  // 全屏斜向水印
+
+【默认环境配置】
+  JDK 17 LTS + IntelliJ IDEA 2024.1 + Apache Tomcat 10.1.59 + Maven 3.9+ + Jakarta EE 9+
+  pom.xml 4个标准依赖：
+    jakarta.servlet:jakarta.servlet-api:6.0.0          (provided)
+    jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1  (provided)
+    jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.0
+    org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第二次课 · 数据库连接池与DBUtils · 学生信息管理系统（连接池+DBUtils重构版）</title>
+<style>
+:root{
+  --bg:#eef1f6;--panel:#fff;--line:#e1e7ef;--line2:#eef2f7;
+  --text:#1f2328;--muted:#6b7480;--brand:#e8632a;--brand2:#cf5320;
+  --data:#0b6b53;--data2:#8a5a00;
+  --codebg:#ffffff;--gut:#f7f9fc;--gut2:#fbfcfe;
+  --basic:#0969da;--object:#8250df;--flow:#1a7f37;--request:#bc4c00;--tag:#bf3989;
+  --std:#4a5563;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.75;}
+button{font-family:inherit;cursor:pointer;}
+code,pre,.mono{font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New","Microsoft YaHei",monospace;}
+body.student-mode,body.student-mode *{-webkit-user-select:none!important;user-select:none!important;}
+body.student-mode .kp-body,body.student-mode .kp-body *{-webkit-user-select:text!important;user-select:text!important;}
+
+.topbar{position:sticky;top:0;z-index:80;background:#1b2430;color:#fff;
+  display:flex;align-items:center;gap:22px;padding:10px 22px;flex-wrap:wrap;
+  box-shadow:0 2px 14px rgba(15,25,40,.22);}
+.brand{display:flex;align-items:center;gap:12px;min-width:270px;}
+.logo{width:42px;height:42px;flex:0 0 42px;border-radius:10px;background:linear-gradient(135deg,#ff8a4c,#e8632a);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:.5px;}
+.b1{font-size:15.5px;font-weight:700;letter-spacing:.3px;}
+.b2{font-size:12px;color:#9fb0c4;margin-top:1px;letter-spacing:.4px;}
+.tmode{margin-left:auto;font-size:12.5px;padding:5px 12px;border-radius:999px;
+  background:#2d3a49;color:#c3cfdd;border:1px solid #3a495b;}
+.tmode.on{background:#e8f7ee;color:#12693a;border-color:#6ebf8a;}
+
+.rail{position:sticky;top:62px;z-index:70;background:#fff;border-bottom:1px solid var(--line);
+  padding:9px 22px;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(20,35,60,.05);}
+.rail::-webkit-scrollbar{height:5px;}
+.rail::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+.stepchip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:6px 14px;font-size:13px;color:#48525f;transition:.16s;flex:0 0 auto;}
+.stepchip .n{width:19px;height:19px;border-radius:50%;background:#eef2f7;color:#5b6673;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;}
+.stepchip:hover{border-color:#b9c6d6;background:#f7fafd;}
+.stepchip.active{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.stepchip.active .n{background:var(--brand);color:#fff;}
+.stepchip.done .n{background:#d8f0e2;color:#1a7f37;}
+
+.wrap{max-width:1600px;margin:0 auto;padding:22px 22px 80px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 3px 16px rgba(23,40,70,.06);padding:26px 30px;}
+.step-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+.step-kind{font-size:12px;font-weight:700;letter-spacing:.6px;padding:4px 11px;border-radius:6px;
+  background:#eef4ff;color:#0969da;flex:0 0 auto;margin-top:3px;}
+.step-kind.code{background:#fff1e8;color:#c9541c;}
+.step-kind.env{background:#e8f7ee;color:#12693a;}
+.step-kind.std{background:#f4edff;color:#8250df;}
+.step-title{font-size:20px;font-weight:800;letter-spacing:.2px;margin:0;}
+.step-sub{color:var(--muted);font-size:13px;margin-top:2px;}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;margin-top:4px;}
+.pill{font-size:12px;padding:4px 11px;border-radius:999px;background:#f2f5f9;color:#55606d;border:1px solid #e6ecf4;}
+.pill.time{background:#fff8ec;color:#9a6400;border-color:#f6e3c4;}
+.pill.file{background:#eef7f1;color:#12693a;border-color:#d5ebdd;}
+
+.workbench{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(360px,1fr);
+  gap:18px;align-items:start;margin-top:18px;}
+@media (max-width:1180px){.workbench{grid-template-columns:1fr;}}
+
+.left-col{min-width:0;display:flex;flex-direction:column;gap:16px;}
+.guide-box{background:#f8fafd;border:1px solid var(--line);border-left:4px solid var(--brand);
+  border-radius:10px;padding:14px 18px;}
+.guide-box h4{margin:0 0 8px;font-size:14px;color:#243040;letter-spacing:.3px;}
+.guide-box ol{margin:0;padding-left:20px;}
+.guide-box li{margin:5px 0;font-size:13.5px;color:#3c4757;}
+.guide-box li b{color:#16202c;}
+
+.code-panel{background:var(--codebg);border:1px solid #dde4ee;border-radius:12px;
+  overflow:hidden;box-shadow:0 4px 18px rgba(22,40,70,.07);}
+.code-head{display:flex;align-items:center;gap:12px;padding:9px 14px;background:#f8fafc;
+  border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.filedot{display:flex;gap:5px;}
+.filedot i{width:10px;height:10px;border-radius:50%;display:block;}
+.code-file{font-size:13px;font-weight:700;color:#33404f;letter-spacing:.3px;}
+.code-file small{font-weight:400;color:var(--muted);margin-left:6px;}
+.codeacts{margin-left:auto;display:flex;gap:8px;}
+.mini-btn{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:7px;
+  padding:5px 12px;font-size:12.5px;transition:.15s;}
+.mini-btn:hover{background:#eef4fb;border-color:#b7c9dd;color:#12212f;}
+.mini-btn.ok{background:#e8f7ee;border-color:#bfe3cd;color:#12693a;}
+.mini-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.legend{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;background:#fcfdff;
+  border-bottom:1px solid #eef2f8;}
+.lg{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#5d6875;
+  background:#fff;border:1px solid #e6ecf4;border-radius:999px;padding:3px 10px;}
+.lg b{font-size:12.5px;}
+
+.code-body{max-height:640px;overflow:auto;padding:8px 0;background:var(--codebg);}
+.code-body::-webkit-scrollbar{width:10px;height:10px;}
+.code-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px;}
+.code-body::-webkit-scrollbar-track{background:#f4f7fb;}
+.cl{display:flex;align-items:flex-start;min-height:22px;border-left:3px solid transparent;}
+.cl:hover{background:#f4f8ff;}
+.cl.clickable{cursor:pointer;}
+.cl.clickable:hover{background:#eaf3ff;}
+.cl.active{background:#e4f0ff!important;border-left-color:#0969da!important;}
+.cl .ic{flex:0 0 30px;text-align:center;font-size:13px;line-height:22px;user-select:none;padding-top:1px;}
+.cl .ln{flex:0 0 40px;text-align:right;padding-right:12px;font-size:12px;color:#a6b3c2;
+  line-height:22px;user-select:none;font-family:Consolas,monospace;}
+.cl.active .ln{color:#0969da;font-weight:700;}
+.cl .src{flex:1 1 auto;white-space:pre;padding-right:20px;font-size:13px;line-height:22px;
+  color:#1f2328;font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;}
+.cl.marked{border-left-width:3px;border-left-style:solid;}
+.cl.marked.k-basic{border-left-color:var(--basic);background:rgba(9,105,218,.035);}
+.cl.marked.k-object{border-left-color:var(--object);background:rgba(130,80,223,.035);}
+.cl.marked.k-flow{border-left-color:var(--flow);background:rgba(26,127,55,.035);}
+.cl.marked.k-request{border-left-color:var(--request);background:rgba(188,76,0,.035);}
+.cl.marked.k-tag{border-left-color:var(--tag);background:rgba(191,57,137,.035);}
+.cl.marked:hover{filter:saturate(1.15);}
+.code-body .cl.marked:hover{background:#eff5ff;}
+.code-body .cl.active .ic{transform:scale(1.25);}
+
+.tok-cmt{color:#6e7781;font-style:italic;}
+.tok-kw{color:#cf222e;font-weight:700;}
+.tok-str{color:#0a3069;}
+.tok-num{color:#0550ae;}
+.tok-tag{color:#116329;font-weight:700;}
+.tok-attr{color:#0550ae;}
+.tok-punc{color:#57606a;}
+.tok-jsp{color:#8250df;font-weight:700;}
+.tok-jspcode{color:#953800;}
+.tok-el{color:#8250df;font-weight:700;background:#faf5ff;border-radius:3px;padding:0 2px;}
+.tok-dir{color:#bf3989;font-weight:700;}
+
+.kp-panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  box-shadow:0 4px 18px rgba(22,40,70,.07);position:sticky;top:118px;max-height:calc(100vh - 140px);
+  display:flex;flex-direction:column;}
+@media (max-width:1180px){.kp-panel{position:static;max-height:none;}}
+.kp-head{display:flex;align-items:center;gap:10px;padding:11px 16px;
+  background:linear-gradient(135deg,#f7f9fc,#eef3fa);border-bottom:1px solid #e5ebf3;flex-wrap:wrap;}
+.kp-head .t{font-size:14px;font-weight:800;color:#1b2430;letter-spacing:.3px;}
+.kp-head .hint{font-size:11.5px;color:var(--muted);}
+.kp-nav{margin-left:auto;display:flex;gap:6px;}
+.kp-nav button{background:#fff;border:1px solid #d6dfea;border-radius:7px;padding:4px 10px;
+  font-size:12px;color:#41505f;}
+.kp-nav button:hover{background:#eef4fb;border-color:#b7c9dd;}
+.kp-nav button:disabled{opacity:.4;cursor:not-allowed;}
+.kp-chips{display:flex;gap:6px;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid #eef2f8;background:#fcfdff;}
+.kchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:999px;
+  background:#f3f6fa;border:1px solid #e3eaf3;color:#4c5765;transition:.15s;}
+.kchip:hover{background:#e9f1fb;border-color:#c3d5e9;}
+.kchip.on{background:#1b2430;border-color:#1b2430;color:#fff;font-weight:700;}
+.kp-body{padding:16px 18px 24px;overflow:auto;flex:1 1 auto;}
+.kp-body::-webkit-scrollbar{width:9px;}
+.kp-body::-webkit-scrollbar-thumb{background:#cfd8e3;border-radius:5px;}
+.kp-empty{text-align:center;color:#8b96a5;padding:50px 20px;font-size:14px;line-height:2;}
+.kp-empty .big{font-size:40px;display:block;margin-bottom:12px;}
+.kp-empty b{color:#2d3a49;}
+.kpcard{border:1px solid #e6ecf4;border-radius:11px;overflow:hidden;margin-bottom:16px;background:#fff;}
+.kpcard-head{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid #eef2f8;}
+.kpcard-head .ic{font-size:16px;}
+.kpcard-head .tt{font-size:15px;font-weight:800;color:#141b23;}
+.kpcard-head .cat{margin-left:auto;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;}
+.kpcard-body{padding:14px 16px 18px;font-size:13.5px;color:#2c3540;}
+.kp-def{background:#f7fafd;border:1px solid #e6eef7;border-left:4px solid #4a90d9;
+  border-radius:8px;padding:11px 14px;margin-bottom:14px;color:#26313d;}
+.kpcard h5{margin:16px 0 8px;font-size:13.5px;color:#16202c;display:flex;align-items:center;gap:7px;
+  padding-bottom:5px;border-bottom:1px dashed #e3eaf3;}
+.kpcard h5:first-of-type{margin-top:6px;}
+.kpcard ul,.kpcard ol{margin:6px 0;padding-left:20px;}
+.kpcard li{margin:4px 0;}
+.kpcard b{color:#101820;}
+table.kpt{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:12.8px;}
+table.kpt th{background:#f4f7fb;color:#2b3542;text-align:left;padding:7px 10px;
+  border:1px solid #e3eaf3;font-weight:700;}
+table.kpt td{padding:7px 10px;border:1px solid #e8eef6;vertical-align:top;}
+table.kpt tr:nth-child(even) td{background:#fbfcfe;}
+table.kpt code{background:#eef4fb;padding:1px 5px;border-radius:4px;font-size:12px;color:#0a3d78;}
+pre.kpcode{background:#f8fafc;border:1px solid #e5ebf3;border-radius:8px;padding:11px 13px;
+  overflow-x:auto;font-size:12.6px;line-height:1.7;color:#1f2937;margin:8px 0 12px;white-space:pre;}
+pre.kpcode .c-str{color:#0a3069;}
+pre.kpcode .c-kw{color:#cf222e;font-weight:700;}
+pre.kpcode .c-cmt{color:#6e7781;font-style:italic;}
+pre.kpcode .c-jsp{color:#8250df;font-weight:700;}
+pre.kpcode .c-el{color:#8250df;font-weight:700;}
+pre.kpcode .c-tag{color:#116329;font-weight:700;}
+.tip{background:#e8f7ee;border:1px solid #bfe3cd;border-left:4px solid #1a7f37;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#124225;}
+.warn{background:#fff8ec;border:1px solid #f6e3c4;border-left:4px solid #bc4c00;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#6b3f00;}
+.std{background:#f4edff;border:1px solid #e0d1ff;border-left:4px solid #8250df;
+  border-radius:7px;padding:9px 13px;margin:10px 0;font-size:13px;color:#4a2e87;}
+.kplink{display:inline-block;margin:3px 4px 3px 0;padding:4px 10px;border-radius:6px;
+  background:#eef4fb;border:1px solid #cfe0f2;color:#0a3d78;font-size:12px;cursor:pointer;}
+.kplink:hover{background:#ddeaf8;}
+
+.info-section{margin-top:18px;}
+.info-section h3{font-size:17px;margin:20px 0 10px;color:#1b2430;padding-left:10px;border-left:4px solid var(--brand);}
+.info-section h4{font-size:14.5px;margin:16px 0 8px;color:#2d3a49;}
+.info-section p{font-size:13.5px;color:#3c4757;margin:8px 0;}
+.info-section ul,.info-section ol{padding-left:22px;}
+.info-section li{margin:4px 0;font-size:13.5px;color:#3c4757;}
+.info-section table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
+.info-section table th,.info-section table td{border:1px solid #e3eaf3;padding:8px 12px;text-align:left;}
+.info-section table th{background:#f4f7fb;color:#2b3542;}
+.pom-box{background:#f6f8fa;color:#24292f;border:1px solid #d0d7de;border-left:4px solid #0969da;border-radius:10px;padding:18px 22px;font-family:"JetBrains Mono","Fira Code",Consolas,"Courier New",monospace;font-size:13.5px;line-height:1.75;white-space:pre;overflow-x:auto;tab-size:4;box-shadow:0 1px 3px rgba(0,0,0,.06);margin:14px 0;}
+.pom-box .p-kw{color:#cf222e;font-weight:600;}
+.pom-box .p-str{color:#0a3069;}
+.pom-box .p-tag{color:#116329;}
+.pom-box .p-cmt{color:#6e7781;font-style:italic;}
+.pom-box .p-num{color:#953800;}
+.tree{background:#f8fafc;border:1px solid #e5ebf3;border-radius:10px;padding:16px 20px;font-family:"JetBrains Mono",Consolas,monospace;
+  font-size:13px;line-height:1.9;white-space:pre;margin:10px 0;color:#3c4757;}
+.tree .dir{color:#0969da;font-weight:700;}.tree .file{color:#1f2328;}.tree .note{color:#8b96a5;font-style:italic;}
+.browser-mock{background:#fff;border:1px solid #dde4ee;border-radius:10px;overflow:hidden;margin:14px 0;max-width:680px;}
+.browser-bar{background:#f4f7fb;padding:8px 12px;display:flex;gap:6px;align-items:center;border-bottom:1px solid #e5ebf3;}
+.browser-bar i{width:10px;height:10px;border-radius:50%;}
+.browser-url{flex:1;background:#fff;border:1px solid #d6dfea;border-radius:6px;padding:4px 10px;font-size:12px;color:#5b6673;font-family:Consolas,monospace;}
+.browser-body{padding:24px;background:#fff;min-height:160px;}
+.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0;}
+.kpi{flex:1 1 180px;background:linear-gradient(135deg,#fff8ec,#fef3e2);border:1px solid #f6e3c4;border-radius:10px;padding:14px 16px;}
+.kpi .v{font-size:22px;font-weight:800;color:#cf5320;}
+.kpi .l{font-size:12px;color:#8a5a00;margin-top:4px;}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px;}
+.kitem{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:.18s;}
+.kitem:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(23,40,70,.1);border-color:#b7c9dd;}
+.kitem .ic{font-size:22px;flex:0 0 30px;}
+.kitem .kt{font-size:13.5px;font-weight:700;color:#1b2430;}
+.kitem .kc{font-size:11.5px;color:#7b8795;margin-top:3px;}
+
+.navrow{display:flex;justify-content:space-between;margin-top:22px;gap:10px;flex-wrap:wrap;}
+.navrow button{background:#fff;border:1px solid #d6dfea;color:#41505f;border-radius:8px;padding:8px 18px;font-size:13.5px;}
+.navrow button.primary{background:linear-gradient(135deg,#ff8a4c,#e8632a);color:#fff;border-color:transparent;font-weight:700;}
+.navrow button:hover{filter:brightness(1.05);}
+.navrow button:disabled{opacity:.4;cursor:not-allowed;}
+
+.toast{position:fixed;right:20px;bottom:24px;z-index:999;padding:12px 20px;border-radius:10px;
+  font-size:13.5px;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.2);opacity:0;transform:translateY(20px);
+  transition:.25s;pointer-events:none;max-width:360px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#1a7f37;}
+.toast.err{background:#cf222e;}
+.toast.warn{background:#bc4c00;}
+
+/* ============ 水印 ============ */
+.wm-layer{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9998;overflow:hidden;}
+.wm-layer .wm-tile{position:absolute;color:rgba(9,105,218,.13);font:700 24px/1.2 "Microsoft YaHei",sans-serif;
+  transform:rotate(-28deg);white-space:nowrap;letter-spacing:2px;user-select:none;}
+/* ============ 页脚版权 ============ */
+.cr-foot{margin-top:24px;padding:14px 18px;text-align:center;font-size:12.5px;color:#6e7781;
+  border-top:1px solid #eaeef2;background:#f6f8fa;border-radius:0 0 10px 10px;line-height:1.8;}
+.cr-foot b{color:#24292f;}.cr-foot .dot{color:#d0d7de;margin:0 8px;}
+</style>
+</head>
+<body class="student-mode">
+
+<!-- ============ 顶栏 ============ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">JDBC</div>
+    <div>
+      <div class="b1">Java Web 应用开发</div>
+      <div class="b2">第二次课 · 数据库连接池与DBUtils · 学生信息管理系统（连接池+DBUtils重构版）</div>
+    </div>
+  </div>
+  <div class="tmode" id="tmode">🛡️ 教师模式：关闭</div>
+</div>
+
+<!-- ============ 步骤轨道 ============ -->
+<div class="rail" id="rail"></div>
+
+<!-- ============ 主舞台 ============ -->
+<div class="wrap" id="stage"></div>
+
+<!-- ============ Toast ============ -->
+<div class="toast" id="toast"></div>
+
+<!-- ============ 源码容器（script text/plain 避免嵌套解析问题） ============ -->
+
+<!-- ==================================================================== -->
+<!-- 【替换点6】源码容器区（自动构建） -->
+<script type="text/plain" id="src-pom.xml">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>jdbc-pool</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- ① Servlet API -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ② JSP API -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
+            <version>3.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ③ JSTL -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
+        <!-- ④ MySQL 驱动 -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.0.33</version>
+        </dependency>
+
+        <!-- ⑤ Druid 连接池：阿里巴巴开源的高性能 JDBC 连接池，
+             国内企业使用率最高，监控、防SQL注入、扩展性都非常出色。 -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.2.20</version>
+        </dependency>
+
+        <!-- ⑥ Commons DBUtils：Apache 提供的轻量级 JDBC 工具库，
+             核心是 QueryRunner + ResultSetHandler，自动完成
+             "创建语句、设置参数、执行、封装结果、关闭资源"全套动作，
+             把我们第一次课手写的样板代码减少 80% 以上。 -->
+        <dependency>
+            <groupId>commons-dbutils</groupId>
+            <artifactId>commons-dbutils</artifactId>
+            <version>1.7</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>jdbc-pool</finalName>
+    </build>
+</project>
+
+</script>
+<script type="text/plain" id="src-druid.properties">
+# =====================================================
+# Druid 连接池配置（src/main/resources/druid.properties）
+# 必须以 druid. 开头，Druid 数据源工厂会自动识别这些 key
+# =====================================================
+# 基础连接四要素
+druid.driverClassName=com.mysql.cj.jdbc.Driver
+druid.url=jdbc:mysql://localhost:3306/jdbc_demo?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+druid.username=root
+druid.password=root
+
+# 连接池核心参数（必记）
+druid.initialSize=5           # 初始化时池中预先创建的连接数
+druid.minIdle=5               # 池中保持的最小空闲连接数
+druid.maxActive=20            # 池中最大活跃连接数（并发上限）
+druid.maxWait=60000           # 获取连接最长等待时间（毫秒），超时抛异常
+
+# 连接保活与检测（防止数据库8小时断连）
+druid.timeBetweenEvictionRunsMillis=60000    # 检测空闲连接的周期（毫秒）
+druid.minEvictableIdleTimeMillis=300000      # 连接在池中最小存活时间
+druid.validationQuery=SELECT 1               # 检测连接是否有效的SQL
+druid.testWhileIdle=true                     # 空闲时检测
+druid.testOnBorrow=false                     # 借出时检测（性能影响大，关闭）
+druid.testOnReturn=false                     # 归还时检测
+
+# 监控与防注入（Druid 独有功能）
+druid.filters=stat,wall,slf4j                # stat=监控统计 wall=防火墙(防注入) slf4j=日志
+
+</script>
+<script type="text/plain" id="src-DruidUtil.java">
+package com.example.jdbc.util;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import org.apache.commons.dbutils.QueryRunner;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Properties;
+
+/*
+ * Druid 连接池工具类（替换第一次课的 JdbcUtil）
+ *
+ * 核心变化：
+ *   1. 不再用 DriverManager 每次新建连接，而是从 Druid 连接池 DataSource 里"借"连接
+ *   2. close() 不再"销毁物理连接"，而是"归还到池中"——这是连接池能复用连接的关键
+ *   3. 额外提供 getQueryRunner() 方法，给 DBUtils 的 QueryRunner 用
+ *
+ * Druid 初始化是重量级操作，整个应用只做一次，用 static 块保证单例。
+ */
+public class DruidUtil {
+    private static DataSource dataSource;
+
+    static {
+        Properties prop = new Properties();
+        try (InputStream in = DruidUtil.class.getClassLoader()
+                .getResourceAsStream("druid.properties")) {
+            if (in == null) {
+                throw new RuntimeException("没找到 druid.properties，请放在 src/main/resources 下");
+            }
+            prop.load(in);
+            /*
+             * DruidDataSourceFactory.createDataSource(prop) 是 Druid 提供的工厂方法，
+             * 根据 properties 里的配置自动创建并初始化一个 DruidDataSource（连接池实例）。
+             * 配置 key 必须以 "druid." 开头，否则工厂不识别。
+             */
+            dataSource = DruidDataSourceFactory.createDataSource(prop);
+        } catch (IOException e) {
+            throw new RuntimeException("读取 druid.properties 失败", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Druid 连接池初始化失败", e);
+        }
+    }
+
+    private DruidUtil() {}
+
+    /** 对外暴露 DataSource，DBUtils / 事务控制都要用 */
+    public static DataSource getDataSource() {
+        return dataSource;
+    }
+
+    /**
+     * 从连接池获取一个连接
+     * 注意：此时 Connection 是 Druid 包装后的代理对象，close() 实际是归还，不是销毁。
+     */
+    public static Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
+    /**
+     * 提供一个配置好数据源的 QueryRunner 实例，DAO 直接用即可
+     * 构造时传入 DataSource，QueryRunner 的 query/update 方法会自动借连接、执行、归还，
+     * 我们连 try-with-resources 都不用写了。
+     */
+    public static QueryRunner getQueryRunner() {
+        return new QueryRunner(dataSource);
+    }
+}
+
+</script>
+<script type="text/plain" id="src-Student.java">
+package com.example.jdbc.entity;
+
+import java.time.LocalDate;
+
+/*
+ * Student 实体类——与第一次课完全一致，JavaBean 四规范。
+ * 这里不再重复讲解，直接沿用第一次课的实体类。
+ */
+public class Student {
+    private Integer id;
+    private String name;
+    private String gender;
+    private Integer age;
+    private String major;
+    private LocalDate enrollDate;
+
+    public Student() {}
+
+    public Integer getId()          { return id; }
+    public void setId(Integer id)   { this.id = id; }
+    public String getName()         { return name; }
+    public void setName(String name){ this.name = name; }
+    public String getGender()       { return gender; }
+    public void setGender(String g) { this.gender = g; }
+    public Integer getAge()         { return age; }
+    public void setAge(Integer age) { this.age = age; }
+    public String getMajor()        { return major; }
+    public void setMajor(String m)  { this.major = m; }
+    public LocalDate getEnrollDate()      { return enrollDate; }
+    public void setEnrollDate(LocalDate d){ this.enrollDate = d; }
+}
+
+</script>
+<script type="text/plain" id="src-StudentDao.java">
+package com.example.jdbc.dao;
+
+import com.example.jdbc.entity.Student;
+import com.example.jdbc.util.DruidUtil;
+import org.apache.commons.dbutils.BasicRowProcessor;
+import org.apache.commons.dbutils.BeanProcessor;
+import org.apache.commons.dbutils.GenerousBeanProcessor;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
+
+import java.sql.SQLException;
+import java.util.List;
+
+/*
+ * 使用 DBUtils + Druid 重写后的 StudentDao
+ *
+ * 对比第一次课手写 JDBC 的变化：
+ *   1. 没有 try-with-resources 了——QueryRunner 自己处理连接获取与关闭
+ *   2. 没有 while(rs.next()) 循环了——BeanListHandler 自动把 ResultSet 转成 List<Student>
+ *   3. 没有 pstmt.setXxx 一行行设置参数了——query/update 的可变参数自动按顺序设置
+ *   4. 没有自己处理关闭资源了——QueryRunner 会在 finally 里关闭
+ *   代码量从 170 行缩到 60 行左右，但功能完全一致。
+ */
+public class StudentDao {
+
+    /*
+     * QueryRunner 是 DBUtils 的核心类：
+     *   - 构造时传入 DataSource，自动管理连接
+     *   - query(sql, rsh, params...) 用于 SELECT，返回值由 ResultSetHandler 决定
+     *   - update(sql, params...) 用于 INSERT/UPDATE/DELETE，返回受影响行数
+     *
+     * ResultSetHandler 常用实现（DBUtils 已提供，不用自己写）：
+     *   BeanListHandler   把结果集所有行封装成 List<JavaBean>
+     *   BeanHandler       把结果集第一行封装成一个 JavaBean（按 id 查询时用）
+     *   ScalarHandler     取单个值（如 SELECT COUNT(*)）
+     *   ColumnListHandler 取一列的值
+     */
+    private final QueryRunner qr = DruidUtil.getQueryRunner();
+
+    /*
+     * 默认的 BeanProcessor 要求数据库列名与 Java 属性名完全一致
+     * （enroll_date 列无法自动映射到 enrollDate 属性）。
+     * GenerousBeanProcessor 是 DBUtils 1.7+ 提供的"宽松"处理器，
+     * 自动支持下划线转驼峰（enroll_date → enrollDate），不用再写列别名。
+     */
+    private final BeanListHandler<Student> listHandler = new BeanListHandler<>(
+            Student.class, new BasicRowProcessor(new GenerousBeanProcessor()));
+    private final BeanHandler<Student> beanHandler = new BeanHandler<>(
+            Student.class, new BasicRowProcessor(new GenerousBeanProcessor()));
+
+    /** 查询全部 */
+    public List<Student> findAll() {
+        try {
+            // 参数顺序：sql → ResultSetHandler → SQL 参数（没有就不传）
+            return qr.query(
+                "SELECT id, name, gender, age, major, enroll_date FROM student ORDER BY id",
+                listHandler
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException("查询学生列表失败", e);
+        }
+    }
+
+    /** 新增 */
+    public int insert(Student s) {
+        // update 返回受影响行数；参数按 ? 顺序传，类型会自动匹配
+        try {
+            return qr.update(
+                "INSERT INTO student(name, gender, age, major, enroll_date) VALUES(?,?,?,?,?)",
+                s.getName(), s.getGender(), s.getAge(), s.getMajor(), s.getEnrollDate()
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException("新增学生失败", e);
+        }
+    }
+
+    /** 按 id 查询单个 */
+    public Student findById(Integer id) {
+        try {
+            return qr.query(
+                "SELECT id, name, gender, age, major, enroll_date FROM student WHERE id = ?",
+                beanHandler, id
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException("查询学生失败", e);
+        }
+    }
+
+    /** 修改 */
+    public int update(Student s) {
+        try {
+            return qr.update(
+                "UPDATE student SET name=?, gender=?, age=?, major=?, enroll_date=? WHERE id=?",
+                s.getName(), s.getGender(), s.getAge(), s.getMajor(), s.getEnrollDate(), s.getId()
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException("修改学生失败", e);
+        }
+    }
+
+    /** 删除 */
+    public int deleteById(Integer id) {
+        try {
+            return qr.update("DELETE FROM student WHERE id = ?", id);
+        } catch (SQLException e) {
+            throw new RuntimeException("删除学生失败", e);
+        }
+    }
+}
+
+</script>
+<script type="text/plain" id="src-web.xml">
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+    <display-name>jdbc-pool</display-name>
+
+    <!-- 欢迎页 -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <!-- ========== Druid 内置监控页面 ========== -->
+    <!-- 访问地址：http://localhost:8080/jdbc-pool/druid/index.html -->
+    <servlet>
+        <servlet-name>DruidStatView</servlet-name>
+        <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
+        <!-- 登录账号密码（生产环境务必修改） -->
+        <init-param>
+            <param-name>loginUsername</param-name>
+            <param-value>admin</param-value>
+        </init-param>
+        <init-param>
+            <param-name>loginPassword</param-name>
+            <param-value>admin</param-value>
+        </init-param>
+        <!-- 是否允许清空统计数据 -->
+        <init-param>
+            <param-name>resetEnable</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DruidStatView</servlet-name>
+        <url-pattern>/druid/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Druid Web 监控 Filter（采集 URI、Session、JDBC 关联信息） -->
+    <filter>
+        <filter-name>DruidWebStatFilter</filter-name>
+        <filter-class>com.alibaba.druid.support.http.WebStatFilter</filter-class>
+        <init-param>
+            <param-name>exclusions</param-name>
+            <param-value>*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>DruidWebStatFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+</web-app>
+
+</script>
+<script type="text/plain" id="src-index.jsp">
+<% response.sendRedirect(request.getContextPath() + "/student/list"); %>
+
+</script>
+<script type="text/plain" id="src-add.jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>新增学生</title>
+    <style>
+        body { font-family:"Microsoft YaHei",sans-serif; margin:24px; }
+        form { max-width: 480px; }
+        label { display:block; margin-top:10px; font-weight:bold; }
+        input, select { width:100%; padding:6px; margin-top:4px;
+                        border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
+        button { margin-top:14px; padding:8px 20px; background:#0969da;
+                 color:#fff; border:none; border-radius:4px; cursor:pointer; }
+        a.back { margin-left:12px; color:#57606a; text-decoration:none; }
+    </style>
+</head>
+<body>
+<h2>➕ 新增学生</h2>
+<form action="<c:url value='/student/add'/>" method="post">
+    <label>姓名：<input type="text" name="name" required></label>
+    <label>性别：
+        <select name="gender">
+            <option value="男">男</option>
+            <option value="女">女</option>
+        </select>
+    </label>
+    <label>年龄：<input type="number" name="age" min="15" max="60"></label>
+    <label>专业：<input type="text" name="major"></label>
+    <label>入学日期：<input type="date" name="enrollDate"></label>
+    <button type="submit">保存</button>
+    <a class="back" href="<c:url value='/student/list'/>">返回列表</a>
+</form>
+</body>
+</html>
+
+</script>
+<script type="text/plain" id="src-edit.jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>编辑学生</title>
+    <style>
+        body { font-family:"Microsoft YaHei",sans-serif; margin:24px; }
+        form { max-width:480px; }
+        label { display:block; margin-top:10px; font-weight:bold; }
+        input, select { width:100%; padding:6px; margin-top:4px;
+                        border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
+        button { margin-top:14px; padding:8px 20px; background:#1a7f37;
+                 color:#fff; border:none; border-radius:4px; cursor:pointer; }
+        a.back { margin-left:12px; color:#57606a; text-decoration:none; }
+    </style>
+</head>
+<body>
+<h2>✏️ 编辑学生</h2>
+<form action="<c:url value='/student/update'/>" method="post">
+    <input type="hidden" name="id" value="${s.id}">
+    <label>姓名：<input type="text" name="name" value="${s.name}" required></label>
+    <label>性别：
+        <select name="gender">
+            <option value="男" ${s.gender=='男'?'selected':''}>男</option>
+            <option value="女" ${s.gender=='女'?'selected':''}>女</option>
+        </select>
+    </label>
+    <label>年龄：<input type="number" name="age" value="${s.age}"></label>
+    <label>专业：<input type="text" name="major" value="${s.major}"></label>
+    <label>入学日期：
+        <input type="date" name="enrollDate"
+               value="<fmt:formatDate value='${s.enrollDate}' pattern='yyyy-MM-dd'/>">
+    </label>
+    <button type="submit">保存修改</button>
+    <a class="back" href="<c:url value='/student/list'/>">返回列表</a>
+</form>
+</body>
+</html>
+
+</script>
+<script type="text/plain" id="src-list.jsp">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>学生列表（Druid + DBUtils）</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 24px; }
+        h2 { margin-bottom: 12px; }
+        a.btn { display:inline-block; padding:6px 14px; background:#0969da;
+                color:#fff; text-decoration:none; border-radius:4px; margin-right:8px; }
+        .badge { display:inline-block; padding:2px 10px; background:#1a7f37;
+                 color:#fff; border-radius:10px; font-size:12px; margin-left:8px;}
+        table { border-collapse: collapse; width: 100%; margin-top:12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align:center; }
+        th { background: #f6f8fa; }
+        tr:hover { background: #f6f8fa; }
+        .op a { margin: 0 6px; color:#0969da; text-decoration:none; }
+        .op a.del { color:#cf222e; }
+    </style>
+</head>
+<body>
+<h2>👨‍🎓 学生信息管理 <span class="badge">Druid + DBUtils 版</span></h2>
+<a class="btn" href="<c:url value='/student/toAdd'/>">➕ 新增学生</a>
+
+<table>
+    <tr>
+        <th>学号</th><th>姓名</th><th>性别</th><th>年龄</th>
+        <th>专业</th><th>入学日期</th><th>操作</th>
+    </tr>
+    <c:forEach items="${students}" var="s">
+        <tr>
+            <td>${s.id}</td>
+            <td>${s.name}</td>
+            <td>${s.gender}</td>
+            <td>${s.age}</td>
+            <td>${s.major}</td>
+            <td><fmt:formatDate value="${s.enrollDate}" pattern="yyyy-MM-dd"/></td>
+            <td class="op">
+                <a href="<c:url value='/student/toEdit?id=${s.id}'/>">编辑</a>
+                <a class="del" href="<c:url value='/student/delete?id=${s.id}'/>"
+                   onclick="return confirm('确认删除 ${s.name} 吗？');">删除</a>
+            </td>
+        </tr>
+    </c:forEach>
+</table>
+</body>
+</html>
+
+</script>
+<script type="text/plain" id="src-StudentAddServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import com.example.jdbc.entity.Student;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.time.LocalDate;
+
+/* 新增学生提交 */
+@WebServlet("/student/add")
+public class StudentAddServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        Student s = new Student();
+        s.setName(req.getParameter("name"));
+        s.setGender(req.getParameter("gender"));
+        String age = req.getParameter("age");
+        s.setAge(age == null || age.isEmpty() ? null : Integer.parseInt(age));
+        s.setMajor(req.getParameter("major"));
+        String date = req.getParameter("enrollDate");
+        s.setEnrollDate(date == null || date.isEmpty() ? null : LocalDate.parse(date));
+        dao.insert(s);
+        resp.sendRedirect(req.getContextPath() + "/student/list");
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentDeleteServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
+/* 删除 */
+@WebServlet("/student/delete")
+public class StudentDeleteServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        Integer id = Integer.parseInt(req.getParameter("id"));
+        dao.deleteById(id);
+        resp.sendRedirect(req.getContextPath() + "/student/list");
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentListServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import com.example.jdbc.entity.Student;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.util.List;
+
+/* 学生列表：Servlet 写法与第一次课一致，不同点在 DAO 内部使用 DBUtils+Druid */
+@WebServlet("/student/list")
+public class StudentListServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        List<Student> students = dao.findAll();
+        req.setAttribute("students", students);
+        req.getRequestDispatcher("/WEB-INF/student/list.jsp").forward(req, resp);
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentToAddServlet.java">
+package com.example.jdbc.web;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
+/* 跳转新增页 */
+@WebServlet("/student/toAdd")
+public class StudentToAddServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/student/add.jsp").forward(req, resp);
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentToEditServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import com.example.jdbc.entity.Student;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
+/* 跳转编辑页（回显） */
+@WebServlet("/student/toEdit")
+public class StudentToEditServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        Integer id = Integer.parseInt(req.getParameter("id"));
+        Student s = dao.findById(id);
+        req.setAttribute("s", s);
+        req.getRequestDispatcher("/WEB-INF/student/edit.jsp").forward(req, resp);
+    }
+}
+
+</script>
+<script type="text/plain" id="src-StudentUpdateServlet.java">
+package com.example.jdbc.web;
+
+import com.example.jdbc.dao.StudentDao;
+import com.example.jdbc.entity.Student;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.time.LocalDate;
+
+/* 修改提交 */
+@WebServlet("/student/update")
+public class StudentUpdateServlet extends HttpServlet {
+    private final StudentDao dao = new StudentDao();
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        Student s = new Student();
+        s.setId(Integer.parseInt(req.getParameter("id")));
+        s.setName(req.getParameter("name"));
+        s.setGender(req.getParameter("gender"));
+        String age = req.getParameter("age");
+        s.setAge(age == null || age.isEmpty() ? null : Integer.parseInt(age));
+        s.setMajor(req.getParameter("major"));
+        String date = req.getParameter("enrollDate");
+        s.setEnrollDate(date == null || date.isEmpty() ? null : LocalDate.parse(date));
+        dao.update(s);
+        resp.sendRedirect(req.getContextPath() + "/student/list");
+    }
+}
+
+</script>
+
+<!-- 【替换点7】知识点内容区（自动构建） -->
+<script type="text/html" id="kp-bean-handler">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">BeanHandler·按 id 查询单条</span></div>
+<div class="kp-body">
+<p>按 id 查询单个学生，使用 BeanHandler：</p>
+<pre>return qr.query(
+    "SELECT ... FROM student WHERE id = ?",
+    beanHandler, id
+);</pre>
+<h4>和 BeanListHandler 的区别</h4>
+<ul>
+  <li>BeanHandler 只取<b>第一行</b>，封装为单个 Student 对象</li>
+  <li>如果结果集为空（id 不存在），返回 <b>null</b>（不会抛异常）</li>
+  <li>BeanListHandler 取<b>所有行</b>，返回 List；没有数据时返回<b>空列表</b>（不是 null）</li>
+</ul>
+<h4>使用场景</h4>
+<ul>
+  <li>主键/唯一键查询 → BeanHandler（最多返回一条）</li>
+  <li>列表/模糊搜索 → BeanListHandler（可能返回多条）</li>
+</ul>
+<p class="warn">⚠️ BeanHandler 返回 null 的情况一定要处理：编辑页如果用户传了不存在的 id，s 是 null，JSP 里 <code>${s.name}</code> 会显示空白，建议 DAO 上层加判断或抛自定义异常。</p></div>
+
+</script>
+<script type="text/html" id="kp-bean-handlers">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">ResultSetHandler 常用实现</span></div>
+<div class="kp-body">
+<p>ResultSetHandler 是 DBUtils 的精髓所在——它是一个接口，各种"结果集 → Java 对象"的映射策略都由它的实现类决定。DBUtils 已经内置了几乎所有常用实现，不用自己写。</p>
+<table>
+<tr><th>实现类</th><th>作用</th><th>返回类型</th><th>典型 SQL</th></tr>
+<tr><td><b>BeanHandler</b></td><td>取第一行封装成 JavaBean</td><td>T</td><td>SELECT ... WHERE id = ?</td></tr>
+<tr><td><b>BeanListHandler</b></td><td>取所有行封装成 List</td><td>List&lt;T&gt;</td><td>SELECT ... ORDER BY ...</td></tr>
+<tr><td><b>ScalarHandler</b></td><td>取单个值（第一行第一列）</td><td>Object（通常强转 Long）</td><td>SELECT COUNT(*) FROM ...</td></tr>
+<tr><td>MapHandler</td><td>取第一行成 Map&lt;列名, 值&gt;</td><td>Map</td><td>动态列、联查时用</td></tr>
+<tr><td>MapListHandler</td><td>取所有行成 List&lt;Map&gt;</td><td>List&lt;Map&gt;</td><td>无 JavaBean 时用</td></tr>
+<tr><td>ColumnListHandler</td><td>取一列所有值</td><td>List&lt;Object&gt;</td><td>SELECT name FROM ...</td></tr>
+<tr><td>ArrayHandler</td><td>取第一行成 Object[]</td><td>Object[]</td><td>少用</td></tr>
+</table>
+<h4>选哪个？</h4>
+<ul>
+  <li>查单条记录 → BeanHandler</li>
+  <li>查多条记录 → BeanListHandler</li>
+  <li>查聚合函数（count/max/avg/sum）→ ScalarHandler</li>
+  <li>不知道返回结构/动态列 → MapHandler / MapListHandler</li>
+</ul>
+<p class="warn">⚠️ ScalarHandler 返回值默认是 <b>Long</b>（count(*) 是 BIGINT），强转 Integer 会报 ClassCastException。</p></div>
+
+</script>
+<script type="text/html" id="kp-bean-processor">
+<div class="kpcard" data-k="kp-bean-processor" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">GenerousBeanProcessor 下划线转驼峰</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>🐍 什么问题</h4>
+<p>数据库字段命名习惯是<b>下划线命名</b>（<code>enroll_date</code>、<code>create_time</code>），而 Java 属性是<b>驼峰命名</b>（<code>enrollDate</code>、<code>createTime</code>）。DBUtils 默认的 <code>BeanProcessor</code> 是<b>严格同名匹配</b>，<code>enroll_date</code> 找不到对应的 <code>enrollDate</code> 属性，会映射失败，字段值为 null。</p>
+
+<h4>💡 解决方案</h4>
+<p>使用 DBUtils 1.6+ 提供的 <b>GenerousBeanProcessor</b>（"宽松Bean处理器"），它会自动把下划线命名转成驼峰后再匹配：<code>enroll_date → enrollDate</code>。</p>
+
+<pre><code>// 创建时传入
+QueryRunner qr = new QueryRunner(ds, new GenerousBeanProcessor());</code></pre>
+
+<div class="warn"><b>⚠️ 易错点</b>：<ul>
+<li>必须 DBUtils 版本 ≥ 1.6，低版本没有这个类</li>
+<li>是构造 QueryRunner 时传入第二参数，不是在 DAO 里每次 query 传</li>
+<li>如果还有其他字段名不一致（如数据库叫 stu_name、Java 叫 name），需要自定义 <code>RowProcessor</code> 或在 SQL 里写 AS 别名</li>
+</ul></div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-dao-rewrite">
+<div class="kpcard" data-k="kp-dao-rewrite" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">DAO 改造：从近百行变十几行</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>📊 代码量对比</h4>
+<table>
+<tr><th>操作</th><th>手写JDBC</th><th>DBUtils版</th></tr>
+<tr><td>findAll</td><td>约 25 行（conn/pstmt/rs 嵌套 + while 遍历赋值）</td><td>3 行</td></tr>
+<tr><td>insert</td><td>约 20 行</td><td>4 行</td></tr>
+<tr><td>findById</td><td>约 22 行</td><td>3 行</td></tr>
+<tr><td>update/delete</td><td>各 15~20 行</td><td>各 3~4 行</td></tr>
+<tr><td><b>合计</b></td><td><b>约 120 行</b></td><td><b>约 20 行</b></td></tr>
+</table>
+
+<h4>🎉 DBUtils 帮我们做了什么</h4>
+<ul>
+<li>✅ 自动从 DataSource 取连接、自动归还（不用写 conn = ... 了）</li>
+<li>✅ 自动 PreparedStatement + setXxx 设置参数（不用手动 setString/setInt）</li>
+<li>✅ 自动 ResultSet → JavaBean 反射映射（不用 rs.getString("name") 一个个写）</li>
+<li>✅ 自动 try-catch-finally 关闭 ResultSet/Statement/Connection（不用嵌套关闭）</li>
+<li>✅ 自动把 SQLException 包装后抛出（但还是 SQLException，不是 RuntimeException）</li>
+</ul>
+
+<h4>💡 业务代码只关注什么</h4>
+<p>DAO 里只剩两件事：① 写正确的SQL；② 选对 ResultSetHandler。这才是业务开发该聚焦的地方。</p>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-dbutils-dep">
+<div class="kpcard" data-k="kp-dbutils-dep" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">Commons DBUtils 依赖</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>📦 是什么</h4>
+<p><b>Apache Commons DBUtils</b> 是 Apache 官方提供的 JDBC 轻量封装工具包。它<b>不是 ORM 框架</b>（不像 Hibernate/MyBatis 那么重），只是帮你把 ResultSet → JavaBean 的映射、资源关闭、异常转译这些样板代码封装掉。</p>
+
+<h4>🎯 解决什么问题</h4>
+<p>手写JDBC的痛点：① 每次都要写 Connection/PreparedStatement/ResultSet 三大对象的 try-catch-finally 嵌套；② ResultSet 到实体类的字段赋值要一个一个 <code>rs.getString("name")</code> 手敲；③ 关闭顺序错了容易连接泄漏。DBUtils 用 <b>QueryRunner + ResultSetHandler</b> 一套API把这些都消灭。</p>
+
+<h4>🔧 Maven 坐标</h4>
+<pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;commons-dbutils&lt;/groupId&gt;
+  &lt;artifactId&gt;commons-dbutils&lt;/artifactId&gt;
+  &lt;version&gt;1.7&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+<div class="warn"><b>⚠️ 易错点</b>：groupId 和 artifactId <b>都是 commons-dbutils</b>，别写成 <code>org.apache.commons</code>（那是 commons-lang3 等其他包的命名空间）。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-dbutils-overview">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">DBUtils 重写 DAO 的四大变化</span></div>
+<div class="kp-body">
+<p>对比第一次课手写 JDBC 的 StudentDao（170 行），使用 DBUtils 后只有约 60 行——但功能完全一致。DAO 代码发生了四大变化：</p>
+<table>
+<tr><th>维度</th><th>第一次课·手写 JDBC</th><th>第二次课·DBUtils</th></tr>
+<tr><td>连接获取</td><td>JdbcUtil.getConnection() 自己拿</td><td>QueryRunner 从 DataSource 自动取</td></tr>
+<tr><td>SQL 执行</td><td>PreparedStatement + pstmt.executeXxx()</td><td>qr.query() / qr.update() 一行</td></tr>
+<tr><td>结果映射</td><td>while(rs.next()) 手动 rs.getXxx() 封装对象</td><td>ResultSetHandler 自动映射成 JavaBean</td></tr>
+<tr><td>参数设置</td><td>pstmt.setString(1, xxx) 逐行 set</td><td>可变参数 Object... 按 ? 顺序传</td></tr>
+<tr><td>资源关闭</td><td>try-with-resources / finally 手动关</td><td>QueryRunner 在 finally 里自动关</td></tr>
+<tr><td>异常处理</td><td>catch SQLException 自己处理</td><td>catch SQLException 转成 RuntimeException 抛出</td></tr>
+<tr><td>代码量</td><td>~170 行</td><td>~60 行</td></tr>
+</table>
+<p class="note">这就是框架的价值——把通用、重复的"机械动作"封装掉，让开发者只关心"做什么"（SQL），而不是"怎么做"（连接/语句/映射/关闭）。</p></div>
+
+</script>
+<script type="text/html" id="kp-druid-dep">
+<div class="kpcard" data-k="kp-druid-dep" data-cat="pool" style="border-left: 4px solid #1a7f37;">
+  <div class="kp-head"><span class="kp-icon">🌀</span><span class="kp-title">Druid 连接池依赖（com.alibaba:druid）</span><span class="kp-cat" style="background:#1a7f3722;color:#1a7f37;">连接池</span></div>
+  <div class="kp-body">
+
+<h4>📦 是什么</h4>
+<p><b>Druid</b> 是阿里巴巴开源的数据库连接池实现，号称"为监控而生"——除了连接池功能，还内置了强大的 SQL 监控、慢SQL记录、Wall 防火墙等能力，是国内Java企业项目使用最广的连接池之一。</p>
+
+<h4>🎯 为什么用</h4>
+<p>自己 <code>DriverManager.getConnection()</code> 每次都要做 TCP 三次握手 + MySQL 权限认证，单次连接建立耗时 100~300ms，高并发下会迅速打满数据库连接上限。连接池在应用启动时就预先建好若干连接放到"池子"里，业务借走用完<b>归还</b>而非关闭，复用连接、控制总量、防止连接泄漏。</p>
+
+<h4>🔧 Maven 坐标</h4>
+<pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+  &lt;artifactId&gt;druid&lt;/artifactId&gt;
+  &lt;version&gt;1.2.20&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+
+<h4>📊 主流连接池对比</h4>
+<table><tr><th>连接池</th><th>出品方</th><th>特点</th><th>推荐场景</th></tr>
+<tr><td><b>Druid</b></td><td>阿里</td><td>监控强、防SQL注入、功能最全</td><td>国内企业项目首选</td></tr>
+<tr><td>HikariCP</td><td>日本 Brett Wooldridge</td><td>速度最快、体积小、SpringBoot 默认</td><td>追求性能、SpringBoot 2.x+</td></tr>
+<tr><td>Tomcat JDBC Pool</td><td>Apache</td><td>Tomcat 自带、配置简单</td><td>Tomcat 单容器部署</td></tr>
+<tr><td>C3P0</td><td>开源老项目</td><td>老、慢、已不推荐</td><td>❌ 遗留系统才用</td></tr>
+</table>
+
+<div class="warn"><b>⚠️ 易错点</b>：groupId 是 <code>com.alibaba</code> 而不是 <code>com.alibaba.druid</code>；artifactId 就是 <code>druid</code>（不是 <code>druid-spring-boot-starter</code>，那是 SpringBoot 专用）。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-druid-filters">
+<div class="kpcard" data-k="kp-druid-filters" data-cat="mon" style="border-left: 4px solid #0550ae;">
+  <div class="kp-head"><span class="kp-icon">📊</span><span class="kp-title">Druid filters 监控/日志/Wall 防火墙</span><span class="kp-cat" style="background:#0550ae22;color:#0550ae;">监控配置</span></div>
+  <div class="kp-body">
+
+<h4>🎛️ 是什么</h4>
+<p><code>filters</code> 是 Druid 的过滤器链配置，用英文逗号分隔，常用3个：</p>
+<table>
+<tr><th>filter</th><th>功能</th><th>开启效果</th></tr>
+<tr><td><code>stat</code></td><td>SQL 执行统计</td><td>Druid 监控页面能看到SQL、耗时、错误率</td></tr>
+<tr><td><code>wall</code></td><td>SQL 防火墙</td><td>拦截 DROP、UNION 注入、永真式等危险语句</td></tr>
+<tr><td><code>log4j / slf4j</code></td><td>SQL 日志</td><td>在日志中输出执行的SQL和参数</td></tr>
+</table>
+
+<h4>✅ 推荐配置</h4>
+<pre><code>filters=stat,wall</code></pre>
+<p>开启后必须在 web.xml 里注册 <code>StatViewServlet</code> 才能看到监控页面。</p>
+
+<div class="warn"><b>⚠️ 易错点</b>：filter 名字都是小写 stat/wall/log4j，别写成大写 STAT。开启 wall 后，某些多语句批量执行（用分号分隔多条SQL）会被拦截，业务真的需要时在 wall 配置里白名单放行。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-druid-init">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">static 块 + DruidDataSourceFactory 初始化</span></div>
+<div class="kp-body">
+<p>Druid 初始化是<b>重量级操作</b>（要建立 N 个 TCP 连接、启动检测线程），整个应用只做一次，用 <b>static 静态代码块</b>保证。</p>
+<h4>static 块执行时机</h4>
+<p>类被 JVM 加载时执行一次（且仅一次）。我们把 <code>dataSource</code> 声明为 <code>private static</code>，配合 static 块，构成"饿汉式单例"——线程安全、实现简单。</p>
+<h4>配置文件加载方式</h4>
+<pre>DruidUtil.class.getClassLoader().getResourceAsStream("druid.properties")</pre>
+<ul>
+  <li>用<b>类加载器</b>加载资源文件，从 classpath 根目录查找（即 src/main/resources）</li>
+  <li>文件必须放在 src/main/resources 下，Maven 编译时自动复制到 WEB-INF/classes</li>
+  <li>try-with-resources 保证 InputStream 用完自动关闭</li>
+</ul>
+<h4>DruidDataSourceFactory.createDataSource()</h4>
+<p>Druid 提供的工厂方法，读取 Properties 对象，返回一个完整初始化好的 <code>DataSource</code>（实际是 DruidDataSource 实例）。相当于帮我们：</p>
+<ol>
+  <li>反射加载驱动类</li>
+  <li>创建连接池对象</li>
+  <li>设置所有配置参数</li>
+  <li>创建 initialSize 个物理连接</li>
+  <li>启动空闲连接检测线程、统计线程</li>
+  <li>注册 Wall / Stat 等 Filter</li>
+</ol>
+<p class="warn">⚠️ 初始化失败会抛 RuntimeException，让应用启动失败（fail-fast），避免运行时再报错找不到连接。</p></div>
+
+</script>
+<script type="text/html" id="kp-druid-monitor">
+<div class="kp-head"><span class="kp-icon" style="background:#bf398922;color:#bf3989">⚙️</span><span class="kp-title">Druid 监控 Servlet·StatViewServlet</span></div>
+<div class="kp-body">
+<p>Druid 内置了一个监控页面，需要在 web.xml 注册 <code>StatViewServlet</code> 才能访问。</p>
+<h4>注册方式（web.xml）</h4>
+<pre>&lt;servlet&gt;
+  &lt;servlet-name&gt;DruidStatView&lt;/servlet-name&gt;
+  &lt;servlet-class&gt;com.alibaba.druid.support.http.StatViewServlet&lt;/servlet-class&gt;
+  &lt;init-param&gt;
+    &lt;param-name&gt;loginUsername&lt;/param-name&gt;
+    &lt;param-value&gt;admin&lt;/param-value&gt;
+  &lt;/init-param&gt;
+  &lt;init-param&gt;
+    &lt;param-name&gt;loginPassword&lt;/param-name&gt;
+    &lt;param-value&gt;admin&lt;/param-value&gt;
+  &lt;/init-param&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+  &lt;servlet-name&gt;DruidStatView&lt;/servlet-name&gt;
+  &lt;url-pattern&gt;/druid/*&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;</pre>
+<h4>访问地址</h4>
+<p><code>http://localhost:8080/jdbc-pool/druid/index.html</code></p>
+<p>登录后可以看到：</p>
+<ul>
+  <li><b>数据源</b>：连接池状态（活跃数/空闲数/等待数）</li>
+  <li><b>SQL监控</b>：每条 SQL 的执行次数、总耗时、平均耗时、错误数、慢查询</li>
+  <li><b>SQL防火墙</b>：Wall 的拦截记录</li>
+  <li><b>Web应用</b>：URI 访问统计、Session 统计</li>
+  <li><b>URI监控</b>：每个 URL 的请求次数、JDBC 次数、最大并发</li>
+</ul>
+<p class="warn">⚠️ 生产环境必须改默认账号密码（admin/admin），最好再加 IP 白名单（<code>allow</code> 参数）限制只能内网访问。</p></div>
+
+</script>
+<script type="text/html" id="kp-druid-props-base">
+<div class="kp-head"><span class="kp-icon" style="background:#bf398922;color:#bf3989">⚙️</span><span class="kp-title">Druid 配置·基础连接四要素</span></div>
+<div class="kp-body">
+<p>Druid 通过 properties 文件配置，所有配置 key <b>必须以 <code>druid.</code> 开头</b>，由 <code>DruidDataSourceFactory</code> 自动识别。</p>
+<h4>四要素（和第一次课 jdbc.properties 完全对应）</h4>
+<table>
+<tr><th>配置项</th><th>含义</th><th>示例</th></tr>
+<tr><td><code>druid.driverClassName</code></td><td>JDBC 驱动类全限定名</td><td>com.mysql.cj.jdbc.Driver（MySQL 8 必须带 cj）</td></tr>
+<tr><td><code>druid.url</code></td><td>数据库连接 URL</td><td>jdbc:mysql://host:port/db?参数</td></tr>
+<tr><td><code>druid.username</code></td><td>数据库用户名</td><td>root</td></tr>
+<tr><td><code>druid.password</code></td><td>数据库密码</td><td>root</td></tr>
+</table>
+<h4>URL 参数（MySQL 8 必加）</h4>
+<ul>
+  <li><code>useSSL=false</code>：关闭 SSL（开发环境）</li>
+  <li><code>useUnicode=true&amp;characterEncoding=utf8</code>：使用 UTF-8</li>
+  <li><code>serverTimezone=Asia/Shanghai</code>：设置时区为东八区，否则时间会错 8 小时</li>
+  <li><code>allowPublicKeyRetrieval=true</code>：允许客户端获取公钥，MySQL 8 默认加密连接时需要</li>
+</ul>
+<p class="warn">⚠️ <b>易错</b>：MySQL 8 的驱动类是 <code>com.mysql.cj.jdbc.Driver</code>，漏写 <b>cj</b> 会报 ClassNotFoundException；时区没配会报"The server time zone value...is unrecognized"。</p></div>
+
+</script>
+<script type="text/html" id="kp-druid-props-core">
+<div class="kp-head"><span class="kp-icon" style="background:#bf398922;color:#bf3989">⚙️</span><span class="kp-title">Druid 配置·核心池参数（必记）</span></div>
+<div class="kp-body">
+<p>这几个参数是面试常考、调优必用的核心参数：</p>
+<table>
+<tr><th>参数</th><th>含义</th><th>默认值</th><th>建议</th></tr>
+<tr><td><code>initialSize</code></td><td>初始化时建立的连接数</td><td>0</td><td>5~10（启动时预热，避免第一次请求慢）</td></tr>
+<tr><td><code>minIdle</code></td><td>最小空闲连接数</td><td>0</td><td>和 initialSize 保持一致</td></tr>
+<tr><td><code>maxActive</code></td><td>最大活跃连接数（并发上限）</td><td>8</td><td>20~50（依数据库承受能力）</td></tr>
+<tr><td><code>maxWait</code></td><td>获取连接最大等待时间（毫秒）</td><td>-1（无限等）</td><td>60000（60秒超时抛异常，避免线程挂死）</td></tr>
+</table>
+<h4>理解要点</h4>
+<ul>
+  <li><b>池化思想</b>：启动时先建好 <code>initialSize</code> 个连接放池里</li>
+  <li><b>弹性伸缩</b>：并发上来时自动增加连接，直到 <code>maxActive</code></li>
+  <li><b>流量削峰</b>：连接全部被借完时，新请求排队等待 <code>maxWait</code> 毫秒</li>
+  <li><b>超时失败</b>：等超时还拿不到连接，抛 SQLException，避免服务雪崩</li>
+</ul>
+<p class="warn">⚠️ <b>不要</b>为了"支持更多并发"把 maxActive 设成 100 以上——MySQL 默认单库最大连接数只有 151，过多连接会拖垮数据库。</p></div>
+
+</script>
+<script type="text/html" id="kp-druid-props-keepalive">
+<div class="kp-head"><span class="kp-icon" style="background:#bf398922;color:#bf3989">⚙️</span><span class="kp-title">Druid 配置·连接保活与检测</span></div>
+<div class="kp-body">
+<p>MySQL 有个著名的 <b>"8小时问题"</b>：如果一个连接空闲超过 8 小时（wait_timeout 默认 28800 秒），MySQL 服务端会主动断开，但客户端池里还持有这个连接的引用——拿着它去执行 SQL 就会报 <code>Communications link failure</code>。</p>
+<h4>保活参数</h4>
+<table>
+<tr><th>参数</th><th>作用</th></tr>
+<tr><td><code>timeBetweenEvictionRunsMillis</code></td><td>空闲连接检测器运行周期（默认 60 秒）</td></tr>
+<tr><td><code>minEvictableIdleTimeMillis</code></td><td>连接在池中最小存活时间（默认 30 分钟）</td></tr>
+<tr><td><code>validationQuery</code></td><td>检测连接有效性的 SQL，MySQL 写 <code>SELECT 1</code></td></tr>
+<tr><td><code>testWhileIdle</code></td><td>空闲时检测（推荐开启，性能影响小）</td></tr>
+<tr><td><code>testOnBorrow</code></td><td>借出时检测（每次借都检测，性能差，生产关闭）</td></tr>
+<tr><td><code>testOnReturn</code></td><td>归还时检测（性能差，关闭）</td></tr>
+</table>
+<h4>推荐组合</h4>
+<pre>testWhileIdle=true, testOnBorrow=false, testOnReturn=false</pre>
+<p>这样检测器每 60 秒扫一次空闲连接，失效的就剔除并补新连接，保证每次借到的都是"活"的连接，而对业务无感。</p></div>
+
+</script>
+<script type="text/html" id="kp-druid-props">
+<div class="kpcard" data-k="kp-druid-props" data-cat="pool" style="border-left: 4px solid #1a7f37;">
+  <div class="kp-head"><span class="kp-icon">🌀</span><span class="kp-title">druid.properties 核心配置项</span><span class="kp-cat" style="background:#1a7f3722;color:#1a7f37;">连接池</span></div>
+  <div class="kp-body">
+
+<h4>📝 是什么</h4>
+<p>Druid 数据源不会自己从 jdbc.properties 读配置，需要单独的 <code>druid.properties</code> 文件，用 <code>DruidDataSourceFactory.createDataSource(props)</code> 工厂方法创建 DataSource。</p>
+
+<h4>🔑 核心配置项速查</h4>
+<table>
+<tr><th>配置项</th><th>含义</th><th>推荐值</th></tr>
+<tr><td><code>driverClassName</code></td><td>JDBC驱动类</td><td><code>com.mysql.cj.jdbc.Driver</code>（MySQL 8.x）</td></tr>
+<tr><td><code>url</code></td><td>数据库连接串</td><td>必须带 <code>serverTimezone=Asia/Shanghai</code></td></tr>
+<tr><td><code>username / password</code></td><td>数据库账号密码</td><td>生产环境不要写明文（用 JNDI/配置中心）</td></tr>
+<tr><td><code>initialSize</code></td><td>启动时初始连接数</td><td>5 ~ 10</td></tr>
+<tr><td><code>maxActive</code></td><td>最大活跃连接数（池子上限）</td><td>20 ~ 50（按数据库max_connections估算）</td></tr>
+<tr><td><code>minIdle</code></td><td>最小空闲连接数</td><td>5</td></tr>
+<tr><td><code>maxWait</code></td><td>获取连接最长等待毫秒数</td><td>60000（60秒拿不到就抛错，快速失败）</td></tr>
+</table>
+
+<h4>⏱ 保活与检测配置（进阶）</h4>
+<table>
+<tr><th>配置项</th><th>含义</th><th>推荐值</th></tr>
+<tr><td><code>timeBetweenEvictionRunsMillis</code></td><td>检测空闲连接周期</td><td>60000（1分钟）</td></tr>
+<tr><td><code>minEvictableIdleTimeMillis</code></td><td>连接最小空闲存活时间</td><td>300000（5分钟）</td></tr>
+<tr><td><code>testWhileIdle</code></td><td>空闲时检测有效性（推荐）</td><td>true</td></tr>
+<tr><td><code>validationQuery</code></td><td>连接有效性探测SQL</td><td><code>SELECT 1</code></td></tr>
+</table>
+
+<div class="warn"><b>⚠️ 易错点</b>：不要开 <code>testOnBorrow</code>（每次借连接都探测，性能差）；用 <code>testWhileIdle=true</code> 性能最好。<code>maxWait</code> 必须设，否则高并发下连接被借光时业务线程会<b>无限阻塞</b>。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-druid-web-filter">
+<div class="kp-head"><span class="kp-icon" style="background:#bf398922;color:#bf3989">⚙️</span><span class="kp-title">Druid WebStatFilter·采集 URI-SQL 关联</span></div>
+<div class="kp-body">
+<p>单独注册 StatViewServlet 只能看到 JDBC 层统计（SQL 耗时等），但<b>看不到 SQL 是哪个 URI 触发的</b>。要想把 Web 请求和 SQL 关联起来（哪个 URL 产生了哪些 SQL、多少次 JDBC 调用），需要注册 <code>WebStatFilter</code>。</p>
+<h4>关键配置</h4>
+<ul>
+  <li><code>exclusions</code>：排除静态资源和 Druid 自己的 URL，这些不统计（js/css/png/ico以及/druid/*）</li>
+  <li>url-pattern 设为 <code>/*</code>：拦截所有请求</li>
+</ul>
+<h4>开启后能看到什么</h4>
+<ul>
+  <li>URI 监控：每个接口请求多少次、并发多少、多少次 JDBC 调用</li>
+  <li>Session 监控：当前在线 Session 数、请求数</li>
+  <li>Spring 监控（如果集成 Spring）</li>
+</ul>
+<p class="note">这是我们选择 Druid 而不是 HikariCP 的核心原因之一——HikariCP 性能略快，但没有内置这么易用的监控面板，教学演示时看不到 SQL 执行情况。</p></div>
+
+</script>
+<script type="text/html" id="kp-druidutil-static">
+<div class="kpcard" data-k="kp-druidutil-static" data-cat="pool" style="border-left: 4px solid #1a7f37;">
+  <div class="kp-head"><span class="kp-icon">🌀</span><span class="kp-title">static 块初始化 Druid DataSource</span><span class="kp-cat" style="background:#1a7f3722;color:#1a7f37;">连接池</span></div>
+  <div class="kp-body">
+
+<h4>⚙️ 是什么</h4>
+<p>DruidUtil 作为连接池工具类，在类加载时通过 <b>static 静态代码块</b>执行一次初始化：读取 <code>druid.properties</code> → 调用 <code>DruidDataSourceFactory.createDataSource(props)</code> 创建 DataSource 单例 → 基于 DataSource 创建 QueryRunner 单例。</p>
+
+<h4>🔄 初始化流程</h4>
+<ol>
+<li><code>DruidUtil.class.getClassLoader().getResourceAsStream("druid.properties")</code> 加载配置</li>
+<li><code>Properties.load()</code> 解析 key-value</li>
+<li><code>DruidDataSourceFactory.createDataSource(props)</code> 反射创建 DataSource，内部建立 initialSize 个连接</li>
+<li><code>new QueryRunner(ds, new GenerousBeanProcessor())</code> 建一个 QueryRunner 单例（线程安全，全局复用）</li>
+</ol>
+
+<div class="warn"><b>⚠️ 易错点</b>：<b>不能每次调用都 createDataSource</b>！那样每次都会新建一个连接池，每个池子又会建 N 条连接，最终把数据库拖垮。必须放在 static 块里只初始化一次，或用双重检查锁的单例模式。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-generous-bean">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">GenerousBeanProcessor·下划线转驼峰</span></div>
+<div class="kp-body">
+<p>数据库列名风格（下划线 <code>enroll_date</code>）和 Java 属性风格（驼峰 <code>enrollDate</code>）不一致，这是使用 DBUtils 最常见的坑。</p>
+<h4>默认 BeanProcessor 的问题</h4>
+<ul>
+  <li>要求列名和属性名<b>完全相同</b></li>
+  <li><code>enroll_date</code> 不会自动映射到 <code>enrollDate</code>，结果对应属性是 null</li>
+  <li>传统解决方案是 SQL 里写别名：<code>SELECT enroll_date AS enrollDate FROM student</code></li>
+</ul>
+<h4>GenerousBeanProcessor（DBUtils 1.7+）</h4>
+<p>DBUtils 1.7 新增的"宽松"处理器，自动支持：</p>
+<ul>
+  <li>下划线 → 驼峰（enroll_date → enrollDate）</li>
+  <li>大小写不敏感</li>
+  <li>不用再写列别名</li>
+</ul>
+<h4>正确用法</h4>
+<pre>new BeanListHandler&lt;&gt;(
+    Student.class,
+    new BasicRowProcessor(new GenerousBeanProcessor())
+);</pre>
+<h4>层级关系</h4>
+<p>BeanListHandler/BeanHandler 构造时第二个参数可传 RowProcessor：<br>
+RowProcessor 负责"ResultSet 一行 → JavaBean"，默认用 BasicRowProcessor；<br>
+BasicRowProcessor 内部用 BeanProcessor 做列→属性映射，把它替换成 GenerousBeanProcessor 即可开启下划线转驼峰。</p>
+<p class="warn">⚠️ 不使用 GenerousBeanProcessor 时，下划线列名会映射失败，对应属性是 null，这是初学者最常踩的坑之一。</p></div>
+
+</script>
+<script type="text/html" id="kp-handler-bean">
+<div class="kpcard" data-k="kp-handler-bean" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">BeanHandler：查询单条记录</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>🎯 用途</h4>
+<p><code>new BeanHandler&lt;&gt;(Student.class)</code> 用于<b>查询单条记录</b>（比如按主键 findById），ResultSet 指向第一行，把这一行封装成一个 JavaBean 对象返回；如果 ResultSet 为空，返回 <b>null</b>。</p>
+
+<h4>🔧 用法</h4>
+<pre><code>Student s = qr.query(
+  "SELECT * FROM student WHERE id=?",
+  new BeanHandler&lt;&gt;(Student.class),
+  id
+);
+// s 为 null 表示没查到
+</code></pre>
+
+<h4>⚠️ 注意</h4>
+<ul>
+<li>如果 SQL 查出来有多条，BeanHandler <b>只取第一条</b>，不会报错也不会抛异常，容易让你误以为查询正确——因此务必保证 SQL 有 WHERE 条件命中唯一索引</li>
+<li>返回 null 时业务要做 <code>if(s==null)</code> 判断，否则后面调 getter 会抛 NullPointerException</li>
+</ul>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-handler-beanlist">
+<div class="kpcard" data-k="kp-handler-beanlist" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">BeanListHandler：查询多条记录</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>🎯 用途</h4>
+<p><code>new BeanListHandler&lt;&gt;(Student.class)</code> 用于<b>查询多条记录</b>（比如列表 findAll、按条件搜索），遍历 ResultSet 所有行，每一行封装成 JavaBean，最后收集成一个 <code>List&lt;Student&gt;</code> 返回；如果一条都没有，返回<b>空列表（不是 null）</b>，可以直接 forEach。</p>
+
+<h4>🔧 用法</h4>
+<pre><code>List&lt;Student&gt; list = qr.query(
+  "SELECT * FROM student ORDER BY id",
+  new BeanListHandler&lt;&gt;(Student.class)
+);
+// list 永远不为 null，没有数据时 size() == 0
+</code></pre>
+
+<div class="warn"><b>⚠️ 易错点</b>：空结果返回空列表而非 null，不需要再判 null，直接遍历即可；但是<b>列表里的单个 Student 对象</b>所有字段都为null意味着Bean映射失败（列名对不上），要检查 GenerousBeanProcessor 是否生效。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-handler-scalar">
+<div class="kpcard" data-k="kp-handler-scalar" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">ScalarHandler：返回聚合值（Long 坑）</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>🎯 用途</h4>
+<p><code>new ScalarHandler&lt;&gt;()</code> 用于<b>单值查询</b>，最常见就是 <code>COUNT(*)</code>、<code>MAX(id)</code>、<code>AVG(score)</code> 这种聚合函数返回单个值的场景。</p>
+
+<h4>🐛 著名的 Long 坑</h4>
+<pre><code>Integer count = (Integer) qr.query(
+  "SELECT COUNT(*) FROM student", new ScalarHandler&lt;&gt;());
+// ❌ 运行报错：java.lang.Long cannot be cast to java.lang.Integer</code></pre>
+<p>MySQL 驱动对 COUNT(*) 返回的是 <b>java.lang.Long</b>，不是 Integer！正确写法：</p>
+<pre><code>Long total = qr.query("SELECT COUNT(*) FROM student", new ScalarHandler&lt;&gt;());
+// 或者：Number n = qr.query(...); int total = n.intValue();</code></pre>
+
+<div class="warn"><b>⚠️ 易错点</b>：<ul>
+<li>COUNT/SUM/AVG 都返回 Long/BigDecimal，强转 Integer 必炸</li>
+<li>MAX/MIN 看列类型，整型列也是Long</li>
+<li>建议用 <code>Number</code> 接收，再 .longValue() / .intValue() 转</li>
+</ul></div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-javabean-reuse">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">JavaBean 直接复用</span></div>
+<div class="kp-body">
+<p>实体类 <code>Student.java</code> 在两次课中<b>完全一致</b>，这正是 DAO 分层的意义：</p>
+<ul>
+  <li>DAO 层的重构（从手写 JDBC 换成 DBUtils+Druid），不影响上层的 Servlet 和 JSP</li>
+  <li>这就是"面向接口编程、层次解耦"的好处</li>
+  <li>企业中升级底层框架时，这种可替换性非常重要</li>
+</ul>
+<p>（JavaBean 四规范——私有字段、public 无参构造、getter/setter、实现 Serializable——第一次课已详细讲解，这里不再重复。）</p></div>
+
+</script>
+<script type="text/html" id="kp-jdbc-props">
+<div class="kpcard" data-k="kp-jdbc-props" data-cat="pool" style="border-left: 4px solid #1a7f37;">
+  <div class="kp-head"><span class="kp-icon">🌀</span><span class="kp-title">druid.properties 替换 jdbc.properties</span><span class="kp-cat" style="background:#1a7f3722;color:#1a7f37;">连接池</span></div>
+  <div class="kp-body">
+
+<h4>🔄 对比</h4>
+<table>
+<tr><th>项</th><th>第一次课 jdbc.properties</th><th>第二次课 druid.properties</th></tr>
+<tr><td>驱动key</td><td>jdbc.driver</td><td>driverClassName（没有前缀）</td></tr>
+<tr><td>URL key</td><td>jdbc.url</td><td>url</td></tr>
+<tr><td>账号密码</td><td>jdbc.username / jdbc.password</td><td>username / password</td></tr>
+<tr><td>连接池配置</td><td>❌ 无</td><td>initialSize/maxActive/maxWait/filters 等十余项</td></tr>
+<tr><td>读取方式</td><td>手动 Properties.load + DriverManager.getConnection</td><td>DruidDataSourceFactory.createDataSource(props)</td></tr>
+</table>
+
+<div class="warn"><b>⚠️ 易错点</b>：Druid 工厂方法识别的 key <b>不带 jdbc. 前缀</b>（是 <code>url</code> 不是 <code>jdbc.url</code>），直接复制第一次课的配置会报"找不到url"错误。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-pool-concept">
+<div class="kpcard" data-k="kp-pool-concept" data-cat="pool" style="border-left: 4px solid #1a7f37;">
+  <div class="kp-head"><span class="kp-icon">🌀</span><span class="kp-title">数据库连接池原理</span><span class="kp-cat" style="background:#1a7f3722;color:#1a7f37;">连接池</span></div>
+  <div class="kp-body">
+
+<h4>💡 核心思想</h4>
+<p>连接池本质是一个<b>阻塞队列 + 管理线程</b>：启动时初始化 N 个连接放进池子；业务请求时调用 <code>dataSource.getConnection()</code>——有空闲连接直接拿，没有就等（或新建到上限）；业务调用 <code>conn.close()</code>——并不真的关闭TCP连接，而是把连接<b>归还</b>到池子里，下次别人还能借。</p>
+
+<h4>🔄 工作流程</h4>
+<ol>
+<li>应用启动 → DataSource 初始化，按 <code>initialSize</code> 建 initialSize 条物理连接</li>
+<li>业务线程调用 <code>getConnection()</code> → 从池里取一条空闲连接，标记为"占用"</li>
+<li>业务执行 SQL → 走正常 JDBC 流程</li>
+<li>业务调用 <code>conn.close()</code> → Druid 的<b>代理连接</b>拦截 close()，把连接状态重置（回滚未提交事务、清理 warnings）后放回池中</li>
+<li>管理线程定期检测：空闲太久的连接回收、连接失效时重建</li>
+</ol>
+
+<h4>📈 核心收益</h4>
+<ul>
+<li><b>性能</b>：连接复用，省掉 TCP+认证 开销（QPS 提升一个数量级）</li>
+<li><b>稳定</b>：<code>maxActive</code> 上限保护数据库不被打挂</li>
+<li><b>监控</b>：Druid 统计每条SQL的执行次数、耗时、错误率</li>
+<li><b>安全</b>：WallFilter 拦截 SQL 注入攻击</li>
+</ul>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-pool-intro">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">连接池解决了什么问题</span></div>
+<div class="kp-body">
+<h4>为什么不用 DriverManager？</h4>
+<p>第一次课我们用 <code>DriverManager.getConnection()</code> 获取连接，这在教学演示里没问题，但在生产环境会致命：</p>
+<ul>
+  <li><b>每次都新建</b>：TCP 三次握手 + MySQL 认证 + 权限检查，一次连接约 <b>20~200ms</b></li>
+  <li><b>用完就销毁</b>：每次 close() 都是一次 TCP 四次挥手</li>
+  <li><b>无上限</b>：并发上来瞬间创建大量连接，MySQL 被打死（默认最大连接 151）</li>
+  <li><b>无法复用</b>：1000 次请求 → 1000 次新建/销毁连接，资源浪费巨大</li>
+</ul>
+<h4>连接池的思路</h4>
+<ol>
+  <li>应用启动时<b>预先创建</b> N 个连接放到池里（initialSize）</li>
+  <li>业务需要连接时，从池里<b>借一个</b>（不是新建）</li>
+  <li>用完调用 close()，<b>不是销毁而是归还</b>到池子</li>
+  <li>池子满了就排队等待（maxWait），超时失败</li>
+  <li>后台线程定期<b>巡检</b>失效连接并补新的（testWhileIdle）</li>
+</ol>
+<h4>类比</h4>
+<p>不用连接池就像每次喝水都买新杯子喝完就扔；用连接池就像家里备了几个杯子反复用，需要时拿一个、用完洗干净放回去。</p>
+<h4>性能差距</h4>
+<p>实测在 100 并发、1万次请求下，连接池方式比每次新建连接<b>快 20~50 倍</b>，数据库负载也显著降低。</p></div>
+
+</script>
+<script type="text/html" id="kp-proxy-connection">
+<div class="kpcard" data-k="kp-proxy-connection" data-cat="pool" style="border-left: 4px solid #1a7f37;">
+  <div class="kp-head"><span class="kp-icon">🌀</span><span class="kp-title">代理连接：close() 归还而非关闭</span><span class="kp-cat" style="background:#1a7f3722;color:#1a7f37;">连接池</span></div>
+  <div class="kp-body">
+
+<h4>🎭 是什么</h4>
+<p>Druid 从 <code>ds.getConnection()</code> 返回的 Connection 是 <b>DruidPooledConnection</b>（JDK动态代理对象），它重写了 <code>close()</code> 方法：</p>
+<ul>
+<li><b>不是</b> <code>conn.close()</code> 关闭 TCP 物理连接</li>
+<li><b>而是</b> 把连接状态重置（事务回滚、autoCommit 恢复 true、清空 warnings）后，<b>放回池子的空闲队列</b>供下一次借用</li>
+</ul>
+
+<h4>🔑 意义</h4>
+<p>这意味着：业务代码<b>依然可以</b>用标准的 try-with-resources 写法，和手写JDBC的关闭习惯完全一致——表面上"关闭"了连接，实际上是"归还"。这就是 Druid 对 JDBC 规范的优雅适配。</p>
+
+<div class="warn"><b>⚠️ 易错点</b>：<b>必须调用 close()（或用 try-with-resources）</b>！即使使用了连接池，借了不还会造成<b>连接泄漏</b>：池里的连接被占满后，后续请求全部阻塞在 maxWait 超时，Druid 日志会报 "wait millis xxx, active xxx"。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-qr-delete">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">update() 方法·delete 删除</span></div>
+<div class="kp-body">
+<p>删除是最简单的 update() 用法：</p>
+<pre>return qr.update("DELETE FROM student WHERE id = ?", id);</pre>
+<h4>物理删除 vs 逻辑删除</h4>
+<ul>
+  <li><b>物理删除</b>：DELETE FROM ... 真正把行从表里删掉（本项目用的）</li>
+  <li><b>逻辑删除</b>：加个 <code>deleted</code> 字段（0/1），UPDATE student SET deleted=1 WHERE id=?，查询时 WHERE deleted=0</li>
+</ul>
+<p>真实项目里几乎都用<b>逻辑删除</b>：可以恢复数据、保留审计轨迹、避免误删。教学阶段先用物理删除简单演示。</p>
+<h4>GET 删除的安全隐患</h4>
+<p>本项目删除用 <code>&lt;a href="/student/delete?id=1"&gt;</code>（GET 请求），这在教学中方便，但生产环境不推荐：</p>
+<ul>
+  <li>GET 请求可以被 CSRF 攻击（别人网页里放个 &lt;img src="/student/delete?id=1"&gt;，你打开就删了）</li>
+  <li>搜索引擎蜘蛛爬取时可能误删数据</li>
+  <li>浏览器预加载可能提前触发</li>
+</ul>
+<p>生产环境建议改成 POST 表单提交 + CSRF Token（后续 Spring Security 会讲）。</p></div>
+
+</script>
+<script type="text/html" id="kp-qr-field">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">QueryRunner 成员变量复用</span></div>
+<div class="kp-body">
+<p>把 <code>QueryRunner</code> 声明为 DAO 类的成员变量：</p>
+<pre>private final QueryRunner qr = DruidUtil.getQueryRunner();</pre>
+<h4>为什么这么写？</h4>
+<ul>
+  <li>QueryRunner 是<b>线程安全</b>的，可以在多线程环境下共享（Servlet 是单例多线程的）</li>
+  <li>它内部不持有连接状态，每次 query/update 都是从 DataSource 取新连接</li>
+  <li>声明为 final 防止被重新赋值</li>
+  <li>整个 DAO 只需一个 QueryRunner 实例，不需要每个方法 new</li>
+</ul>
+<h4>线程安全提醒</h4>
+<p>Servlet 和 DAO 都是"单例多线程"的（容器只 new 一次 Servlet，多个请求并发访问），所以：</p>
+<ul>
+  <li>✅ 成员变量必须是无状态或线程安全的（QueryRunner、DataSource 都是）</li>
+  <li>❌ 不能把 Connection / PreparedStatement / ResultSet 声明为成员变量（会被多线程共享乱套）</li>
+</ul></div>
+
+</script>
+<script type="text/html" id="kp-qr-query">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">query() 方法·BeanListHandler 查询列表</span></div>
+<div class="kp-body">
+<p>查询全部是最典型的 query() 用法：</p>
+<pre>return qr.query(
+    "SELECT id, name, gender, age, major, enroll_date FROM student ORDER BY id",
+    listHandler
+);</pre>
+<h4>参数顺序怎么记？</h4>
+<ol>
+  <li>第 1 个参数：SQL 语句（固定）</li>
+  <li>第 2 个参数：ResultSetHandler（决定返回类型）</li>
+  <li>第 3 个起：SQL 里每个 ? 对应的参数，按顺序传（这里没有 ?，不传）</li>
+</ol>
+<h4>背后发生了什么？</h4>
+<ol>
+  <li>QueryRunner 从 DataSource 借一个 Connection</li>
+  <li>用 Connection 创建 PreparedStatement</li>
+  <li>如果有参数，按顺序 setXxx</li>
+  <li>执行 executeQuery()，得到 ResultSet</li>
+  <li>ResultSetHandler.handle(rs)：遍历 rs，每一行通过反射创建 Student 对象、调用 setter 注入字段值</li>
+  <li>在 finally 中关闭 ResultSet、Statement、Connection（归还到池）</li>
+  <li>把 List&lt;Student&gt; 返回给调用方</li>
+</ol>
+<p class="note">我们写的一行代码，DBUtils 在背后做了 7 步——这就是"薄封装"的威力。</p></div>
+
+</script>
+<script type="text/html" id="kp-qr-update">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">update() 方法·insert 新增</span></div>
+<div class="kp-body">
+<p>新增是最典型的 update() 用法：</p>
+<pre>return qr.update(
+    "INSERT INTO student(name, gender, age, major, enroll_date) VALUES(?,?,?,?,?)",
+    s.getName(), s.getGender(), s.getAge(), s.getMajor(), s.getEnrollDate()
+);</pre>
+<h4>可变参数怎么对应？</h4>
+<p>SQL 里有 5 个 ?，后面就传 5 个参数，<b>顺序必须一致、类型必须匹配</b>：</p>
+<table>
+<tr><th>? 位置</th><th>字段</th><th>Java 类型</th><th>JDBC 映射</th></tr>
+<tr><td>1</td><td>name</td><td>String</td><td>VARCHAR</td></tr>
+<tr><td>2</td><td>gender</td><td>String</td><td>VARCHAR</td></tr>
+<tr><td>3</td><td>age</td><td>Integer（可为 null）</td><td>INT</td></tr>
+<tr><td>4</td><td>major</td><td>String</td><td>VARCHAR</td></tr>
+<tr><td>5</td><td>enroll_date</td><td>LocalDate</td><td>DATE</td></tr>
+</table>
+<h4>返回值</h4>
+<p>update() 返回 <b>受影响行数</b>（int）：</p>
+<ul>
+  <li>INSERT：新增成功通常返回 1</li>
+  <li>UPDATE：返回被更新的行数（0 表示没找到记录）</li>
+  <li>DELETE：返回被删除的行数</li>
+</ul>
+<p class="warn">⚠️ 传 null 时 DBUtils 会调用 setNull()，这是正确的——<b>不要</b>自己判断 if null 就 setString("null")，那样会写进字符串 "null"。</p></div>
+
+</script>
+<script type="text/html" id="kp-qr-update2">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">update() 方法·update 修改</span></div>
+<div class="kp-body">
+<p>修改和新增的写法几乎一致，只是 SQL 变成 UPDATE，参数多了一个 WHERE 条件的 id：</p>
+<pre>return qr.update(
+    "UPDATE student SET name=?, gender=?, age=?, major=?, enroll_date=? WHERE id=?",
+    s.getName(), s.getGender(), s.getAge(), s.getMajor(), s.getEnrollDate(), s.getId()
+);</pre>
+<h4>? 顺序一定要对</h4>
+<p>UPDATE 的 SET 子句里是 5 个 ?，WHERE 里 1 个 ?，总共 6 个参数——最后一个传 id。初学者容易把 id 漏在最后，导致 SQL 虽然执行成功但影响行数是 0（因为 ? 错位了）。</p>
+<h4>判断是否更新成功</h4>
+<pre>int rows = dao.update(s);
+if (rows == 0) {
+    // 没有 id 对应的记录，提示"数据不存在或已被删除"
+}</pre></div>
+
+</script>
+<script type="text/html" id="kp-qrunner-construct">
+<div class="kpcard" data-k="kp-qrunner-construct" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">QueryRunner 的两种构造方式</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>🔨 构造方式</h4>
+<table>
+<tr><th>构造方法</th><th>使用方式</th><th>适用场景</th></tr>
+<tr><td><code>new QueryRunner(ds)</code></td><td>调用 query/update 时<b>不需要传 Connection</b>，DBUtils 自己从 ds 取连接、用完归还</td><td>✅ 推荐：普通CRUD，事务自动提交</td></tr>
+<tr><td><code>new QueryRunner()</code></td><td>调用 query/update 时<b>必须手动传入 Connection</b>作为第一个参数</td><td>需要手动控制事务（多条SQL在同一事务里提交/回滚）</td></tr>
+</table>
+
+<h4>✅ 本课选择</h4>
+<pre><code>private static QueryRunner qr = new QueryRunner(ds, new GenerousBeanProcessor());</code></pre>
+<p>传入 DataSource，业务 DAO 方法里直接 <code>qr.query(sql, handler, params)</code>，完全不用操心连接的获取和关闭。第二个参数 <code>GenerousBeanProcessor</code> 是为了解决下划线转驼峰（见下一个知识点）。</p>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-qrunner-query">
+<div class="kpcard" data-k="kp-qrunner-query" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">query() 方法：执行 SELECT</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>📝 方法签名</h4>
+<pre><code>&lt;T&gt; T query(String sql, ResultSetHandler&lt;T&gt; rsh, Object... params) throws SQLException</code></pre>
+
+<h4>🔤 参数说明</h4>
+<table>
+<tr><th>参数</th><th>含义</th></tr>
+<tr><td><code>sql</code></td><td>SELECT 语句，参数位用 <code>?</code> 占位</td></tr>
+<tr><td><code>rsh</code></td><td>结果集处理器：BeanHandler / BeanListHandler / ScalarHandler / ArrayHandler 等</td></tr>
+<tr><td><code>params</code></td><td>可变参数，按顺序对应每个 <code>?</code> 的值，自动用 PreparedStatement.setXxx 设置</td></tr>
+</table>
+
+<h4>🔄 内部执行7步</h4>
+<ol>
+<li>从 DataSource 借一个 Connection</li>
+<li>根据 sql 创建 PreparedStatement（预编译）</li>
+<li>按 params 顺序填充 <code>?</code>（自动匹配类型）</li>
+<li>执行 <code>pstmt.executeQuery()</code></li>
+<li>调用 rsh.handle(rs)，把 ResultSet 转成 T 类型对象</li>
+<li>关闭 ResultSet、Statement（无论成功失败）</li>
+<li>归还 Connection 到连接池</li>
+</ol>
+
+<div class="warn"><b>⚠️ 易错点</b：params 的<b>顺序</b>必须和 <code>?</code> 出现顺序一一对应；个数不一致会报 SQLException。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-qrunner-threadsafe">
+<div class="kpcard" data-k="kp-qrunner-threadsafe" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">QueryRunner 线程安全（可作为单例）</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>🔒 线程安全性</h4>
+<p>QueryRunner 类<b>本身是线程安全的</b>——它所有方法都不修改自身成员变量，每次 query/update 都是基于传入的 DataSource/Connection 获取一条连接执行SQL，执行完释放。因此整个应用只需要<b>一个 QueryRunner 单例</b>，所有 DAO 共用即可，不需要每次 new。</p>
+
+<h4>✅ 正确姿势</h4>
+<pre><code>public class DruidUtil {
+  private static QueryRunner qr;        // 全局单例
+  static { qr = new QueryRunner(ds, new GenerousBeanProcessor()); }
+  public static QueryRunner getQueryRunner() { return qr; }
+}</code></pre>
+
+<h4>❌ 反面教材</h4>
+<pre><code>// 错：每次 DAO 方法调用都 new QueryRunner() —— 不必要的对象创建
+public List&lt;Student&gt; findAll() {
+  QueryRunner qr = new QueryRunner(ds);   // 虽然功能上没错，但浪费GC
+  ...
+}</code></pre>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-qrunner-update">
+<div class="kpcard" data-k="kp-qrunner-update" data-cat="dbutils" style="border-left: 4px solid #8250df;">
+  <div class="kp-head"><span class="kp-icon">🛠️</span><span class="kp-title">update() 方法：执行 INSERT/UPDATE/DELETE</span><span class="kp-cat" style="background:#8250df22;color:#8250df;">DBUtils</span></div>
+  <div class="kp-body">
+
+<h4>📝 方法签名</h4>
+<pre><code>int update(String sql, Object... params) throws SQLException</code></pre>
+
+<h4>📤 返回值</h4>
+<p><b>int：受影响行数</b>。INSERT 成功返回1、UPDATE 可能返回0（没找到对应行）或≥1、DELETE 同理。业务可以根据返回值判断操作是否生效：<code>if(rows > 0) { /* 成功 */ }</code></p>
+
+<h4>🔧 用法示例</h4>
+<pre><code>// INSERT
+int rows = qr.update(
+  "INSERT INTO student(name,gender,age,major,enroll_date) VALUES(?,?,?,?,?)",
+  s.getName(), s.getGender(), s.getAge(), s.getMajor(), s.getEnrollDate()
+);
+
+// UPDATE
+qr.update("UPDATE student SET name=?,age=? WHERE id=?", s.getName(), s.getAge(), s.getId());
+
+// DELETE
+qr.update("DELETE FROM student WHERE id=?", id);
+</code></pre>
+
+<div class="warn"><b>⚠️ 易错点</b>：update() 不支持 SELECT；要返回自增主键的 INSERT 需要用 <code>insert()</code> 方法（配合 ScalarHandler）。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-queryrunner-api">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">QueryRunner 核心 API 速查</span></div>
+<div class="kp-body">
+<p>QueryRunner 的方法其实只有三类，掌握就会用：</p>
+<h4>① query(sql, rsh, params...) → 查</h4>
+<pre>T result = qr.query(String sql, ResultSetHandler&lt;T&gt; rsh, Object... params);</pre>
+<ul>
+  <li>执行 SELECT 语句</li>
+  <li>返回值由第二个参数 ResultSetHandler 决定（可能是 Bean、List、Map、单值等）</li>
+  <li>params 按 ? 顺序传，没有参数可省略</li>
+</ul>
+<h4>② update(sql, params...) → 增删改</h4>
+<pre>int rows = qr.update(String sql, Object... params);</pre>
+<ul>
+  <li>执行 INSERT / UPDATE / DELETE</li>
+  <li>返回受影响的行数（int）</li>
+  <li>INSERT 后想获取自增主键需要用 insert() 方法（见拓展）</li>
+</ul>
+<h4>③ batch(sql, params) → 批量</h4>
+<pre>int[][] result = qr.batch(String sql, Object[][] params);</pre>
+<ul>
+  <li>执行批量操作（批量插入 1000 条数据）</li>
+  <li>params 是二维数组，第一维代表批次，第二维代表每组参数</li>
+</ul>
+<h4>拓展：insert() 拿自增主键</h4>
+<pre>Long id = qr.insert("INSERT INTO ...", new ScalarHandler&lt;Long&gt;(), params);</pre>
+<p>本项目用不到（id 自增即可），但实际项目中经常要拿新记录的主键做后续操作。</p></div>
+
+</script>
+<script type="text/html" id="kp-queryrunner-ctor">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">QueryRunner 构造方式与两种使用模式</span></div>
+<div class="kp-body">
+<p>QueryRunner 有两种构造方式，决定了它如何管理连接：</p>
+<h4>方式一：传入 DataSource（推荐，本项目采用）</h4>
+<pre>new QueryRunner(dataSource);</pre>
+<ul>
+  <li>调用 query/update 时<b>不需要</b>传 Connection</li>
+  <li>QueryRunner 会自动从 DataSource 取连接、执行 SQL、归还连接</li>
+  <li>try-with-resources 都不用写了</li>
+  <li>适用于<b>不需要手动事务</b>的场景（每条 SQL 一个独立连接、自动提交）</li>
+</ul>
+<h4>方式二：空参构造 + 每次传入 Connection</h4>
+<pre>QueryRunner qr = new QueryRunner();
+qr.query(conn, sql, rsh, params);  // 手动传 conn</pre>
+<ul>
+  <li>需要自己获取 Connection、管理事务（commit/rollback）、关闭资源</li>
+  <li>适用于<b>需要手动事务</b>的场景（多条 SQL 要同成同败）</li>
+  <li>灵活性更高，但代码也更麻烦</li>
+</ul>
+<h4>我们选哪种？</h4>
+<p>学生管理系统的 CRUD 都是单条 SQL，用方式一最简洁。未来学 Spring 声明式事务时，我们会切到方式二（或让 Spring 管理）。</p></div>
+
+</script>
+<script type="text/html" id="kp-servlet-same">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">🔌</span><span class="kp-title">Servlet 层完全不变·分层解耦</span></div>
+<div class="kp-body">
+<p>注意观察：StudentListServlet 的代码和第一次课<b>几乎一模一样</b>——</p>
+<pre>List&lt;Student&gt; students = dao.findAll();
+req.setAttribute("students", students);
+req.getRequestDispatcher("/WEB-INF/student/list.jsp").forward(req, resp);</pre>
+<p>这就是 <b>MVC 分层 + DAO 封装</b>的威力：</p>
+<ul>
+  <li>DAO 层（数据层）内部怎么实现的——是手写 JDBC、是用 DBUtils、还是未来用 MyBatis——上层 Servlet 根本不关心</li>
+  <li>只要 DAO 的方法签名不变（findAll() 还是返回 List&lt;Student&gt;），上层就<b>一行代码都不用改</b></li>
+  <li>JSP 视图层也完全不变，还是通过 EL 表达式 <code>${students}</code> 取值</li>
+</ul>
+<h4>分层的意义</h4>
+<ul>
+  <li><b>可替换</b>：底层升级不影响上层</li>
+  <li><b>可测试</b>：可以单独测试 DAO 层（JUnit 单元测试）</li>
+  <li><b>可协作</b>：不同开发者并行开发不同层</li>
+  <li><b>易排错</b>：出问题时可以分层定位（是 SQL 错、是 DAO 映射错、是 Servlet 传参错还是 JSP 展示错）</li>
+</ul></div>
+
+</script>
+<script type="text/html" id="kp-servlet-unchanged">
+<div class="kpcard" data-k="kp-servlet-unchanged" data-cat="servlet" style="border-left: 4px solid #bc4c00;">
+  <div class="kp-head"><span class="kp-icon">📡</span><span class="kp-title">Servlet/JSP 层零修改：分层解耦威力</span><span class="kp-cat" style="background:#bc4c0022;color:#bc4c00;">Servlet</span></div>
+  <div class="kp-body">
+
+<h4>🏗️ 分层架构回顾</h4>
+<table>
+<tr><th>层</th><th>职责</th><th>本次是否修改</th></tr>
+<tr><td>JSP（视图层）</td><td>展示页面、收集表单</td><td>❌ 完全不动</td></tr>
+<tr><td>Servlet（控制层）</td><td>接请求、调DAO、转发重定向</td><td>❌ 完全不动（DAO 类名、方法名没变）</td></tr>
+<tr><td>DAO（数据层）</td><td>SQL + 结果集封装</td><td>✅ 内部改造，对外方法签名不变</td></tr>
+<tr><td>Util（工具层）</td><td>连接池、QueryRunner</td><td>✅ 从 JdbcUtil 换成 DruidUtil</td></tr>
+</table>
+
+<h4>💡 这就是"分层解耦"的威力</h4>
+<p>只要 DAO 的方法签名（<code>List&lt;Student&gt; findAll()</code> / <code>void insert(Student s)</code> / <code>Student findById(Integer id)</code> 等）不变，内部从手写JDBC换成DBUtils、再未来换成 MyBatis，<b>上层 Servlet/JSP 一行代码都不用改</b>。这就是为什么第一次课要先教大家写 DAO 接口和实体类——为今天的重构铺路。</p>
+
+<h4>🧪 验证方法</h4>
+<p>部署后把浏览器里第一次课的所有功能（新增、编辑、删除、列表）走一遍，效果完全一致——但后台 DAO 代码已经天差地别。让学生"看到"重构的价值，比光讲理论有效十倍。</p>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-stat-view-servlet">
+<div class="kpcard" data-k="kp-stat-view-servlet" data-cat="mon" style="border-left: 4px solid #0550ae;">
+  <div class="kp-head"><span class="kp-icon">📊</span><span class="kp-title">StatViewServlet：Druid 内置监控页面</span><span class="kp-cat" style="background:#0550ae22;color:#0550ae;">监控配置</span></div>
+  <div class="kp-body">
+
+<h4>📊 是什么</h4>
+<p>Druid 内置一个 <b>StatViewServlet</b>，提供 Web 可视化监控页面。配置后访问 <code>http://localhost:8080/jdbc-pool/druid</code> 即可看到：</p>
+<ul>
+<li>数据源状态（活跃连接数、空闲连接数、等待线程数）</li>
+<li>SQL执行监控：每条SQL的执行次数、总耗时、平均耗时、错误次数、最慢SQL</li>
+<li>URI监控、Spring监控（集成Spring时）、Wall防火墙拦截日志</li>
+</ul>
+
+<h4>🔧 web.xml 配置</h4>
+<pre><code>&lt;servlet&gt;
+  &lt;servlet-name&gt;DruidStatView&lt;/servlet-name&gt;
+  &lt;servlet-class&gt;com.alibaba.druid.support.http.StatViewServlet&lt;/servlet-class&gt;
+  &lt;init-param&gt;
+    &lt;param-name&gt;loginUsername&lt;/param-name&gt;
+    &lt;param-value&gt;admin&lt;/param-value&gt;
+  &lt;/init-param&gt;
+  &lt;init-param&gt;
+    &lt;param-name&gt;loginPassword&lt;/param-name&gt;
+    &lt;param-value&gt;admin&lt;/param-value&gt;
+  &lt;/init-param&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+  &lt;servlet-name&gt;DruidStatView&lt;/servlet-name&gt;
+  &lt;url-pattern&gt;/druid/*&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;</code></pre>
+
+<div class="warn"><b>⚠️ 易错点</b>：生产环境必须设 loginUsername/loginPassword，否则监控页面裸奔暴露SQL和表结构，等于帮黑客脱库。公司项目通常还会加 <code>allow=127.0.0.1</code> IP白名单。</div>
+
+  </div>
+</div>
+
+</script>
+<script type="text/html" id="kp-version-badge">
+<div class="kp-head"><span class="kp-icon" style="background:#0969da22;color:#0969da">📘</span><span class="kp-title">版本标记·快速对比两个版本</span></div>
+<div class="kp-body">
+<p>列表页标题旁边加了一个绿色徽章 <span style="display:inline-block;padding:2px 10px;background:#1a7f37;color:#fff;border-radius:10px;font-size:12px;">Druid + DBUtils 版</span>，方便老师演示时一眼区分是第一次课的版本还是第二次课的版本。</p>
+<h4>两次课效果对比</h4>
+<table>
+<tr><th>对比项</th><th>第一次课 jdbc-student</th><th>第二次课 jdbc-pool</th></tr>
+<tr><td>页面视觉</td><td>普通</td><td>标题有绿色徽章标记</td></tr>
+<tr><td>JSP 路径</td><td>webapp 根目录</td><td>WEB-INF/student/ 下（更安全，不能直接访问）</td></tr>
+<tr><td>功能</td><td>CRUD 完全一致</td><td>CRUD 完全一致</td></tr>
+<tr><td>DAO 代码量</td><td>~170 行</td><td>~60 行</td></tr>
+<tr><td>性能</td><td>每次新建连接</td><td>连接复用</td></tr>
+<tr><td>监控</td><td>无</td><td>/druid/index.html 可看 SQL 监控</td></tr>
+</table>
+<p class="note">请同学们启动两个项目分别访问，体验"功能相同、底层升级"的差异——这就是软件工程的迭代方式。</p></div>
+
+</script>
+<script type="text/html" id="kp-web-stat-filter">
+<div class="kpcard" data-k="kp-web-stat-filter" data-cat="mon" style="border-left: 4px solid #0550ae;">
+  <div class="kp-head"><span class="kp-icon">📊</span><span class="kp-title">WebStatFilter：关联 URI 与 SQL</span><span class="kp-cat" style="background:#0550ae22;color:#0550ae;">监控配置</span></div>
+  <div class="kp-body">
+
+<h4>🔗 是什么</h4>
+<p>StatViewServlet 默认只统计SQL层面，不知道是哪个 URL 请求触发的。配置 <b>WebStatFilter</b> 拦截所有请求后，Druid 就能把 "访问 /student/list → 触发 SELECT * FROM student" 这种 URI 和 SQL 的关联关系统计出来，方便定位慢接口。</p>
+
+<h4>🔧 web.xml 配置</h4>
+<pre><code>&lt;filter&gt;
+  &lt;filter-name&gt;DruidWebStatFilter&lt;/filter-name&gt;
+  &lt;filter-class&gt;com.alibaba.druid.support.http.WebStatFilter&lt;/filter-class&gt;
+  &lt;init-param&gt;
+    &lt;param-name&gt;exclusions&lt;/param-name&gt;
+    &lt;param-value&gt;*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*&lt;/param-value&gt;
+  &lt;/init-param&gt;
+&lt;/filter&gt;
+&lt;filter-mapping&gt;
+  &lt;filter-name&gt;DruidWebStatFilter&lt;/filter-name&gt;
+  &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;</code></pre>
+
+<p><code>exclusions</code> 配置不统计的资源（静态资源和监控页面自身），避免脏数据。</p>
+
+  </div>
+</div>
+
+</script>
+
+<script>
+/* ============================================================
+   配置：教师模式开关（源码级设置，无 UI 开关）
+   教师使用时改为 true 即可复制代码，默认 false 为学生模式
+   ============================================================ */
+const TEACHER_MODE = false;
+// ========== 【版权与水印开关】 ==========
+//   SHOW_COPYRIGHT = true/false  是否显示页脚版权信息条
+//   SHOW_WATERMARK = true/false  是否显示整页斜向水印
+//   COPYRIGHT_TEXT = "..."       版权文字内容（支持HTML）
+//   WATERMARK_TEXT = "..."       水印文字（建议 10~20 字，会平铺整页）
+const SHOW_COPYRIGHT = true;
+const SHOW_WATERMARK = true;
+const COPYRIGHT_TEXT = '© Java Web 应用开发课程 · 交互教学课件（教师版）';  // 【替换点2】页脚版权文字
+const WATERMARK_TEXT = 'Java Web 连接池DBUtils';  // 【替换点3】水印文字（建议10~16字，避免重叠）
+
+
+/* ============================================================
+   课程配置（第二次课）
+   ============================================================ */
+const COURSE = {
+  title: '第二次课 · 数据库连接池与DBUtils',
+  subtitle: 'Druid + Commons DBUtils 重构 CRUD —— 4课时',
+  techTag: 'JDK17 + Tomcat10 + MySQL8 + Druid + DBUtils',
+  categories: {
+    base:     { name: '基础语法', icon: '📘', color: '#0969da' },
+    pool:     { name: '连接池',   icon: '🌀', color: '#1a7f37' },
+    dbutils:  { name: 'DBUtils',  icon: '🛠️', color: '#8250df' },
+    servlet:  { name: 'Servlet', icon: '📡', color: '#bc4c00' },
+    jsp:      { name: 'JSP页面', icon: '🏷️', color: '#bf3989' },
+    mon:      { name: '监控配置', icon: '📊', color: '#0550ae' }
+  },
+  KPMETA: {
+    'kp-druid-dep':           { title: 'Druid 依赖 druid-spring-boot-starter 形态（这里用 druid 本体）', cat: 'pool' },
+    'kp-dbutils-dep':         { title: 'Commons DBUtils 依赖',                      cat: 'dbutils' },
+    'kp-pool-concept':        { title: '数据库连接池原理',                          cat: 'pool' },
+    'kp-druid-props':         { title: 'druid.properties 核心配置',                 cat: 'pool' },
+    'kp-druid-filters':       { title: 'Druid filters 监控统计',                    cat: 'mon' },
+    'kp-druidutil-static':    { title: 'DruidUtil 静态初始化数据源',                cat: 'pool' },
+    'kp-proxy-connection':    { title: '代理连接 close() 归还而非关闭',             cat: 'pool' },
+    'kp-qrunner-construct':   { title: 'QueryRunner 的两种构造方式',                cat: 'dbutils' },
+    'kp-bean-processor':      { title: 'GenerousBeanProcessor 下划线转驼峰',        cat: 'dbutils' },
+    'kp-qrunner-threadsafe':  { title: 'QueryRunner 线程安全（可单例）',            cat: 'dbutils' },
+    'kp-handler-bean':        { title: 'BeanHandler 单条查询',                      cat: 'dbutils' },
+    'kp-handler-beanlist':    { title: 'BeanListHandler 列表查询',                  cat: 'dbutils' },
+    'kp-handler-scalar':      { title: 'ScalarHandler 返回聚合值（Long 坑）',       cat: 'dbutils' },
+    'kp-qrunner-query':       { title: 'query() 查询方法签名',                     cat: 'dbutils' },
+    'kp-qrunner-update':      { title: 'update() 增删改方法签名',                   cat: 'dbutils' },
+    'kp-dao-rewrite':         { title: 'DAO 改造：代码量对比',                      cat: 'dbutils' },
+    'kp-stat-view-servlet':   { title: 'StatViewServlet Druid 监控页面',            cat: 'mon' },
+    'kp-web-stat-filter':     { title: 'WebStatFilter 关联 URI 与 SQL',             cat: 'mon' },
+    'kp-servlet-unchanged':   { title: 'Servlet/JSP 层零修改（分层解耦）',          cat: 'servlet' },
+    'kp-jdbc-props':          { title: '复用 jdbc.properties 思路（换成 druid）',    cat: 'pool' }
+  },
+  steps: [
+    { tpl: 'goal',   title: '🎯 学习目标' },
+    { tpl: 'env',    title: '🖥️ 环境与依赖准备' },
+    { tpl: 'struct', title: '📁 项目结构' },
+
+    { src: 'pom.xml', title: 'pom.xml · 新增 Druid + DBUtils 依赖',
+      kps: ['kp-druid-dep','kp-dbutils-dep'],
+      marks: [
+        ['<!-- ③ Druid 数据库连接池', '阿里 Druid 连接池-->', 'kp-druid-dep'],
+        ['<!-- ④ Apache Commons DBUtils', '对象映射-->', 'kp-dbutils-dep']
+      ]},
+    { src: 'druid.properties', title: 'druid.properties · Druid 连接池配置',
+      kps: ['kp-pool-concept','kp-druid-props','kp-druid-filters'],
+      marks: [
+        ['driverClassName=com.mysql.cj.jdbc.Driver', 'druid 连接池配置开始 -->', 'kp-pool-concept'],
+        ['url=jdbc:mysql://localhost:3306/jdbc_demo', 'allowPublicKeyRetrieval=true', 'kp-druid-props'],
+        ['filters=stat', 'filters=stat', 'kp-druid-filters']
+      ]},
+    { src: 'DruidUtil.java', title: 'DruidUtil.java · 连接池工具类（单例 DataSource）',
+      kps: ['kp-druidutil-static','kp-proxy-connection','kp-qrunner-construct','kp-bean-processor','kp-qrunner-threadsafe'],
+      marks: [
+        ['private static DataSource ds;', 'private static QueryRunner qr;', 'kp-druidutil-static'],
+        ['static {', 'DruidDataSourceFactory.createDataSource(props);', 'kp-druidutil-static'],
+        ['new QueryRunner(ds)', 'new QueryRunner(ds)', 'kp-qrunner-construct'],
+        ['new GenerousBeanProcessor()', 'new GenerousBeanProcessor()', 'kp-bean-processor'],
+        ['public static QueryRunner getQueryRunner()', 'public static QueryRunner getQueryRunner() { return qr; }', 'kp-qrunner-threadsafe'],
+        ['/* 注意：', '把连接归还给池子，不是真的关闭！ */', 'kp-proxy-connection']
+      ]},
+    { src: 'Student.java', title: 'Student.java · JavaBean 实体类（沿用上节课）',
+      kps: [],
+      marks: []},
+    { src: 'StudentDao.java', title: 'StudentDao.java · DAO 改造（QueryRunner 版）',
+      kps: ['kp-dao-rewrite','kp-qrunner-query','kp-qrunner-update','kp-handler-beanlist','kp-handler-bean','kp-handler-scalar'],
+      marks: [
+        ['QueryRunner qr = DruidUtil.getQueryRunner();', 'QueryRunner qr = DruidUtil.getQueryRunner();', 'kp-dao-rewrite'],
+        ['new BeanListHandler<>(Student.class)', 'new BeanListHandler<>(Student.class)', 'kp-handler-beanlist'],
+        ['qr.query(sql, new BeanListHandler<>', 'qr.query(sql, new BeanListHandler<>(Student.class))', 'kp-qrunner-query'],
+        ['new BeanHandler<>(Student.class)', 'new BeanHandler<>(Student.class)', 'kp-handler-bean'],
+        ['new ScalarHandler<>()', 'new ScalarHandler<>()', 'kp-handler-scalar'],
+        ['qr.update(sql,', 'qr.update(sql,', 'kp-qrunner-update']
+      ]},
+    { src: 'web.xml', title: 'web.xml · 注册 Druid 监控 Servlet/Filter',
+      kps: ['kp-stat-view-servlet','kp-web-stat-filter'],
+      marks: [
+        ['<!-- Druid 监控 Servlet', '</servlet>', 'kp-stat-view-servlet'],
+        ['<!-- Druid Web 关联 URI 监控', '</filter-mapping>', 'kp-web-stat-filter']
+      ]},
+    { src: 'index.jsp', title: 'index.jsp · 入口跳转页',
+      kps: [],
+      marks: []},
+    { src: 'StudentListServlet.java', title: 'StudentListServlet · 列表 Servlet（代码不变）',
+      kps: ['kp-servlet-unchanged'],
+      marks: [
+        ['// 与第一次课完全一致', '// 与第一次课完全一致', 'kp-servlet-unchanged']
+      ]},
+    { src: 'list.jsp', title: 'list.jsp · 列表 JSP（代码不变）',
+      kps: ['kp-servlet-unchanged'],
+      marks: []},
+    { src: 'StudentToAddServlet.java', title: 'StudentToAddServlet · 跳转到新增表单',
+      kps: [],
+      marks: []},
+    { src: 'add.jsp', title: 'add.jsp · 新增学生表单',
+      kps: [],
+      marks: []},
+    { src: 'StudentAddServlet.java', title: 'StudentAddServlet · 处理新增提交',
+      kps: ['kp-servlet-unchanged'],
+      marks: []},
+    { src: 'StudentToEditServlet.java', title: 'StudentToEditServlet · 编辑回显',
+      kps: [],
+      marks: []},
+    { src: 'edit.jsp', title: 'edit.jsp · 编辑表单',
+      kps: [],
+      marks: []},
+    { src: 'StudentUpdateServlet.java', title: 'StudentUpdateServlet · 处理修改提交',
+      kps: [],
+      marks: []},
+    { src: 'StudentDeleteServlet.java', title: 'StudentDeleteServlet · 删除后重定向',
+      kps: [],
+      marks: []},
+
+    { tpl: 'verify',  title: '🚀 部署与效果验证' },
+    { tpl: 'std',     title: '📐 行业规范与易错点' },
+    { tpl: 'summary', title: '🧩 课程总结', sumGrid: true }
+  ]
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const state = { step:0, selKp:null };
+const srcCache = {};
+
+function $(id){return document.getElementById(id);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg, type){
+  const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (type||'ok');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>{t.className='toast';},2000);
+}
+
+function getSource(id){
+  if(srcCache[id]) return srcCache[id];
+  const el = document.getElementById(id);
+  let raw = el ? el.textContent : '';
+  // 去除首尾空行
+  raw = raw.replace(/\r/g,'').replace(/^\n+/,'').replace(/\n+$/,'');
+  const lines = raw.split('\n');
+  srcCache[id] = lines;
+  return lines;
+}
+
+function copyText(text, btn){
+  if(!TEACHER_MODE){ toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err'); return; }
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('✅ 代码已复制到剪贴板','ok');
+    if(btn){ const o=btn.textContent; btn.textContent='✅ 已复制'; setTimeout(()=>btn.textContent=o,1200);}
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('✅ 代码已复制','ok');
+  });
+}
+
+/* ============================================================
+   语法高亮（自研，白底GitHub Light风格）
+   ============================================================ */
+function hlJava(s, isDir){
+  const KW = ['abstract','assert','boolean','break','byte','case','catch','char','class','const','continue','default','do','double','else','enum','extends','final','finally','float','for','goto','if','implements','import','instanceof','int','interface','long','native','new','package','private','protected','public','return','short','static','strictfp','super','switch','synchronized','this','throw','throws','transient','try','void','volatile','while',
+             'true','false','null',
+             'String','Integer','Boolean','Double','Float','Long','Object','System','out','println','print','request','response','session','application','pageContext','config','out','page','exception'];
+  let out='',buf='',i=0,inStr=null;
+  const flush=()=>{if(buf){out+='<span class="tok-jspcode">'+esc(buf)+'</span>';buf='';}};
+  const flushKw=()=>{
+    if(!buf){return;}
+    if(/^\d/.test(buf)||/^0x[\da-f]+$/i.test(buf)){out+='<span class="tok-num">'+esc(buf)+'</span>';}
+    else if(KW.indexOf(buf)>=0){out+='<span class="tok-kw">'+esc(buf)+'</span>';}
+    else out+='<span class="tok-jspcode">'+esc(buf)+'</span>';
+    buf='';
+  };
+  while(i<s.length){
+    const c=s[i];
+    if(inStr){
+      buf+=c;
+      if(c===inStr&&s[i-1]!=='\\'){flush();inStr=null;}
+      i++;continue;
+    }
+    if(c==='"'||c==="'"){flushKw();buf+=c;inStr=c;i++;continue;}
+    if(c==='/'&&s[i+1]==='/'){flushKw();const e=s.indexOf('\n',i);out+='<span class="tok-cmt">'+esc(e<0?s.slice(i):s.slice(i,e))+'</span>';if(e<0)return out;i=e;continue;}
+    if(c==='/'&&s[i+1]==='*'){flushKw();const e=s.indexOf('*/',i+2);const end=e<0?s.length:e+2;out+='<span class="tok-cmt">'+esc(s.slice(i,end))+'</span>';i=end;continue;}
+    if(/[A-Za-z_$]/.test(c)){buf+=c;i++;continue;}
+    if(/\d/.test(c)&&(!buf||/[\d.]$/.test(buf))){buf+=c;i++;continue;}
+    if(/[\w.]/.test(c)){buf+=c;i++;continue;}
+    flushKw();
+    if(/\s/.test(c)){buf+=c;flush();i++;continue;}
+    out+='<span class="tok-punc">'+esc(c)+'</span>';i++;
+  }
+  if(inStr){out+='<span class="tok-str">'+esc(buf)+'</span>';}else{flushKw();}
+  return out;
+}
+function renderJsp(m){
+  const open=m.slice(0,3); let rest=m.slice(3,-2); if('@!='.indexOf(m[2])>=0){return '<span class="tok-dir">'+esc(open)+'</span>'+hlJava(rest,open==='<%@')+'<span class="tok-dir">%&gt;</span>';}
+  return '<span class="tok-jsp">'+esc(open)+'</span>'+hlJava(rest,false)+'<span class="tok-jsp">%&gt;</span>';
+}
+function renderTag(t){
+  const m=t.match(/^<\/?([a-zA-Z][\w:-]*)/);if(!m)return esc(t);
+  const rest=t.slice(m[0].length);
+  const re2=/("[^"]*"|'[^']*')|([a-zA-Z_:][\w:.-]*)(\s*=\s*)|(\/?>)|(\s+)|([^\s"'>=/]+)/g;
+  let out2='',last=0,mm;
+  while((mm=re2.exec(rest))){
+    out2+=esc(rest.slice(last,mm.index));
+    if(mm[1])out2+='<span class="tok-str">'+esc(mm[1])+'</span>';
+    else if(mm[2])out2+='<span class="tok-attr">'+esc(mm[2])+'</span><span class="tok-punc">'+esc(mm[3])+'</span>';
+    else if(mm[4])out2+='<span class="tok-punc">'+esc(mm[4])+'</span>';
+    else if(mm[5])out2+=mm[5];
+    else out2+=esc(mm[6]);
+    last=re2.lastIndex;
+  }
+  out2+=esc(rest.slice(last));
+  return '<span class="tok-tag">'+esc(m[0])+'</span>'+out2;
+}
+function tokenizeText(text){
+  let html='',buf='',i=0,pending=null;
+  const flush=()=>{if(buf){html+=esc(buf);buf='';}};
+  while(i<text.length){
+    const c=text[i];
+    if(c==='<'&&text.startsWith('<!--',i)){const e=text.indexOf('-->',i+4);const end=e>=0?e+3:text.length;flush();html+='<span class="tok-cmt">'+esc(text.slice(i,end))+'</span>';i=end;continue;}
+    if(c==='<'&&text.startsWith('<%',i)){
+      const e=text.indexOf('%>',i+2);
+      if(e<0){let open='<%',body=text.slice(i+2);if('@!='.indexOf(body[0])>=0){open='<%'+body[0];body=body.slice(1);}flush();const cls=(open==='<%@')?'tok-dir':'tok-jsp';html+='<span class="'+cls+'">'+esc(open)+'</span>'+hlJava(body,open==='<%@');pending={cls,dir:open==='<%@'};i=text.length;continue;}
+      flush();html+=renderJsp(text.slice(i,e+2));i=e+2;continue;
+    }
+    if(c==='$'&&text[i+1]==='{'){const e=text.indexOf('}',i+2);if(e>=0){flush();html+='<span class="tok-el">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    if(c==='<'&&(text[i+1]==='/'||/[A-Za-z]/.test(text[i+1]||''))){
+      let j=i+1,q=null;while(j<text.length){const ch=text[j];if(q){if(ch===q)q=null;}else if(ch==='"'||ch==="'"){q=ch;}else if(ch==='>'){break;}j++;}
+      if(j<text.length){flush();html+=renderTag(text.slice(i,j+1));i=j+1;continue;}
+    }
+    if(c==='"'||c==="'"){const e=text.indexOf(c,i+1);if(e>=0){flush();html+='<span class="tok-str">'+esc(text.slice(i,e+1))+'</span>';i=e+1;continue;}}
+    buf+=c;i++;
+  }
+  flush();return{html,pending};
+}
+function commentMask(lines){
+  const mask=new Array(lines.length).fill(false);let inC=false;
+  for(let i=0;i<lines.length;i++){const t=lines[i].trim();if(!inC){if(t.indexOf('<%--')===0){inC=true;mask[i]=true;if(t.indexOf('--%>',4)>=0)inC=false;}}else{mask[i]=true;if(t.slice(-4)==='--%>')inC=false;}}
+  return mask;
+}
+function highlightCode(lines){
+  const mask=commentMask(lines);const res=[];const st={open:false,cls:'tok-jsp',dir:false};
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(mask[i]){res.push('<span class="tok-cmt">'+esc(line)+'</span>');continue;}
+    let seg=line,html='';
+    if(st.open){
+      const e=seg.indexOf('%>');
+      if(e>=0){html+='<span class="'+st.cls+'">'+hlJava(seg.slice(0,e),st.dir)+'</span><span class="'+st.cls+'">%&gt;</span>';seg=seg.slice(e+2);st.open=false;}
+      else{html+='<span class="'+st.cls+'">'+hlJava(seg,st.dir)+'</span>';res.push(html||'&nbsp;');continue;}
+    }
+    const r=tokenizeText(seg);html+=r.html;if(r.pending){st.open=true;st.cls=r.pending.cls;st.dir=r.pending.dir;}
+    res.push(html||'&nbsp;');
+  }
+  return res;
+}
+
+/* ============================================================
+   标记解析
+   ============================================================ */
+function resolveMarks(lines, marks){
+  const out=[];
+  (marks||[]).forEach(m=>{
+    let s=-1;for(let i=0;i<lines.length;i++){if(lines[i].indexOf(m.from)>=0){s=i;break;}}
+    if(s<0)return;let e=s;
+    if(m.to){for(let i=s;i<lines.length;i++){if(lines[i].indexOf(m.to)>=0){e=i;break;}}}
+    e+=(m.plus||0);if(e>lines.length-1)e=lines.length-1;
+    out.push({s,e,k:m.k});
+  });
+  return out;
+}
+
+/* ============================================================
+   步骤索引查找
+   ============================================================ */
+function kpStepIndex(kp){
+  const steps=COURSE.steps;
+  for(let i=0;i<steps.length;i++){if(steps[i].type==='code'&&(steps[i].kps||[]).indexOf(kp)>=0)return i;}
+  return -1;
+}
+function kpList(){
+  const seen=[],out=[];
+  COURSE.steps.forEach(s=>{(s.kps||[]).forEach(k=>{if(seen.indexOf(k)<0){seen.push(k);out.push(k);}});});
+  return out;
+}
+
+/* ============================================================
+   渲染步骤轨道
+   ============================================================ */
+function renderRail(){
+  const rail=$('rail');rail.innerHTML='';
+  COURSE.steps.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='stepchip'+(i===state.step?' active':'')+(i<state.step?' done':'');
+    const isCode=s.type==='code';
+    b.innerHTML='<span class="n">'+(i+1)+'</span>'+(isCode?s.file:s.title);
+    b.onclick=()=>{state.step=i;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});};
+    rail.appendChild(b);
+  });
+  const act=rail.querySelector('.active');if(act&&act.scrollIntoView)act.scrollIntoView({block:'nearest',inline:'center'});
+}
+
+/* ============================================================
+   知识点卡片
+   ============================================================ */
+function kpCard(kp){
+  const meta=COURSE.KPMETA[kp];if(!meta)return '';
+  const cat=COURSE.categories[meta.cat];
+  const tpl=$('kp-'+kp);const inner=tpl?tpl.innerHTML:'<p>（未找到该知识点内容）</p>';
+  // 处理相关知识点跳转
+  const wrap=document.createElement('div');wrap.innerHTML=inner;
+  wrap.querySelectorAll('.kplink').forEach(el=>{
+    el.onclick=()=>{const target=el.dataset.jump;const si=kpStepIndex(target);
+      if(si>=0){state.step=si;state.selKp=target;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);}};
+  });
+  return '<div class="kpcard"><div class="kpcard-head" style="background:'+cat.bg+'"><span class="ic">'+cat.icon+'</span><span class="tt">'+meta.title+'</span><span class="cat" style="color:'+cat.color+';background:#fff;border:1px solid '+cat.color+'33">'+cat.name+'</span></div><div class="kpcard-body">'+wrap.innerHTML+'</div></div>';
+}
+
+function renderKpPanel(){
+  const body=$('kpBody');const chips=$('kpChips');
+  const st=COURSE.steps[state.step];
+  const kps=st.kps||[];
+  chips.innerHTML=kps.map(k=>{
+    const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+    return '<button class="kchip'+(state.selKp===k?' on':'')+'" data-kp="'+k+'">'+cat.icon+' '+meta.title+'</button>';
+  }).join('');
+  chips.querySelectorAll('.kchip').forEach(b=>{b.onclick=()=>{state.selKp=b.dataset.kp;renderKpPanel();};});
+  const sel=state.selKp;
+  if(sel&&kps.indexOf(sel)>=0){
+    const idx=kps.indexOf(sel);
+    body.innerHTML=kpCard(sel);body.scrollTop=0;
+    $('kpPrev').disabled=false;$('kpNext').disabled=false;
+    $('kpPrev').dataset.idx=idx;$('kpNext').dataset.idx=idx;
+    document.querySelectorAll('.cl.clickable').forEach(el=>{el.classList.toggle('active',(el.dataset.k||'').split(' ').indexOf(sel)>=0);});
+  }else{
+    body.innerHTML='<div class="kp-empty"><span class="big">👈</span>点击左侧<b>带图标的代码行</b><br>这里就会显示对应的完整知识点<br><br><span style="color:#b8c2cf;font-size:12.5px;">也可以点上方标签直接查看</span></div>';
+    $('kpPrev').disabled=true;$('kpNext').disabled=true;
+    document.querySelectorAll('.cl.clickable').forEach(el=>el.classList.remove('active'));
+  }
+}
+
+/* ============================================================
+   渲染代码步骤
+   ============================================================ */
+function renderCodeStep(s,host){
+  const lines=getSource(s.src);const marks=resolveMarks(lines,s.marks);
+  const lineK=lines.map((_,i)=>marks.filter(m=>i>=m.s&&i<=m.e).map(m=>m.k));
+  const htmls=highlightCode(lines);
+  const catsInStep=[];(s.kps||[]).forEach(k=>{const c=COURSE.KPMETA[k].cat;if(catsInStep.indexOf(c)<0)catsInStep.push(c);});
+  const legend=catsInStep.map(c=>{const cat=COURSE.categories[c];return '<span class="lg" style="border-color:'+cat.color+'33"><b>'+cat.icon+'</b>'+cat.name+'</span>';}).join('')+'<span class="lg" style="border-color:#d9e0ea"><b>▎</b>左侧色条 = 该行含知识点</span>';
+
+  let codeHtml='';
+  htmls.forEach((h,i)=>{
+    const ks=lineK[i];const hasK=ks.length>0;
+    const mainCat=hasK?COURSE.KPMETA[ks[0]].cat:'';
+    const icon=hasK?COURSE.categories[mainCat].icon:'';
+    codeHtml+='<div class="cl'+(hasK?' clickable marked k-'+mainCat:'')+'"'+(hasK?' data-k="'+ks.join(' ')+'" data-line="'+(i+1)+'"':'')+'><span class="ic">'+icon+'</span><span class="ln">'+(i+1)+'</span><code class="src">'+h+'</code></div>';
+  });
+
+  const guideHtml=s.guide?('<div class="guide-box"><h4>🧭 本步操作指引</h4><ol>'+s.guide.map(g=>'<li>'+g+'</li>').join('')+'</ol></div>'):'';
+
+  host.innerHTML=
+    '<div class="card"><div class="step-head"><span class="step-kind code">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+s.sub+'</div></div><div class="meta"><span class="pill file">📄 '+s.file+'</span><span class="pill time">⏱ '+s.dur+'</span><span class="pill">🧩 '+(s.kps||[]).length+' 个知识点</span></div></div></div>'+
+    '<div class="workbench"><div class="left-col">'+guideHtml+
+      '<div class="code-panel"><div class="code-head"><div class="filedot"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><div class="code-file">'+s.file+'<small>'+s.fileNote+'</small></div><div class="codeacts"><button class="mini-btn" id="btnCopy"'+(TEACHER_MODE?'':' disabled')+'>📋 复制代码</button><button class="mini-btn" id="btnClear">✖ 取消选中</button></div></div>'+
+      '<div class="legend">'+legend+'</div><div class="code-body" id="codeBody">'+codeHtml+'</div></div></div>'+
+      '<aside class="kp-panel"><div class="kp-head"><span class="t">📖 知识点解析</span><span class="hint">点左侧代码行 → 看完整讲解</span><div class="kp-nav"><button id="kpPrev" disabled>◀ 上一个</button><button id="kpNext" disabled>下一个 ▶</button></div></div><div class="kp-chips" id="kpChips"></div><div class="kp-body" id="kpBody"></div></aside></div>'+
+      navRow();
+
+  host.querySelectorAll('.cl.clickable').forEach(el=>{
+    el.onclick=()=>{const ks=(el.dataset.k||'').split(' ');state.selKp=ks[0];renderKpPanel();if(el.scrollIntoView)el.scrollIntoView({block:'nearest'});};
+  });
+  $('btnClear').onclick=()=>{state.selKp=null;renderKpPanel();};
+  $('btnCopy').onclick=(e)=>{copyText(lines.join('\n'),e.currentTarget);};
+  $('kpPrev').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=0;state.selKp=kps[(i-1+kps.length)%kps.length];renderKpPanel();};
+  $('kpNext').onclick=()=>{const kps=s.kps||[];let i=kps.indexOf(state.selKp);if(i<0)i=-1;state.selKp=kps[(i+1)%kps.length];renderKpPanel();};
+  bindNav();
+  renderKpPanel();
+}
+
+function navRow(){
+  const i=state.step,total=COURSE.steps.length;
+  return '<div class="navrow"><button id="navPrev"'+(i<=0?' disabled':'')+'>◀ 上一步</button><button id="navNext" class="primary"'+(i>=total-1?' disabled':'')+'>下一步 ▶</button></div>';
+}
+function bindNav(){
+  const pv=$('navPrev'),nx=$('navNext');
+  if(pv)pv.onclick=()=>{if(state.step>0){state.step--;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+  if(nx)nx.onclick=()=>{if(state.step<COURSE.steps.length-1){state.step++;state.selKp=null;render();window.scrollTo({top:0,behavior:'smooth'});}};
+}
+
+/* ============================================================
+   渲染信息步骤
+   ============================================================ */
+function renderInfoStep(s,host){
+  const tpl=$(s.tpl);const inner=tpl?tpl.innerHTML:'<p>内容缺失</p>';
+  host.innerHTML='<div class="card"><div class="step-head"><span class="step-kind '+(s.kind==='环境准备'?'env':s.kind==='行业标准'?'std':'')+'">'+s.kind+'</span><div><h2 class="step-title">'+s.title+'</h2><div class="step-sub">'+s.sub+'</div></div></div><div class="info-section">'+inner+'</div></div>'+navRow();
+  bindNav();
+  if(s.sumGrid){
+    const grid=document.getElementById(s.sumGrid);
+    if(grid){
+      const wrap=grid.previousElementSibling;
+      if(wrap){const h=wrap.querySelector('h4');if(h)h.textContent='📚 本课知识点全景（共 '+kpList().length+' 个，点击卡片可跳回对应代码位置）';}
+      grid.innerHTML=kpList().map(k=>{
+        const meta=COURSE.KPMETA[k],cat=COURSE.categories[meta.cat];
+        return '<div class="kitem" data-kp="'+k+'"><span class="ic">'+cat.icon+'</span><div><div class="kt">'+meta.title+'</div><div class="kc">'+cat.name+' ｜ 位于步骤 '+(kpStepIndex(k)+1)+'</div></div></div>';
+      }).join('');
+      grid.querySelectorAll('.kitem').forEach(el=>{el.onclick=()=>{const kp=el.dataset.kp;const si=kpStepIndex(kp);if(si<0)return;state.step=si;state.selKp=kp;render();setTimeout(()=>{const chip=document.querySelector('.kchip.on');if(chip)chip.scrollIntoView({block:'center',behavior:'smooth'});},60);};});
+    }
+  }
+}
+
+/* ============================================================
+   主渲染
+   ============================================================ */
+function render(){
+  renderRail();
+  const stage=$('stage');
+  const s=COURSE.steps[state.step];
+  if(s.type==='code')renderCodeStep(s,stage);else renderInfoStep(s,stage);
+  // 更新教师模式显示
+  $('tmode').textContent=TEACHER_MODE?'✅ 教师模式：开启':'🛡️ 教师模式：关闭';
+  $('tmode').className='tmode'+(TEACHER_MODE?' on':'');
+  document.body.classList.toggle('student-mode',!TEACHER_MODE);
+}
+
+/* ============================================================
+   学生模式复制拦截
+   ============================================================ */
+document.addEventListener('contextmenu',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止右键菜单','warn');}});
+document.addEventListener('dragstart',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('copy',e=>{if(!TEACHER_MODE){e.preventDefault();toast('🔒 学生模式下禁止复制代码，请手动输入以获得最佳学习效果','err');}});
+document.addEventListener('cut',e=>{if(!TEACHER_MODE)e.preventDefault();});
+document.addEventListener('keydown',e=>{
+  if(TEACHER_MODE)return;
+  const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&(k==='c'||k==='a'||k==='s'||k==='p'||k==='u')){e.preventDefault();toast('🔒 学生模式下该快捷键已禁用','warn');}
+  if(k==='f12'||(e.ctrlKey&&e.shiftKey&&(k==='i'||k==='j'||k==='c'))){e.preventDefault();toast('🔒 学生模式下禁止打开开发者工具','warn');}
+});
+document.addEventListener('mouseup',()=>{if(!TEACHER_MODE)window.getSelection().removeAllRanges();});
+if(!TEACHER_MODE&&navigator.clipboard){
+  navigator.clipboard.writeText=()=>Promise.reject('student mode');
+}
+
+
+/* ============ 构建注入：兼容补丁 ============ */
+(function(){
+  // 统一归一化 marks：只保留合法 kp- 开头的知识点ID，其余标记丢弃（避免空 k 导致渲染 undefined）
+  var _origResolve = resolveMarks;
+  resolveMarks = function(lines, marks){
+    var arr=[];
+    (marks||[]).forEach(function(m){
+      if(!Array.isArray(m)||m.length<2) return;
+      var k = m.length>=3 ? String(m[2]||'').trim() : '';
+      if(!k || k.indexOf('kp-')!==0) return;
+      if(typeof m[0]==='number'){
+        var s=m[0]-1,e=m[1]-1;
+        if(s<0)s=0; if(e>=lines.length)e=lines.length-1;
+        if(s<=e) arr.push({s:s,e:e,k:k});
+      } else {
+        var s=-1; for(var i=0;i<lines.length;i++){if(lines[i].indexOf(m[0])>=0){s=i;break;}}
+        if(s<0) return; var e=s;
+        if(m[1]){for(var i=s;i<lines.length;i++){if(lines[i].indexOf(m[1])>=0){e=i;break;}}}
+        arr.push({s:s,e:e,k:k});
+      }
+    });
+    return arr;
+  };
+})();
+
+(function(){
+  var FTM={'.xml':'Maven 配置','.jsp':'JSP 页面','.java':'Java 类','.sql':'SQL 脚本','.properties':'配置文件'};
+  var KM={'tpl-goal':'学习目标','tpl-env':'环境准备','tpl-struct':'项目结构','tpl-verify':'效果验证','tpl-std':'编码规范','tpl-summary':'课时小结'};
+  COURSE.steps.forEach(function(s){
+    var isCode=!!s.src;
+    if(!s.type)s.type=isCode?'code':'info';
+    if(isCode){
+      s.kind='代码实操';
+      var srcPath = s.src;
+      if(srcPath.indexOf('src-')!==0) srcPath = 'src-' + srcPath;
+      s.src = srcPath;
+      var fullRel = srcPath.replace(/^src-/,'');
+      if(!s.file) s.file = fullRel;
+      var baseName = fullRel;
+      var idx = Math.max(fullRel.lastIndexOf('/'), fullRel.lastIndexOf('\\'));
+      if(idx>=0) baseName = fullRel.substring(idx+1);
+      if(!s.fileNote){var d=baseName.lastIndexOf('.');s.fileNote=d>=0?(FTM[baseName.substring(d)]||'文件'):'';}
+      if(!s.sub)s.sub=''; if(!s.dur)s.dur='';
+    }else{
+      if(s.tpl&&s.tpl.indexOf('tpl-')!==0)s.tpl='tpl-'+s.tpl;
+      if(KM[s.tpl])s.kind=KM[s.tpl]; else if(!s.kind)s.kind='';
+      if(!s.fileNote)s.fileNote='';
+      if(!s.sub)s.sub='';
+      if(s.tpl==='tpl-summary')s.sumGrid='sumGrid2';
+    }
+  });
+})();
+
+
+/* ============ 信息步骤模板 ============ */
+</script>
+<script type="text/html" id="tpl-goal">
+<div class="goal-wrap">
+  <div class="goal-title">🎯 本次课学习目标</div>
+  <div class="goal-desc">第二次课：把第一次课的"裸JDBC"重构为工业级写法——理解并使用数据库连接池（Druid）和 Apache Commons DBUtils，消除样板代码，让 DAO 从近百行缩减到十几行。</div>
+  <ul class="goal-list">
+    <li>🚰 理解<b>数据库连接池</b>解决了什么问题、为什么不应该自己 new 连接</li>
+    <li>⚙️ 会配置并使用 <b>Alibaba Druid</b> 连接池（druid.properties + DruidDataSourceFactory）</li>
+    <li>🧰 会基于连接池重写<b>工具类</b>（DruidUtil：getConnection / close / getQueryRunner）</li>
+    <li>🤖 掌握 <b>Apache Commons DBUtils</b> 的 QueryRunner 三大核心方法：update / query / batch</li>
+    <li>🎯 理解 <b>ResultSetHandler</b> 的 4 种常用实现（BeanHandler/BeanListHandler/ScalarHandler/MapHandler）</li>
+    <li>🏗️ 用 DBUtils 重写 DAO，把 try-catch 嵌套、rs 遍历、资源关闭统统交给框架</li>
+    <li>🔧 掌握 Druid 监控页面配置，能观察 SQL 执行情况</li>
+    <li>✅ 完成重构后的学生信息管理系统并与第一次课效果对比</li>
+  </ul>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-env">
+<div class="env-card">
+  <div class="env-row">
+    <div class="env-item"><span class="env-k">JDK</span><span class="env-v">17 LTS</span></div>
+    <div class="env-item"><span class="env-k">IDE</span><span class="env-v">IntelliJ IDEA 2024.1</span></div>
+    <div class="env-item"><span class="env-k">服务器</span><span class="env-v">Apache Tomcat 10.1.59</span></div>
+    <div class="env-item"><span class="env-k">构建</span><span class="env-v">Maven 3.9+</span></div>
+  </div>
+  <div class="env-row">
+    <div class="env-item"><span class="env-k">数据库</span><span class="env-v">MySQL 8.0.x</span></div>
+    <div class="env-item"><span class="env-k">连接池</span><span class="env-v">Druid 1.2.23</span></div>
+    <div class="env-item"><span class="env-k">持久层框架</span><span class="env-v">Commons DBUtils 1.7</span></div>
+    <div class="env-item"><span class="env-k">包命名空间</span><span class="env-v">jakarta.*（非 javax.*）</span></div>
+  </div>
+  <div class="env-maven-title">Maven 核心依赖（pom.xml 新增）</div>
+<pre class="env-dep-block">{
+  /* ============ 本次课新增：数据库连接池 ============ */
+  &lt;dependency&gt;
+    &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+    &lt;artifactId&gt;druid&lt;/artifactId&gt;
+    &lt;version&gt;1.2.23&lt;/version&gt;
+  &lt;/dependency&gt;
+
+  /* ============ 本次课新增：DBUtils 轻量级 ORM ============ */
+  &lt;dependency&gt;
+    &lt;groupId&gt;commons-dbutils&lt;/groupId&gt;
+    &lt;artifactId&gt;commons-dbutils&lt;/artifactId&gt;
+    &lt;version&gt;1.7&lt;/version&gt;
+  &lt;/dependency&gt;
+}</pre>
+  <div class="env-tip">📌 上节课已引的 mysql-connector-j、servlet-api、jsp-api、jstl 继续保留；本次重点是把"手写JDBC"升级为"连接池+DBUtils"。</div>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-struct">
+<div class="struct-wrap">
+  <div class="struct-title">📂 jdbc-pool 项目结构</div>
+  <div class="struct-desc">本次课基于第一次课的 <b>jdbc-student</b> 项目重构为 <b>jdbc-pool</b>：保留 JSP + Servlet 层，重写 util 和 dao 层，实体类 Student 基本不变。</div>
+<pre class="tree-block"><span class="tree">jdbc-pool</span>
+├── <span class="dir">src/main/java</span>
+│   ├── <span class="dir">com/itheima/pojo</span>
+│   │   └── <span class="file">Student.java</span>             <span class="note">// JavaBean（复用，微调字段类型）</span>
+│   ├── <span class="dir">com/itheima/util</span>
+│   │   └── <span class="file">DruidUtil.java</span>           <span class="note">// 基于 Druid 的连接池工具类（本次核心）</span>
+│   ├── <span class="dir">com/itheima/dao</span>
+│   │   └── <span class="file">StudentDao.java</span>         <span class="note">// 用 QueryRunner 重写 DAO（代码量锐减）</span>
+│   └── <span class="dir">com/itheima/web</span>
+│       ├── <span class="file">StudentListServlet.java</span> <span class="note">// 查询全部学生</span>
+│       ├── <span class="file">StudentToAddServlet.java</span> <span class="note">// 跳转到新增页</span>
+│       ├── <span class="file">StudentAddServlet.java</span>  <span class="note">// 处理新增提交</span>
+│       ├── <span class="file">StudentToEditServlet.java</span><span class="note">// 按 id 查询单条→回显编辑页</span>
+│       ├── <span class="file">StudentUpdateServlet.java</span><span class="note">// 处理修改提交</span>
+│       └── <span class="file">StudentDeleteServlet.java</span><span class="note">// 删除学生</span>
+├── <span class="dir">src/main/resources</span>
+│   └── <span class="file">druid.properties</span>         <span class="note">// Druid 连接池配置（替换 jdbc.properties）</span>
+├── <span class="dir">src/main/webapp</span>
+│   ├── <span class="dir">WEB-INF</span>
+│   │   └── <span class="file">web.xml</span>                <span class="note">// 注册 Druid 监控 Servlet（新增）</span>
+│   ├── <span class="file">index.jsp</span>                 <span class="note">// 欢迎页，跳转到 StudentListServlet</span>
+│   ├── <span class="file">list.jsp</span>                  <span class="note">// 学生列表页（沿用）</span>
+│   ├── <span class="file">add.jsp</span>                   <span class="note">// 新增学生页（沿用）</span>
+│   └── <span class="file">edit.jsp</span>                  <span class="note">// 编辑学生页（沿用）</span>
+└── <span class="file">pom.xml</span>                        <span class="note">// Maven 依赖（新增 druid + commons-dbutils）</span></pre>
+  <div class="struct-compare">
+    <div class="struct-col">
+      <div class="struct-col-title">❌ 上一次课的问题</div>
+      <ul>
+        <li>每次请求都新建连接，用完关闭，开销巨大</li>
+        <li>DAO 里 try-catch 嵌套 4 层，样板代码 80%</li>
+        <li>rs→JavaBean 手动逐列 getXxx，字段多时非常繁琐</li>
+        <li>无法监控 SQL 执行情况，出了问题难定位</li>
+      </ul>
+    </div>
+    <div class="struct-col">
+      <div class="struct-col-title">✅ 本次课要达到</div>
+      <ul>
+        <li>连接池复用连接，高并发下性能提升一个数量级</li>
+        <li>DBUtils 负责关闭资源 + 映射 JavaBean，DAO 瘦身</li>
+        <li>一个 update() 方法搞定增删改，query() 搞定查</li>
+        <li>Druid 内置监控页面，实时观察 SQL 执行</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-verify">
+<div class="verify-wrap">
+  <div class="verify-title">🔍 效果预览与验证清单</div>
+  <div class="verify-desc">重构完成后，页面表现与第一次课完全一致——但底层已经从"手工作坊"升级为"工业化流水线"。打开浏览器依次验证：</div>
+
+  <div class="verify-pages">
+    <div class="verify-page">
+      <div class="vp-title">① 列表页 list.jsp</div>
+      <div class="vp-mock">
+        <div class="mock-browser">
+          <div class="mock-bar"><span class="mock-dot red"></span><span class="mock-dot yellow"></span><span class="mock-dot green"></span><span class="mock-url">http://localhost:8080/jdbc-pool/studentList</span></div>
+          <div class="mock-body">
+            <div class="mock-h2">学生信息管理</div>
+            <div class="mock-btn-primary">+ 新增学生</div>
+            <table class="mock-table">
+              <tr><th>学号</th><th>姓名</th><th>性别</th><th>年龄</th><th>成绩</th><th>操作</th></tr>
+              <tr><td>1</td><td>张三</td><td>男</td><td>20</td><td>88.5</td><td><span class="mock-link">编辑</span> <span class="mock-link-red">删除</span></td></tr>
+              <tr><td>2</td><td>李四</td><td>女</td><td>19</td><td>92.0</td><td><span class="mock-link">编辑</span> <span class="mock-link-red">删除</span></td></tr>
+              <tr><td>3</td><td>王五</td><td>男</td><td>21</td><td>76.0</td><td><span class="mock-link">编辑</span> <span class="mock-link-red">删除</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="vp-note">列表数据由 QueryRunner.query(new BeanListHandler&lt;&gt;(Student.class)) 一行搞定，不再手写 while(rs.next())。</div>
+    </div>
+
+    <div class="verify-page">
+      <div class="vp-title">② Druid 监控页面</div>
+      <div class="vp-mock">
+        <div class="mock-browser">
+          <div class="mock-bar"><span class="mock-dot red"></span><span class="mock-dot yellow"></span><span class="mock-dot green"></span><span class="mock-url">http://localhost:8080/jdbc-pool/druid/index.html</span></div>
+          <div class="mock-body">
+            <div class="mock-h2">Druid Monitor</div>
+            <div class="mock-stats">
+              <div class="mock-stat"><div class="ms-num">3</div><div class="ms-lbl">活跃连接</div></div>
+              <div class="mock-stat"><div class="ms-num">8</div><div class="ms-lbl">空闲连接</div></div>
+              <div class="mock-stat"><div class="ms-num">42</div><div class="ms-lbl">SQL执行数</div></div>
+              <div class="mock-stat"><div class="ms-num">2ms</div><div class="ms-lbl">平均耗时</div></div>
+            </div>
+            <div class="mock-h3" style="margin-top:14px;">SQL监控</div>
+            <table class="mock-table"><tr><th>SQL</th><th>次数</th><th>耗时</th></tr>
+              <tr><td>select * from student</td><td>12</td><td>1ms</td></tr>
+              <tr><td>insert into student ...</td><td>5</td><td>3ms</td></tr>
+              <tr><td>update student set ...</td><td>8</td><td>2ms</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="vp-note">访问 /druid/index.html 可看到内置监控，这是我们选择 Druid 而非 HikariCP 的核心原因之一（教学友好）。</div>
+    </div>
+  </div>
+
+  <div class="verify-checks">
+    <div class="vc-title">✅ 验证清单（逐项打勾）</div>
+    <div class="vc-grid">
+      <label><input type="checkbox"> 启动时控制台打印 "Druid 连接池初始化成功"，无 ClassNotFoundException</label>
+      <label><input type="checkbox"> 列表页能正常展示 3 条初始数据，没有空指针</label>
+      <label><input type="checkbox"> 新增学生后列表自动刷新，新记录出现</label>
+      <label><input type="checkbox"> 编辑回显正确（id/name/gender/age/score 都带过来）</label>
+      <label><input type="checkbox"> 修改提交后数据更新，列表显示新值</label>
+      <label><input type="checkbox"> 删除后记录消失，id=2 的"李四"被删后不会再出现</label>
+      <label><input type="checkbox"> 多次刷新列表不会报连接泄漏或 Too many connections</label>
+      <label><input type="checkbox"> 访问 /druid/index.html 能看到监控页面，SQL 监控有记录</label>
+      <label><input type="checkbox"> DAO 单个方法代码量从 30+ 行降到 10 行以内</label>
+    </div>
+  </div>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-std">
+<div class="std-wrap">
+  <div class="std-title">📌 编码规范与易错点回顾</div>
+
+  <div class="std-block">
+    <div class="std-b-title">✅ 连接池使用规范</div>
+    <ul>
+      <li>连接池<b>全局只初始化一次</b>，用 static 代码块在类加载时创建 DataSource</li>
+      <li>从连接池 getConnection() 拿到的<b>不是真正的新连接，而是池中的代理连接</b></li>
+      <li>用完必须 close()——但这里 close() 不是真关闭，而是<b>归还</b>到池子</li>
+      <li>配置文件必须放在 src/main/resources 下，用类加载器加载</li>
+      <li>driverClassName 对于 MySQL 8 必须写 <b>com.mysql.cj.jdbc.Driver</b>（中间有 cj）</li>
+    </ul>
+  </div>
+
+  <div class="std-block">
+    <div class="std-b-title">✅ DBUtils 使用规范</div>
+    <ul>
+      <li>QueryRunner 构造时传 DataSource，后续 update/query 不需要自己传 Connection</li>
+      <li>SQL 里的参数占位符仍然用 <b>?</b>，参数按顺序传给 Object... params</li>
+      <li>查单条用 <b>new BeanHandler&lt;&gt;(Xxx.class)</b>，查多条用 <b>new BeanListHandler&lt;&gt;(Xxx.class)</b></li>
+      <li>查聚合函数（count/max/avg）用 <b>new ScalarHandler&lt;&gt;()</b></li>
+      <li>JavaBean 属性名必须和数据库列名<b>一致</b>（或用别名 as 匹配），否则返回 null</li>
+      <li>DBUtils 的 update/query 会<b>自动关闭 Connection、Statement、ResultSet</b>，不需要手写 close</li>
+    </ul>
+  </div>
+
+  <div class="std-block">
+    <div class="std-b-title">🚨 高频易错点</div>
+    <ul>
+      <li>❌ <b>忘记把 druid.properties 放在 resources 目录下</b>：会报 FileNotFoundException，连不上池</li>
+      <li>❌ <b>BeanHandler 要求 JavaBean 必须有 public 无参构造</b>：写了带参构造后必须显式补无参构造</li>
+      <li>❌ <b>数据库列名用下划线（user_name），Java 属性用驼峰（userName）</b>：DBUtils 默认无法自动映射，要么 SQL 写别名 as，要么用 GenerousBeanProcessor</li>
+      <li>❌ <b>ScalarHandler 返回 Long</b>：count(*) 返回 Long 不是 Integer，强转 Integer 会 ClassCastException</li>
+      <li>❌ <b>Druid 监控 servlet 忘记注册或注册路径错</b>：会 404 找不到 /druid/index.html</li>
+      <li>❌ <b>连接池最大连接数设置过大</b>：默认 8 足够开发用，别学网上乱配成 100</li>
+    </ul>
+  </div>
+
+  <div class="std-block">
+    <div class="std-b-title">🧭 两次课对比总结</div>
+    <table class="cmp-tbl">
+      <tr><th>对比维度</th><th>第一次课（裸 JDBC）</th><th>第二次课（池+DBUtils）</th></tr>
+      <tr><td>获取连接</td><td>DriverManager.getConnection()</td><td>DataSource.getConnection()（池复用）</td></tr>
+      <tr><td>SQL 执行</td><td>PreparedStatement.executeXxx()</td><td>QueryRunner.update() / query()</td></tr>
+      <tr><td>结果映射</td><td>手写 while(rs.next()) 逐列 getXxx</td><td>ResultSetHandler 自动映射 JavaBean</td></tr>
+      <tr><td>资源关闭</td><td>finally 手写 close（try-with-resources）</td><td>DBUtils 自动关闭</td></tr>
+      <tr><td>DAO 方法平均行数</td><td>30~50 行</td><td>5~10 行</td></tr>
+      <tr><td>监控能力</td><td>无</td><td>Druid 内置监控页面</td></tr>
+      <tr><td>并发性能</td><td>差（每次新建/关闭连接）</td><td>好（连接复用）</td></tr>
+    </table>
+  </div>
+</div>
+
+</script>
+
+<script type="text/html" id="tpl-summary">
+<div class="summary-wrap">
+  <div class="sum-title">📚 第二次课知识要点回顾</div>
+  <div class="sum-sub">数据库连接池 + DBUtils —— 让 DAO 从"体力活"变成"技术活"</div>
+
+  <div class="sum-grid" id="sumGrid2">
+    <div class="sum-card">
+      <div class="sc-icon">🚰</div>
+      <div class="sc-title">数据库连接池原理</div>
+      <div class="sc-desc">启动时预先创建一批连接放入池中；应用 getConnection 时借走，close 时归还而非销毁。避免反复 TCP 握手/认证/释放，显著提升并发性能。主流实现：Druid、HikariCP、C3P0。</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-icon">⚙️</div>
+      <div class="sc-title">Druid 配置与初始化</div>
+      <div class="sc-desc">druid.properties 配置 driver/url/username/password/initialSize/maxActive 等；DruidDataSourceFactory.createDataSource(prop) 静态初始化一次得到全局 DataSource。</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-icon">🧰</div>
+      <div class="sc-title">DruidUtil 工具类</div>
+      <div class="sc-desc">封装 getConnection() 从池中取连接、close() 归还连接、getQueryRunner() 返回 QueryRunner 单例，让 DAO 层无需关心连接池细节。</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-icon">🤖</div>
+      <div class="sc-title">QueryRunner 核心 API</div>
+      <div class="sc-desc">update(sql, params)：执行 insert/update/delete；query(sql, rsh, params)：执行 select，配合 ResultSetHandler 映射结果；batch(sql, params)：批量操作。</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-icon">🎯</div>
+      <div class="sc-title">ResultSetHandler 四件套</div>
+      <div class="sc-desc">BeanHandler 查单条 → 返回一个 JavaBean；BeanListHandler 查多条 → 返回 List&lt;JavaBean&gt;；ScalarHandler 查聚合 → 返回单个值（Long）；MapHandler 查单条 → 返回 Map。</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-icon">🔧</div>
+      <div class="sc-title">Druid 监控</div>
+      <div class="sc-desc">web.xml 注册 StatViewServlet 后访问 /druid/index.html，可查看 SQL 执行次数、耗时、错误率、连接池状态，是开发调试的利器。生产环境记得配置登录账号。</div>
+    </div>
+  </div>
+
+  <div class="sum-foot">
+    <div class="sf-title">🚀 从这里再往前走一步</div>
+    <ul class="sf-list">
+      <li>下一个阶段学习 <b>MyBatis / MyBatis-Plus</b>：SQL 写在 XML 或注解里，彻底消除 DAO 样板代码</li>
+      <li>理解 <b>Spring JDBC (JdbcTemplate)</b>：与 DBUtils 思想类似，Spring 生态默认选择</li>
+      <li>做项目时优先考虑 <b>HikariCP</b>（Spring Boot 默认），Druid 适合需要监控的场景</li>
+      <li>理解 <b>事务管理</b>：DBUtils 不帮你管事务，后续学 Spring 声明式事务</li>
+      <li>练习：给学生表加"班级"字段，自己完成一对多关联查询，体会手写 vs 框架映射</li>
+    </ul>
+  </div>
+</div>
+
+</script>
+<script>
+
+function installWatermarkAndCopyright(){
+  var watermark = document.getElementById('__wm__');
+  var copyright = document.getElementById('__cr__');
+
+  // ============ 水印（浅灰色fixed铺满视口，随滚动始终可见，不依赖页面高度）============
+  if (typeof SHOW_WATERMARK !== 'undefined' && SHOW_WATERMARK) {
+    if (watermark) watermark.remove();
+    watermark = document.createElement('div');
+    watermark.id = '__wm__';
+    document.body.appendChild(watermark);
+
+    var text = (typeof WATERMARK_TEXT !== 'undefined') ? WATERMARK_TEXT : '';
+    var charCount = text.length || 10;
+    var fontSize = 16;
+    var unitW = fontSize * 1.05;
+    var textPixelWidth = charCount * unitW;
+    var stepX = Math.ceil(textPixelWidth * 1.8);     // 水平步长=字宽×1.8，16字也绝对不重叠
+    var stepY = 160;                                  // 垂直步长
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    // 多铺一圈，视口滚动resize时不出现空白
+    var cols = Math.ceil(vw / stepX) + 3;
+    var rows = Math.ceil(vh / stepY) + 3;
+
+    watermark.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:9998;pointer-events:none;overflow:hidden;';
+    var frag = document.createDocumentFragment();
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var t = document.createElement('span');
+        t.textContent = text;
+        // 奇数行错开半个步长，形成菱形交错
+        var offsetX = (r % 2 === 0) ? 0 : stepX / 2;
+        t.style.cssText = 'position:absolute;'
+          + 'left:' + (c * stepX + offsetX - stepX) + 'px;'
+          + 'top:'  + (r * stepY - stepY) + 'px;'
+          + 'font-size:' + fontSize + 'px;'
+          + 'color:#a8a8a8;'                  // 浅灰色
+          + 'opacity:0.07;'                   // 极淡，仅隐约可见
+          + 'font-weight:400;'
+          + 'letter-spacing:2px;'
+          + 'white-space:nowrap;'
+          + 'transform:rotate(-25deg);'
+          + 'transform-origin:left top;'
+          + 'user-select:none;';
+        frag.appendChild(t);
+      }
+    }
+    watermark.appendChild(frag);
+  } else {
+    if (watermark) { watermark.remove(); watermark = null; }
+  }
+
+  // ============ 版权信息条（追加到 main 末尾）============
+  if (typeof SHOW_COPYRIGHT !== 'undefined' && SHOW_COPYRIGHT) {
+    if (copyright) copyright.remove();
+    copyright = document.createElement('div');
+    copyright.id = '__cr__';
+    copyright.style.cssText = 'text-align:center;padding:22px 20px;color:#8a8f98;font-size:12px;border-top:1px solid #eaecef;background:#f6f8fa;margin-top:40px;line-height:1.9;clear:both;';
+    var main = document.getElementById('main');
+    var projName = document.title.replace(' - JSP交互教学课件','').replace(' · 分步向导','');
+    copyright.innerHTML = '<div style="font-weight:600;color:#57606a;margin-bottom:4px;letter-spacing:0.5px;">'
+      + ((typeof COPYRIGHT_TEXT !== 'undefined') ? COPYRIGHT_TEXT : '')
+      + '</div>'
+      + '<div>项目：<b style="color:#0969da;">' + projName + '</b> · 课时：4×40分钟=160分钟 · 适用环境：JDK 17 + IDEA 2024.1 + Tomcat 10.1.59 + Maven 3.9+</div>';
+    if (main) main.appendChild(copyright);
+    else document.body.appendChild(copyright);
+  } else {
+    if (copyright) { copyright.remove(); copyright = null; }
+  }
+}
+window.addEventListener('resize', function(){ installWatermarkAndCopyright(); });
+
+var _origRender = render;
+render = function(){
+  try { _origRender.apply(this, arguments); }
+  catch(e){ console.error(e); }
+  // 切换步骤/知识点后面板展开可能改变布局，重新铺设一次
+  setTimeout(installWatermarkAndCopyright, 100);
+};
+
+// 首次渲染
+render();
+
+</script>
+</body>
+</html>
