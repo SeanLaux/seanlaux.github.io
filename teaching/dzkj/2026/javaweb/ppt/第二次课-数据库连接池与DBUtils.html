@@ -2566,20 +2566,72 @@ if(!TEACHER_MODE&&navigator.clipboard){
 /* ============ 信息步骤模板 ============ */
 </script>
 <script type="text/html" id="tpl-goal">
-<div class="goal-wrap">
-  <div class="goal-title">🎯 本次课学习目标</div>
-  <div class="goal-desc">第二次课：把第一次课的"裸JDBC"重构为工业级写法——理解并使用数据库连接池（Druid）和 Apache Commons DBUtils，消除样板代码，让 DAO 从近百行缩减到十几行。</div>
-  <ul class="goal-list">
-    <li>🚰 理解<b>数据库连接池</b>解决了什么问题、为什么不应该自己 new 连接</li>
-    <li>⚙️ 会配置并使用 <b>Alibaba Druid</b> 连接池（druid.properties + DruidDataSourceFactory）</li>
-    <li>🧰 会基于连接池重写<b>工具类</b>（DruidUtil：getConnection / close / getQueryRunner）</li>
-    <li>🤖 掌握 <b>Apache Commons DBUtils</b> 的 QueryRunner 三大核心方法：update / query / batch</li>
-    <li>🎯 理解 <b>ResultSetHandler</b> 的 4 种常用实现（BeanHandler/BeanListHandler/ScalarHandler/MapHandler）</li>
-    <li>🏗️ 用 DBUtils 重写 DAO，把 try-catch 嵌套、rs 遍历、资源关闭统统交给框架</li>
-    <li>🔧 掌握 Druid 监控页面配置，能观察 SQL 执行情况</li>
-    <li>✅ 完成重构后的学生信息管理系统并与第一次课效果对比</li>
-  </ul>
+<h3>🎯 本次课任务目标</h3>
+<p>在第一次课"裸 JDBC"的基础上，用 <b>Druid 连接池 + Apache Commons DBUtils</b> 重构数据访问层，消除重复的样板代码，让 DAO 从近百行缩减到十几行；<b>Servlet 与 JSP 层一行不改</b>，亲手验证"分层解耦"的价值。</p>
+<div class="kpi-row">
+  <div class="kpi"><div class="v">4×40 分钟</div><div class="l">共 160 分钟</div></div>
+  <div class="kpi"><div class="v">16 个</div><div class="l">工程文件（仅 5 个需改动）</div></div>
+  <div class="kpi"><div class="v">2 个</div><div class="l">新增依赖（Druid / DBUtils）</div></div>
+  <div class="kpi"><div class="v">11 个</div><div class="l">文件原样复用（零修改）</div></div>
 </div>
+
+<h3>🖥️ 最终效果预览（2 个主要页面）</h3>
+<p><b>① 学生列表页 list.jsp —— 页面表现与第一次课完全一致，底层已换引擎</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="browser-url">http://localhost:8080/jdbc-pool/studentList</div></div>
+  <div class="browser-body">
+    <div style="font-size:17px;font-weight:700;color:#24292f;margin-bottom:12px;">👨‍🎓 学生信息管理（连接池 + DBUtils 版）</div>
+    <div style="display:inline-block;background:#0969da;color:#fff;padding:6px 14px;border-radius:5px;font-size:13px;margin-bottom:12px;">➕ 新增学生</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <tr style="background:#f6f8fa;">
+        <th style="border:1px solid #d0d7de;padding:7px;">学号</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">姓名</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">性别</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">年龄</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">成绩</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">操作</th>
+      </tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">1</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">张三</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">男</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">20</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">88.5</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">2</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">李四</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">女</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">19</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">92.0</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">3</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">王五</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">男</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">21</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">76.0</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+    </table>
+    <div style="margin-top:10px;font-size:12.5px;color:#57606a;">数据由 <code>queryRunner.query(sql, new BeanListHandler&lt;&gt;(Student.class))</code> 一行查出，不再手写 <code>while(rs.next())</code>。</div>
+  </div>
+</div>
+
+<p><b>② Druid 监控页 /druid/index.html —— 连接池与 SQL 执行情况一目了然</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="browser-url">http://localhost:8080/jdbc-pool/druid/index.html</div></div>
+  <div class="browser-body">
+    <div style="font-size:17px;font-weight:700;color:#24292f;margin-bottom:12px;">📊 Druid Monitor</div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="flex:1 1 100px;background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:800;color:#0969da;">3</div><div style="font-size:12px;color:#57606a;margin-top:3px;">活跃连接</div></div>
+      <div style="flex:1 1 100px;background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:800;color:#0969da;">8</div><div style="font-size:12px;color:#57606a;margin-top:3px;">空闲连接</div></div>
+      <div style="flex:1 1 100px;background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:800;color:#0969da;">42</div><div style="font-size:12px;color:#57606a;margin-top:3px;">SQL 执行数</div></div>
+      <div style="flex:1 1 100px;background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:800;color:#0969da;">2ms</div><div style="font-size:12px;color:#57606a;margin-top:3px;">平均耗时</div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <tr style="background:#f6f8fa;"><th style="border:1px solid #d0d7de;padding:7px;">SQL</th><th style="border:1px solid #d0d7de;padding:7px;">执行次数</th><th style="border:1px solid #d0d7de;padding:7px;">耗时</th></tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;">select * from student</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">12</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">1ms</td></tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;">insert into student ...</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">5</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">3ms</td></tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;">update student set ...</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">8</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">2ms</td></tr>
+    </table>
+    <div style="margin-top:10px;font-size:12.5px;color:#57606a;">内置监控页是我们选择 Druid 而非 HikariCP 的重要原因之一（教学友好、无需额外工具）。</div>
+  </div>
+</div>
+
+<h3>✅ 验收清单</h3>
+<ul>
+<li>🔲 启动时控制台打印 <b>"Druid 连接池初始化成功"</b>，无 ClassNotFoundException</li>
+<li>🔲 列表页正常展示 3 条初始数据，没有空指针、没有字段全 null</li>
+<li>🔲 <b>新增</b>学生后列表自动刷新，新记录出现</li>
+<li>🔲 <b>编辑</b>回显正确（id / name / gender / age / score 都带过来）</li>
+<li>🔲 <b>删除</b>后记录消失，刷新页面不会再次出现</li>
+<li>🔲 连续多次刷新列表，不报连接泄漏或 Too many connections</li>
+<li>🔲 访问 <b>/druid/index.html</b> 能看到监控页，SQL 监控里有执行记录</li>
+<li>🔲 DAO 单个方法代码量从 30+ 行降到 10 行以内</li>
+<li>🔲 <b>Servlet 与 JSP 源码与第一次课完全一致</b>（未做任何改动即可跑通）</li>
+</ul>
 
 </script>
 
@@ -2672,72 +2724,23 @@ if(!TEACHER_MODE&&navigator.clipboard){
 </script>
 
 <script type="text/html" id="tpl-verify">
-<div class="verify-wrap">
-  <div class="verify-title">🔍 效果预览与验证清单</div>
-  <div class="verify-desc">重构完成后，页面表现与第一次课完全一致——但底层已经从"手工作坊"升级为"工业化流水线"。打开浏览器依次验证：</div>
+<h3>🚀 部署与运行验证（5 步）</h3>
+<p>把第一次课已经跑通的工程复制为 <b>jdbc-pool</b>，替换本课新增的 5 个文件后，按以下步骤启动验证。</p>
+<ol>
+  <li><b>建库准备</b>：沿用第一次课的 <code>jdbc_demo</code> 库与 student 表，无需重新建库。</li>
+  <li><b>配置连接池</b>：打开 <code>druid.properties</code>，核对 url / username / password 与你的 MySQL 一致，<code>filters=stat</code> 已开启。</li>
+  <li><b>IDEA 配置 Tomcat 10</b>：Deployment 添加 <code>jdbc-pool:war exploded</code>，Application context 改为 <code>/jdbc-pool</code>。</li>
+  <li><b>启动 Tomcat</b>：控制台出现"Druid 连接池初始化成功"，浏览器访问 <code>http://localhost:8080/jdbc-pool/</code>。</li>
+  <li><b>验证功能与监控</b>：CRUD 全部正常后，再访问 <code>/druid/index.html</code> 查看 SQL 监控记录。</li>
+</ol>
 
-  <div class="verify-pages">
-    <div class="verify-page">
-      <div class="vp-title">① 列表页 list.jsp</div>
-      <div class="vp-mock">
-        <div class="mock-browser">
-          <div class="mock-bar"><span class="mock-dot red"></span><span class="mock-dot yellow"></span><span class="mock-dot green"></span><span class="mock-url">http://localhost:8080/jdbc-pool/studentList</span></div>
-          <div class="mock-body">
-            <div class="mock-h2">学生信息管理</div>
-            <div class="mock-btn-primary">+ 新增学生</div>
-            <table class="mock-table">
-              <tr><th>学号</th><th>姓名</th><th>性别</th><th>年龄</th><th>成绩</th><th>操作</th></tr>
-              <tr><td>1</td><td>张三</td><td>男</td><td>20</td><td>88.5</td><td><span class="mock-link">编辑</span> <span class="mock-link-red">删除</span></td></tr>
-              <tr><td>2</td><td>李四</td><td>女</td><td>19</td><td>92.0</td><td><span class="mock-link">编辑</span> <span class="mock-link-red">删除</span></td></tr>
-              <tr><td>3</td><td>王五</td><td>男</td><td>21</td><td>76.0</td><td><span class="mock-link">编辑</span> <span class="mock-link-red">删除</span></td></tr>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="vp-note">列表数据由 QueryRunner.query(new BeanListHandler&lt;&gt;(Student.class)) 一行搞定，不再手写 while(rs.next())。</div>
-    </div>
-
-    <div class="verify-page">
-      <div class="vp-title">② Druid 监控页面</div>
-      <div class="vp-mock">
-        <div class="mock-browser">
-          <div class="mock-bar"><span class="mock-dot red"></span><span class="mock-dot yellow"></span><span class="mock-dot green"></span><span class="mock-url">http://localhost:8080/jdbc-pool/druid/index.html</span></div>
-          <div class="mock-body">
-            <div class="mock-h2">Druid Monitor</div>
-            <div class="mock-stats">
-              <div class="mock-stat"><div class="ms-num">3</div><div class="ms-lbl">活跃连接</div></div>
-              <div class="mock-stat"><div class="ms-num">8</div><div class="ms-lbl">空闲连接</div></div>
-              <div class="mock-stat"><div class="ms-num">42</div><div class="ms-lbl">SQL执行数</div></div>
-              <div class="mock-stat"><div class="ms-num">2ms</div><div class="ms-lbl">平均耗时</div></div>
-            </div>
-            <div class="mock-h3" style="margin-top:14px;">SQL监控</div>
-            <table class="mock-table"><tr><th>SQL</th><th>次数</th><th>耗时</th></tr>
-              <tr><td>select * from student</td><td>12</td><td>1ms</td></tr>
-              <tr><td>insert into student ...</td><td>5</td><td>3ms</td></tr>
-              <tr><td>update student set ...</td><td>8</td><td>2ms</td></tr>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="vp-note">访问 /druid/index.html 可看到内置监控，这是我们选择 Druid 而非 HikariCP 的核心原因之一（教学友好）。</div>
-    </div>
-  </div>
-
-  <div class="verify-checks">
-    <div class="vc-title">✅ 验证清单（逐项打勾）</div>
-    <div class="vc-grid">
-      <label><input type="checkbox"> 启动时控制台打印 "Druid 连接池初始化成功"，无 ClassNotFoundException</label>
-      <label><input type="checkbox"> 列表页能正常展示 3 条初始数据，没有空指针</label>
-      <label><input type="checkbox"> 新增学生后列表自动刷新，新记录出现</label>
-      <label><input type="checkbox"> 编辑回显正确（id/name/gender/age/score 都带过来）</label>
-      <label><input type="checkbox"> 修改提交后数据更新，列表显示新值</label>
-      <label><input type="checkbox"> 删除后记录消失，id=2 的"李四"被删后不会再出现</label>
-      <label><input type="checkbox"> 多次刷新列表不会报连接泄漏或 Too many connections</label>
-      <label><input type="checkbox"> 访问 /druid/index.html 能看到监控页面，SQL 监控有记录</label>
-      <label><input type="checkbox"> DAO 单个方法代码量从 30+ 行降到 10 行以内</label>
-    </div>
-  </div>
-</div>
+<h4>🔍 控制台与监控观察点</h4>
+<ul>
+<li>启动无 <code>ClassNotFoundException: com.alibaba.druid.pool.DruidDataSourceFactory</code>（出现说明 Druid 依赖未引入）。</li>
+<li>控制台无 <code>Cannot find druid.properties</code>（出现说明配置文件未放进 <code>src/main/resources</code>）。</li>
+<li>Druid 监控页能打开且有 SQL 记录，说明 <code>filters=stat</code> 与 StatViewServlet 配置生效。</li>
+<li>反复刷新列表页连接数不持续增长，说明代理连接的 close 已把连接归还到池中。</li>
+</ul>
 
 </script>
 

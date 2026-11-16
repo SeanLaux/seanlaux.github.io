@@ -2086,20 +2086,80 @@ if(!TEACHER_MODE&&navigator.clipboard){
 /* ============ 信息步骤模板 ============ */
 </script>
 <script type="text/html" id="tpl-goal">
-<div class="goal-wrap">
-  <div class="goal-title">🎯 本次课学习目标</div>
-  <div class="goal-desc">第一次课：掌握 JDBC 核心 API，独立完成学生信息表的增删改查，理解"面向接口编程"和 DAO 分层思想。</div>
-  <ul class="goal-list">
-    <li>📦 理解 <b>JDBC</b> 是什么、解决什么问题、一次操作的完整六步流程</li>
-    <li>🔌 掌握 <b>DriverManager + Connection + PreparedStatement + ResultSet</b> 四个核心 API</li>
-    <li>🧱 会写 <b>JavaBean 实体类</b>，能把 ResultSet 的一行封装成对象</li>
-    <li>🛠️ 会写 <b>JDBC 工具类</b>，把连接获取和资源关闭集中管理</li>
-    <li>🏛️ 理解 <b>DAO 分层模式</b>，把 SQL 操作封装在 DAO 里，Servlet 只调用不写 SQL</li>
-    <li>🚨 理解 <b>SQL 注入</b>原理，掌握 PreparedStatement 参数化查询的正确写法</li>
-    <li>🔁 会用 <b>try-with-resources</b> 语法让资源自动关闭，避免连接泄漏</li>
-    <li>✅ 独立跑通"学生信息管理"CRUD 完整页面</li>
-  </ul>
+<h3>🎯 本次课任务目标</h3>
+<p>完成 <b>学生信息管理系统（jdbc-student）</b>项目，通过"跟着敲代码"掌握 JDBC 核心 API 与 DAO 分层思想，最终实现学生信息表（student）的<b>查询、新增、编辑、删除</b>四大功能，全部通过标准 JDBC 六步流程落地。</p>
+<div class="kpi-row">
+  <div class="kpi"><div class="v">4×40 分钟</div><div class="l">共 160 分钟</div></div>
+  <div class="kpi"><div class="v">17 个</div><div class="l">工程文件（12 个需手写）</div></div>
+  <div class="kpi"><div class="v">4 个</div><div class="l">核心 JDBC API</div></div>
+  <div class="kpi"><div class="v">6 步</div><div class="l">JDBC 标准执行流程</div></div>
 </div>
+
+<h3>🖥️ 最终效果预览（3 个主要页面）</h3>
+<p><b>① 学生列表页 list.jsp —— 首页，展示全部学生并提供操作入口</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="browser-url">http://localhost:8080/jdbc-student/student/list</div></div>
+  <div class="browser-body">
+    <div style="font-size:17px;font-weight:700;color:#24292f;margin-bottom:12px;">👨‍🎓 学生信息管理（JDBC 版）</div>
+    <div style="display:inline-block;background:#0969da;color:#fff;padding:6px 14px;border-radius:5px;font-size:13px;margin-bottom:12px;">➕ 新增学生</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <tr style="background:#f6f8fa;">
+        <th style="border:1px solid #d0d7de;padding:7px;">学号</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">姓名</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">性别</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">年龄</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">专业</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">入学日期</th>
+        <th style="border:1px solid #d0d7de;padding:7px;">操作</th>
+      </tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">1</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">张三</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">男</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">20</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">软件技术</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">2024-09-01</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">2</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">李四</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">女</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">19</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">计算机应用</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">2024-09-01</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+      <tr><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">3</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">王五</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">男</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">21</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">大数据技术</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;">2023-09-01</td><td style="border:1px solid #d0d7de;padding:7px;text-align:center;color:#0969da;">编辑 删除</td></tr>
+    </table>
+  </div>
+</div>
+
+<p><b>② 新增学生页 add.jsp —— 填写表单后提交入库</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="browser-url">http://localhost:8080/jdbc-student/student/toAdd</div></div>
+  <div class="browser-body">
+    <div style="font-size:17px;font-weight:700;color:#24292f;margin-bottom:12px;">➕ 新增学生</div>
+    <div style="max-width:440px;">
+      <div style="margin-bottom:10px;"><div style="font-size:13px;color:#57606a;margin-bottom:4px;">姓名</div><div style="border:1px solid #d0d7de;border-radius:5px;padding:7px 10px;color:#9aa4af;font-size:13px;">请输入姓名</div></div>
+      <div style="margin-bottom:10px;"><div style="font-size:13px;color:#57606a;margin-bottom:4px;">性别</div><div style="border:1px solid #d0d7de;border-radius:5px;padding:7px 10px;color:#24292f;font-size:13px;">男 ▾</div></div>
+      <div style="margin-bottom:10px;"><div style="font-size:13px;color:#57606a;margin-bottom:4px;">年龄</div><div style="border:1px solid #d0d7de;border-radius:5px;padding:7px 10px;color:#9aa4af;font-size:13px;">请输入年龄</div></div>
+      <div style="margin-bottom:10px;"><div style="font-size:13px;color:#57606a;margin-bottom:4px;">专业</div><div style="border:1px solid #d0d7de;border-radius:5px;padding:7px 10px;color:#9aa4af;font-size:13px;">请输入专业</div></div>
+      <div style="margin-bottom:10px;"><div style="font-size:13px;color:#57606a;margin-bottom:4px;">入学日期</div><div style="border:1px solid #d0d7de;border-radius:5px;padding:7px 10px;color:#24292f;font-size:13px;">2026-11-17 📅</div></div>
+      <div style="background:#2da44e;color:#fff;text-align:center;padding:8px;border-radius:5px;font-size:13px;font-weight:600;">提 交</div>
+    </div>
+  </div>
+</div>
+
+<p><b>③ 编辑学生页 edit.jsp —— 回显原数据，隐藏域携带主键 id</b></p>
+<div class="browser-mock">
+  <div class="browser-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="browser-url">http://localhost:8080/jdbc-student/student/toEdit?id=1</div></div>
+  <div class="browser-body">
+    <div style="font-size:17px;font-weight:700;color:#24292f;margin-bottom:12px;">✏️ 编辑学生（回显 id=1）</div>
+    <div style="max-width:440px;">
+      <div style="margin-bottom:10px;"><div style="font-size:13px;color:#57606a;margin-bottom:4px;">姓名</div><div style="border:1px solid #0969da;border-radius:5px;padding:7px 10px;color:#24292f;font-size:13px;">张三</div></div>
+      <div style="margin-bottom:10px;"><div style="font-size:13px;color:#57606a;margin-bottom:4px;">专业</div><div style="border:1px solid #0969da;border-radius:5px;padding:7px 10px;color:#24292f;font-size:13px;">软件技术</div></div>
+      <div style="border:1px dashed #d0d7de;border-radius:5px;padding:7px 10px;color:#8b949e;font-size:12px;margin-bottom:10px;">&lt;input type="hidden" name="id" value="1"&gt;</div>
+      <div style="background:#0969da;color:#fff;text-align:center;padding:8px;border-radius:5px;font-size:13px;font-weight:600;">保存修改</div>
+    </div>
+  </div>
+</div>
+
+<h3>✅ 验收清单</h3>
+<ul>
+<li>🔲 项目 <b>jdbc-student</b> 在 Tomcat 10.1.59 中能正常启动，控制台无 ClassNotFoundException</li>
+<li>🔲 执行 init.sql 后 <b>jdbc_demo.student</b> 表存在，且含 3 条初始数据</li>
+<li>🔲 访问 http://localhost:8080/jdbc-student/ 能自动转发到列表页，3 条数据正常显示</li>
+<li>🔲 <b>新增</b>：填写表单提交后，新记录出现在列表中</li>
+<li>🔲 <b>编辑</b>：点"编辑"能回显该学生全部字段，修改提交后列表显示新值</li>
+<li>🔲 <b>删除</b>：点"删除"弹出 confirm 确认框，确认后该记录消失且刷新后不再出现</li>
+<li>🔲 所有 SQL 均通过 <b>PreparedStatement</b> 参数化，无 "+" 字符串拼接</li>
+<li>🔲 源码全部使用 <b>jakarta.*</b> 包名，无 javax.servlet 导入</li>
+</ul>
 
 </script>
 
@@ -2162,32 +2222,23 @@ if(!TEACHER_MODE&&navigator.clipboard){
 </script>
 
 <script type="text/html" id="tpl-verify">
-<div class="verify-wrap">
-  <div class="verify-title">🚀 部署与效果验证</div>
-  <div class="verify-desc">按以下 5 步跑起来，看到 3 条初始学生数据说明 JDBC 链路通了。</div>
-  <ol class="verify-steps">
-    <li><b>建库建表</b>：打开 IDEA Database / Navicat，执行 <code>init.sql</code>，确认 <code>jdbc_demo.student</code> 表中有 3 条数据。</li>
-    <li><b>配置数据库</b>：打开 <code>jdbc.properties</code>，把 <code>jdbc.user/jdbc.password</code> 改成你自己的 MySQL 账号密码。</li>
-    <li><b>IDEA 配置 Tomcat 10</b>：Deployment 添加 <code>jdbc-student:war exploded</code>，Application context 改为 <code>/jdbc-student</code>。</li>
-    <li><b>启动 Tomcat</b>：控制台无异常，访问 <code>http://localhost:8080/jdbc-student/</code>。</li>
-    <li><b>验证 CRUD</b>：新增→列表看到新数据；编辑→数据被修改；删除→数据消失；能跑通全部流程说明合格。</li>
-  </ol>
-  <div class="verify-preview">
-    <div class="browser-mock">
-      <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="browser-url">http://localhost:8080/jdbc-student/student/list</span></div>
-      <div class="browser-body">
-        <h3 style="margin:0 0 10px 0;">👨‍🎓 学生信息管理（JDBC 版）</h3>
-        <button style="background:#0969da;color:#fff;border:none;padding:6px 12px;border-radius:4px;">➕ 新增学生</button>
-        <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">
-          <tr style="background:#f6f8fa;"><th style="border:1px solid #ddd;padding:6px;">学号</th><th style="border:1px solid #ddd;padding:6px;">姓名</th><th style="border:1px solid #ddd;padding:6px;">性别</th><th style="border:1px solid #ddd;padding:6px;">年龄</th><th style="border:1px solid #ddd;padding:6px;">专业</th><th style="border:1px solid #ddd;padding:6px;">入学日期</th><th style="border:1px solid #ddd;padding:6px;">操作</th></tr>
-          <tr><td style="border:1px solid #ddd;padding:6px;text-align:center;">1</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">张三</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">男</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">20</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">软件技术</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">2024-09-01</td><td style="border:1px solid #ddd;padding:6px;text-align:center;color:#0969da;">编辑 删除</td></tr>
-          <tr><td style="border:1px solid #ddd;padding:6px;text-align:center;">2</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">李四</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">女</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">19</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">计算机应用</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">2024-09-01</td><td style="border:1px solid #ddd;padding:6px;text-align:center;color:#0969da;">编辑 删除</td></tr>
-          <tr><td style="border:1px solid #ddd;padding:6px;text-align:center;">3</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">王五</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">男</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">21</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">大数据技术</td><td style="border:1px solid #ddd;padding:6px;text-align:center;">2023-09-01</td><td style="border:1px solid #ddd;padding:6px;text-align:center;color:#0969da;">编辑 删除</td></tr>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
+<h3>🚀 部署与运行验证（5 步）</h3>
+<p>代码全部写完后，按以下 5 步把项目跑起来。看到列表页出现 3 条初始数据，说明 JDBC 链路已经打通。</p>
+<ol>
+  <li><b>建库建表</b>：用 IDEA Database 或 Navicat 执行 <code>init.sql</code>，确认 <code>jdbc_demo.student</code> 表中有 3 条数据。</li>
+  <li><b>配置数据库账号</b>：打开 <code>jdbc.properties</code>，把 <code>jdbc.user</code> / <code>jdbc.password</code> 改成你自己的 MySQL 账号密码。</li>
+  <li><b>IDEA 配置 Tomcat 10</b>：Deployment 添加 <code>jdbc-student:war exploded</code>，Application context 改为 <code>/jdbc-student</code>。</li>
+  <li><b>启动 Tomcat</b>：控制台无异常后，浏览器访问 <code>http://localhost:8080/jdbc-student/</code>。</li>
+  <li><b>验证 CRUD</b>：新增 → 列表看到新数据；编辑 → 数据被修改；删除 → 数据消失。全部跑通即合格。</li>
+</ol>
+
+<h4>🔍 控制台与运行观察点</h4>
+<ul>
+<li>启动无 <code>ClassNotFoundException: com.mysql.cj.jdbc.Driver</code>（出现说明 pom 里 MySQL 驱动依赖未生效）。</li>
+<li>连接串含 <code>serverTimezone=Asia/Shanghai</code>，否则会报时区错误。</li>
+<li>列表数据的中文不乱码，说明库、表、连接字符集均为 utf8mb4。</li>
+<li>反复刷新列表页不报错，说明连接与流资源已被正确关闭。</li>
+</ul>
 
 </script>
 
